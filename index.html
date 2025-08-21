@@ -25,7 +25,15 @@
 
       <div class="right">
         <button class="icon" title="Filter"><i class="bi bi-funnel"></i></button>
-        <button class="icon" title="Settings"><i class="bi bi-gear"></i></button>
+        <div class="settings-dropdown">
+          <button class="icon settings-btn" title="Settings"><i class="bi bi-gear"></i></button>
+          <div class="dropdown-menu">
+            <button class="dropdown-item logout-btn">
+              <i class="bi bi-box-arrow-right"></i>
+              Logout
+            </button>
+          </div>
+        </div>
         <button class="icon" title="Notifications"><i class="bi bi-bell"></i></button>
         <div class="avatar-nav"></div>
       </div>
@@ -93,6 +101,36 @@
       </div>
     </div>
   </aside>
+
+  <script>
+    // Settings dropdown functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const settingsBtn = document.querySelector('.settings-btn');
+      const dropdownMenu = document.querySelector('.dropdown-menu');
+      const logoutBtn = document.querySelector('.logout-btn');
+      
+      // Toggle dropdown when settings button is clicked
+      settingsBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropdownMenu.classList.toggle('show');
+      });
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!e.target.closest('.settings-dropdown')) {
+          dropdownMenu.classList.remove('show');
+        }
+      });
+      
+      // Handle logout button click
+      logoutBtn.addEventListener('click', function() {
+        // Optional: Add logout logic here (clear session storage, etc.)
+        
+        // Redirect to landing page
+        window.location.href = 'landingpage.html';
+      });
+    });
+  </script>
 
 </body>
 </html>

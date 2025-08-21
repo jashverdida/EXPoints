@@ -173,59 +173,6 @@ main.container-xl > *{
   box-shadow:inset 0 1px 0 #ffffff33;
 }
 
-/* ========== Settings Dropdown ========== */
-.settings-dropdown{
-  position:relative;
-  display:inline-block;
-}
-
-.dropdown-menu{
-  position:absolute;
-  top:calc(100% + 8px);
-  right:0;
-  min-width:140px;
-  background:linear-gradient(180deg, #12225ae6, #0b1537e6);
-  border:1.5px solid var(--line);
-  border-radius:var(--r-lg);
-  box-shadow:0 12px 28px #0006;
-  opacity:0;
-  visibility:hidden;
-  transform:translateY(-10px);
-  transition:all 0.2s ease;
-  z-index:1000;
-}
-
-.dropdown-menu.show{
-  opacity:1;
-  visibility:visible;
-  transform:translateY(0);
-}
-
-.dropdown-item{
-  width:100%;
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:12px 16px;
-  background:transparent;
-  border:none;
-  color:var(--ink);
-  font-size:1rem;
-  font-family:inherit;
-  cursor:pointer;
-  transition:background-color 0.2s ease;
-  border-radius:var(--r-lg);
-}
-
-.dropdown-item:hover{
-  background:rgba(255, 255, 255, 0.1);
-}
-
-.dropdown-item i{
-  font-size:1.1rem;
-  color:var(--brand);
-}
-
 /* ========== Cards (larger) ========== */
 .card-post,
 .card-reply,
@@ -521,5 +468,96 @@ main.container-xl > * + *{
 
   .avatar-sm{
     --sz:56px;
+  }
+}
+
+/* ========== Settings Dropdown ========== */
+.settings-dropdown{
+  position:relative;
+  display:inline-block;
+}
+
+.dropdown-menu{
+  position:absolute;
+  top:calc(100% + 8px);
+  right:0;
+  min-width:140px;
+  background:transparent;
+  border:none;
+  border-radius:var(--r-lg);
+  box-shadow:none;
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(-10px);
+  transition:all 0.2s ease;
+  z-index:9999;
+}
+
+.dropdown-menu.show{
+  opacity:1;
+  visibility:visible;
+  transform:translateY(0);
+}
+
+.dropdown-item{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 16px;
+  background:transparent;
+  border:none;
+  color:var(--ink);
+  font-size:1rem;
+  font-family:inherit;
+  cursor:pointer;
+  transition:all 0.3s ease;
+  border-radius:var(--r-md);
+  position:relative;
+  overflow:hidden;
+}
+
+/* Colorful logout button styling */
+.logout-btn{
+  background:linear-gradient(180deg,#12225ae6,#0b1537e6);
+  color:var(--ink);
+  font-weight:600;
+  border:1.5px solid var(--line);
+  box-shadow:0 12px 28px #0006;
+  backdrop-filter:blur(10px);
+}
+
+.logout-btn:hover,
+.logout-btn:active,
+.logout-btn:focus{
+  background:linear-gradient(135deg, #ff6b6b, #ee5a24) !important;
+  color:#fff !important;
+  border-color:rgba(255, 255, 255, 0.3);
+  transform:translateY(-2px) scale(1.02);
+  box-shadow:
+    0 8px 25px rgba(0, 0, 0, 0.3),
+    0 0 15px rgba(128, 128, 128, 0.4);
+}
+
+.logout-btn i{
+  color:var(--brand);
+  font-size:1.2rem;
+  transition:all 0.3s ease;
+}
+
+.logout-btn:hover i,
+.logout-btn:active i,
+.logout-btn:focus i{
+  color:#fff !important;
+  filter:drop-shadow(0 0 3px rgba(200, 200, 200, 0.5));
+  animation:logoutGlow 0.6s ease-in-out;
+}
+
+@keyframes logoutGlow {
+  0%, 100% { 
+    filter:drop-shadow(0 0 3px rgba(200, 200, 200, 0.5)); 
+  }
+  50% { 
+    filter:drop-shadow(0 0 8px rgba(220, 220, 220, 0.7)); 
   }
 }

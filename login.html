@@ -22,10 +22,10 @@
            src="assets/img/Login Panda Controller.png"
            alt="Panda mascot" />
 
-      <!-- Play button -->
-      <button class="btn btn-play" type="button" aria-label="Play">
+      <!-- Play button (now goes back to landing page) -->
+      <a class="btn btn-play" href="landingpage.html" aria-label="Back to Landing">
         <i class="bi bi-play-fill"></i>
-      </button>
+      </a>
 
       <!-- Centered logo -->
       <div class="auth-logo-wrap">
@@ -35,7 +35,7 @@
       </div>
 
       <!-- Form -->
-      <form novalidate>
+      <form action="index.html" method="get" novalidate>
         <div class="mb-3">
           <label class="form-label">Email or Phone No.</label>
           <input type="email" class="form-control input-glass" placeholder="Enter Valid Email or Phone No." required>
@@ -54,6 +54,7 @@
           <a href="forgot.html" class="link-light text-decoration-none">Forgot Password?</a>
         </div>
 
+        <!-- Login button now routes to index.html -->
         <button type="submit" class="btn btn-brand w-100 mb-3">LOGIN</button>
 
         <div class="auth-divider my-3">OR</div>

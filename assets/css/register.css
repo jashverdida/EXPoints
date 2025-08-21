@@ -27,21 +27,51 @@ body{
   background:linear-gradient(180deg,#0f1e5ae0,#0a1344e0);box-shadow:0 18px 50px #0008;padding:1.25rem 1.25rem 1.5rem;position:relative
 }
   
-/* Head row (+EXPoints, back, panda) */
-.auth-head{position:relative;padding:.2rem 0 1rem;border-bottom:1px solid var(--glass-b)}
-.btn-back{
-  position:absolute;left:0;top:0;width:36px;height:36px;border-radius:50%;
-  background:transparent;border:1px solid var(--glass-b);color:var(--ink);display:grid;place-items:center
+/* Head row (logo centered, back left, panda right) */
+.auth-head {
+  position: relative;
+  padding: .2rem 0 1rem;
+  border-bottom: 1px solid var(--glass-b);
+  display: flex;
+  justify-content: center; /* centers logo */
+  align-items: center;
 }
-.auth-logo{margin-left:48px;font-weight:800}
-.auth-panda{position:absolute;right:-26px;top:-26px;width:80px;height:auto;pointer-events:none}
+
+.auth-logo img {
+  max-height: 250px; /* bigger logo */
+  width: auto;
+}
+
+.btn-back {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--glass-b);
+  color: var(--ink);
+  display: grid;
+  place-items: center;
+}
+
+.auth-panda-register {
+  position: absolute;
+  top: -80px;       /* higher */
+  right: -120px;    /* further out */
+  width: 160px;     /* bigger panda */
+  height: auto;
+  pointer-events: none;
+}
 
 /* Inputs */
-.input-glass{
+.input-pill{
   height:44px;border-radius:.6rem;background:rgba(255,255,255,.15)!important;
   border:2px solid rgba(255,255,255,.85)!important;color:var(--ink)!important
 }
-.input-glass::placeholder{color:#eaf1ff}
+.input-pill::placeholder{color:#eaf1ff}
 .field-label{color:#fff;font-weight:800}
 
 /* Buttons + divider */
@@ -61,9 +91,3 @@ body{
   background:linear-gradient(90deg,transparent,#9cc2ff,transparent)
 }
 .auth-divider::before{left:0}.auth-divider::after{right:0}
-
-/* Optional thin spine beside the panda (subtle) */
-.card-spine{
-  position:absolute;right:110px;top:86px;bottom:20px;width:2px;
-  background:linear-gradient(180deg,#bcd2ff,#5f86ff);opacity:.55;border-radius:2px
-}

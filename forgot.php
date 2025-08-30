@@ -27,7 +27,7 @@
               </div>
               <div class="d-grid gap-2">
                 <button type="submit" class="btn btn-primary">Send Reset Link</button>
-                <a class="btn btn-outline-light" href="login.html">Back to Login</a>
+                <a class="btn btn-outline-light" href="login.php">Back to Login</a>
               </div>
             </form>
           </div>

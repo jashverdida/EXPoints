@@ -21,7 +21,7 @@
       <!-- Header -->
       <div class="auth-head mb-3 position-relative">
         <!-- Back button -->
-        <a class="btn btn-back" href="index.html" aria-label="Back">
+        <a class="btn btn-back" href="index.php" aria-label="Back">
           <i class="bi bi-chevron-left"></i>
         </a>
 
@@ -35,7 +35,7 @@
       </div>
 
       <!-- Register Form -->
-      <form action="dashboard.html" method="get" novalidate>
+      <form action="dashboard.php" method="get" novalidate>
         <div class="row g-2 align-items-center mb-3">
           <label for="firstName" class="col-12 col-md-5 col-form-label field-label">First Name</label>
           <div class="col-12 col-md-7">

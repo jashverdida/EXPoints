@@ -127,7 +127,7 @@
         // Optional: Add logout logic here (clear session storage, etc.)
         
         // Redirect to landing page
-        window.location.href = 'index.html';
+        window.location.href = 'index.php';
       });
     });
   </script>

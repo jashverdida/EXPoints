@@ -17,7 +17,7 @@
     <!-- TOP NAV (transparent) -->
     <header class="lp-header container-xl">
       <nav class="lp-nav">
-        <a href="index.html" class="lp-brand">
+        <a href="index.php" class="lp-brand">
           <img src="assets/img/EXPoints Logo.png" alt="+EXPoints" class="lp-brand-img">
         </a>
 
@@ -47,8 +47,8 @@
           </p>
 
           <div class="lp-ctas">
-            <a href="login.html" class="btn lp-btn lp-btn-light">LOGIN!</a>
-            <a href="register.html" class="btn lp-btn lp-btn-brand">REGISTER!</a>
+            <a href="login.php" class="btn lp-btn lp-btn-light">LOGIN!</a>
+            <a href="register.php" class="btn lp-btn lp-btn-brand">REGISTER!</a>
           </div>
         </div>
       </div>

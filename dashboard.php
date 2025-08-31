@@ -1,3 +1,17 @@
+<?php
+session_start();
+
+// Check if user is authenticated (but don't redirect if not - allow guest browsing)
+$isLoggedIn = isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] === true;
+$userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'User') : 'Guest';
+
+// Optional: Check session timeout only if logged in
+if ($isLoggedIn && isset($_SESSION['login_time']) && (time() - $_SESSION['login_time']) > 86400) {
+    session_destroy();
+    $isLoggedIn = false;
+    $userName = 'Guest';
+}
+?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -25,9 +39,16 @@
 
       <div class="right">
         <button class="icon" title="Filter"><i class="bi bi-funnel"></i></button>
+        
+        <?php if ($isLoggedIn): ?>
+        <!-- Logged in user options -->
         <div class="settings-dropdown">
           <button class="icon settings-btn" title="Settings"><i class="bi bi-gear"></i></button>
           <div class="dropdown-menu">
+            <button class="dropdown-item profile-btn">
+              <i class="bi bi-person"></i>
+              Profile
+            </button>
             <button class="dropdown-item logout-btn">
               <i class="bi bi-box-arrow-right"></i>
               Logout
@@ -35,7 +56,12 @@
           </div>
         </div>
         <button class="icon" title="Notifications"><i class="bi bi-bell"></i></button>
-        <div class="avatar-nav"></div>
+        <div class="avatar-nav" title="<?php echo htmlspecialchars($userName); ?>"></div>
+        <?php else: ?>
+        <!-- Guest user options -->
+        <a href="login.php" class="icon" title="Login"><i class="bi bi-box-arrow-in-right"></i></a>
+        <a href="register.php" class="icon" title="Register"><i class="bi bi-person-plus"></i></a>
+        <?php endif; ?>
       </div>
     </header>
   </div>
@@ -80,10 +106,20 @@
     <!-- Comment -->
     <section class="card-input">
       <div class="row g-3 align-items-center">
+        <?php if ($isLoggedIn): ?>
         <div class="col-auto"><div class="avatar-us"></div></div>
         <div class="col">
           <input class="comment" placeholder="Write a Comment on this post!" />
         </div>
+        <?php else: ?>
+        <div class="col-12 text-center">
+          <div class="guest-comment-prompt">
+            <p class="mb-2" style="color: #cfe0ff;">Want to join the discussion?</p>
+            <a href="login.php" class="btn btn-outline-light btn-sm me-2">Login</a>
+            <a href="register.php" class="btn btn-primary btn-sm">Register</a>
+          </div>
+        </div>
+        <?php endif; ?>
       </div>
     </section>
   </main>
@@ -122,12 +158,15 @@
         }
       });
       
+      // Profile button functionality
+      document.querySelector('.profile-btn').addEventListener('click', function() {
+        window.location.href = 'profile.php';
+      });
+      
       // Handle logout button click
       logoutBtn.addEventListener('click', function() {
-        // Optional: Add logout logic here (clear session storage, etc.)
-        
-        // Redirect to landing page
-        window.location.href = 'index.php';
+        // Redirect to logout script for proper session cleanup
+        window.location.href = 'logout.php';
       });
     });
   </script>

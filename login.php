@@ -62,7 +62,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Firebase Login Script -->
+<!-- Firebase Login Script with Firestore Synchronization -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
@@ -86,30 +86,43 @@
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
+    if (!email || !password) {
+      alert('Please enter both email and password');
+      return;
+    }
+
     try {
+      // Step 1: Authenticate with Firebase Auth
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Get Firebase ID Token
+      // Step 2: Get Firebase ID Token
       const idToken = await user.getIdToken();
 
-      // Send token to backend for PHP session
-      fetch("verify.php", {
+      // Step 3: Verify and sync with Firestore users collection
+      const response = await fetch("verify_user.php", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          window.location.href = "dashboard.php";
-        } else {
-          alert("Login failed: " + data.error);
-        }
+        body: JSON.stringify({ 
+          idToken: idToken,
+          email: user.email,
+          uid: user.uid
+        })
       });
 
+      const data = await response.json();
+      
+      if (data.success) {
+        // Successfully authenticated and synchronized
+        console.log('Login successful - Firebase Auth synced with Firestore');
+        window.location.href = "dashboard.php";
+      } else {
+        alert("Login verification failed: " + data.error);
+      }
+
     } catch (error) {
-      alert("Error: " + error.message);
+      console.error('Login error:', error);
+      alert("Login failed: " + error.message);
     }
   });
 </script>

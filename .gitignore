@@ -1,0 +1,33 @@
+# Firebase Credentials - NEVER commit these!
+config/firebase-service-account.json
+*-service-account.json
+*.p12
+*.pem
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# Node modules
+node_modules/
+functions/node_modules/
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Vendor dependencies (if using Composer)
+vendor/
+
+# Temporary files
+*.tmp
+*.temp

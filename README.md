@@ -6,3 +6,6 @@ Group Members:
 Eijay P. Pepito
 Jashmine Verdida
 Lord Christian Beligaño
+
+Landing Page:
+![alt text](LandingPage.png)

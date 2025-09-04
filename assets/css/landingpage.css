@@ -242,7 +242,6 @@ body{
 .posters{
   /* frame geometry (flush with page top, no extra gap) */
   --box-h: calc(100vh - var(--header-offset) - 16px);
-
   position: fixed;
   right: 24px;
   top: var(--header-offset);         /* aligns to page top margin */

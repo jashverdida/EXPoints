@@ -1,0 +1,235 @@
+:root{
+  --ink:#ffffff;
+  --line:#3c4e91;
+  --glass:#111a3acc;
+  --brand:#38a0ff;
+  --brand2:#6d5bff;
+  --accent:#ffb03a;
+  --avatar-size:110px;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+  color:var(--ink);
+}
+
+.bg-exp{
+  background:
+    radial-gradient(900px 600px at 15% 10%, #0c1f6f, transparent 60%),
+    radial-gradient(700px 500px at 85% 85%, #1736b7, transparent 55%),
+    linear-gradient(180deg, #08122e, #030816 70%);
+  min-height:100vh;
+}
+
+.topbar{
+  position:relative;
+  z-index:10;
+}
+
+/* logo */
+.brand-logo{
+  height:60px;
+}
+
+@media (min-width:992px){
+  .brand-logo{
+    height:140px;
+  }
+}
+
+/* main cards */
+.card-glass{
+  position:relative;
+  border:1px solid var(--line);
+  border-radius:22px;
+  background:linear-gradient(180deg,#0f1631cc,var(--glass));
+  box-shadow:0 0 0 1px #6ea0ff22 inset, 0 18px 40px #0009;
+}
+
+.card-pill{
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:linear-gradient(180deg,#0f1631cc,var(--glass));
+  box-shadow:0 0 0 1px #6ea0ff22 inset;
+}
+
+/* avatar overlap */
+.avatar-wrap{
+  position:absolute;
+  left:-28px;
+  top:-16px;                /* <-- was negative; now inside card */
+  width:110px;
+  height:110px;
+  border-radius:50%;
+  background:#0b1a44;
+  display:grid;
+  place-items:center;
+  border:6px solid #eef2ff20;
+  box-shadow:0 8px 26px #0007, 0 0 0 2px #6ea0ff55 inset;
+  z-index:2;
+}
+
+.avatar-xl{
+  width:98px;
+  height:98px;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+/* push header text away from avatar */
+.content-shift{
+  padding-left:0;
+}
+
+@media (min-width:768px){
+  .content-shift{
+    margin-left:88px;
+  }
+}
+
+/* header text */
+.profile-name{
+  color:#fff;
+  font-weight:800;
+  letter-spacing:.2px;
+}
+
+.profile-handle{
+  color:#fff;
+  font-weight:600;
+  font-size:.95rem;
+}
+
+.profile-bio{
+  color:#fff;
+  font-size:.95rem;
+  line-height:1.45;
+}
+
+/* level */
+.lvl-pill{
+  display:inline-block;
+  padding:.15rem .6rem;
+  font-weight:700;
+  font-size:.8rem;
+  color:#fff;
+  border-radius:999px;
+  background:linear-gradient(90deg,#7a2cff,var(--accent));
+  box-shadow:0 0 14px #ffb03a55;
+}
+
+.level-bar{
+  height:10px;
+  background:#ffffff1a;
+  border:1px solid #5e78c9;
+  border-radius:999px;
+}
+
+.level-bar .progress-bar{
+  background:linear-gradient(90deg,var(--brand),var(--brand2));
+}
+
+/* stats */
+.stats-row > span{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:.15rem .55rem;
+  border:1px solid #5e78c92e;
+  border-radius:999px;
+  background:#ffffff10;
+  color:#fff;
+  font-weight:600;
+}
+
+/* mini-cards */
+.mini-card{
+  display:block;
+  background:#111a3a;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 0 0 1px #6ea0ff22 inset;
+}
+
+.mini-title{
+  color:#fff;
+  font-weight:700;
+  letter-spacing:.3px;
+}
+
+.mini-value{
+  color:#fff;
+  font-weight:800;
+  letter-spacing:1px;
+}
+
+/* thumbnails */
+.thumb-box{
+  width:96px;
+  height:96px;
+  margin:8px auto 0;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.thumb-box > img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.genre-badge{
+  height:120px;
+  width:auto;
+  display:block;
+  margin:8px auto 0;
+}
+
+/* best posts */
+.best-title{
+  font-size:1rem;
+  font-weight:800;
+  margin-bottom:.8rem;
+  color:#fff;
+}
+
+.best-post{
+  background:#0f1631;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px 12px;
+  color:#fff;
+}
+
+.best-post .small{
+  color:#fff;
+}
+
+.best-post:hover{
+  background:#17204a;
+}
+
+/* corners */
+.corner-icon{
+  position:absolute;
+  bottom:-14px;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  border:3px solid #6ea0ffcc;
+  background:#0d173f;
+}
+
+.corner-icon.left{
+  left:18px;
+}
+
+.corner-icon.right{
+  right:18px;
+}

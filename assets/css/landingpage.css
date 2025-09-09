@@ -346,3 +346,98 @@ body{
     font-size: 1.08rem;
   }
 }
+
+/* ================= Sections ================= */
+.lp-section{
+  padding: 64px 0 72px;
+}
+
+.section-inner{
+  border: 1px solid #ffffff26;
+  border-radius: 1.2rem;
+  background: linear-gradient(180deg,#12225ae6,#0b1537e6);
+  box-shadow: 0 18px 50px #0008;
+  padding: 2rem;
+}
+
+.section-title{
+  font-weight: 800;
+  font-size: clamp(1.6rem, 1.2rem + 0.8vw, 2.1rem);
+  margin: 0 0 .5rem;
+}
+
+.section-sub{
+  color: #eaf1ff;
+  opacity: .95;
+  margin: 0 0 1.25rem;
+}
+
+.section-grid{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.feature{
+  border: 1px solid var(--line);
+  border-radius: .9rem;
+  padding: 1rem 1.1rem;
+  background: rgba(255,255,255,.06);
+}
+
+.feature h3{
+  margin: 0 0 .4rem;
+  font-size: 1.15rem;
+}
+
+.cards{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.card-link{
+  text-decoration: none;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: .9rem;
+  padding: 1rem 1.1rem;
+  background: rgba(255,255,255,.06);
+  display: block;
+}
+
+.card-heading{ display:block; font-weight:800; }
+.card-desc{ display:block; color:#cfe0ff }
+
+.devs{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.dev{ text-align:center; }
+.dev-avatar{
+  width: 140px; height: 140px; border-radius: 50%; margin: 0 auto 10px;
+  background-size: cover; background-position: center;
+  box-shadow: 0 8px 24px #0008; border: 2px solid var(--brand);
+}
+.dev-name{ font-weight:800 }
+.dev-role{ color:#cfe0ff }
+
+.discover-row{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.discover-tile{
+  text-decoration: none; color: var(--ink);
+  border: 1px solid var(--line); border-radius: 1rem; padding: 1.1rem 1.25rem;
+  background: rgba(255,255,255,.06); display: block;
+}
+.tile-title{ display:block; font-weight:800 }
+.tile-sub{ display:block; color:#cfe0ff }
+
+@media (max-width: 992px){
+  .section-grid, .cards, .devs, .discover-row{ grid-template-columns: 1fr; }
+}

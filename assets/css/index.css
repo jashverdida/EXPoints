@@ -203,6 +203,46 @@ main.container-xl > *{
   box-shadow:inset 0 1px 0 #ffffff33;
 }
 
+.avatar-nav::after{
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background-image: url('../img/lara.jpg');
+  background-size: cover;
+  background-position: center;
+  border-radius: 50%;
+  z-index: 2;
+}
+
+/* avatar-us styling */
+.avatar-us::before{
+  content:"";
+  position:absolute;
+  inset:2px;
+  border-radius:50%;
+  background:
+    radial-gradient(65% 65% at 30% 25%, #ffffff29 0 40%, transparent 41%),
+    linear-gradient(180deg,#0f1e5a,#0a1344);
+  box-shadow:inset 0 1px 0 #ffffff33;
+}
+
+.avatar-us::after{
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  right: 2px;
+  bottom: 2px;
+  background-image: url('../img/lara.jpg');
+  background-size: cover;
+  background-position: center;
+  border-radius: 50%;
+  z-index: 2;
+}
+
 /* ========== Cards (larger) ========== */
 .card-post,
 .card-reply,
@@ -240,7 +280,8 @@ main.container-xl > * + *{
 
 /* avatars (bigger) */
 .avatar-lg,
-.avatar-sm{
+.avatar-sm,
+.avatar-us{
   position:relative;
   border-radius:50%;
   padding:2px;
@@ -540,7 +581,8 @@ main.container-xl > * + *{
 .dropdown-menu{
   position:absolute;
   top:calc(100% + 8px);
-  right:0;
+  left:50%;
+  transform:translateX(-50%) translateY(-20px) scaleY(0.8);
   min-width:140px;
   background:transparent;
   border:none;
@@ -548,7 +590,6 @@ main.container-xl > * + *{
   box-shadow:none;
   opacity:0;
   visibility:hidden;
-  transform:translateY(-20px) scaleY(0.8);
   transform-origin:top center;
   transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   z-index:10001;
@@ -557,7 +598,7 @@ main.container-xl > * + *{
 .dropdown-menu.show{
   opacity:1;
   visibility:visible;
-  transform:translateY(0) scaleY(1);
+  transform:translateX(-50%) translateY(0) scaleY(1);
 }
 
 .dropdown-item{

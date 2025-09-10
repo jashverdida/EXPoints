@@ -41,6 +41,30 @@ body{
   line-height:1.48;
 }
 
+/* Top-right avatar (clickable) */
+.right .avatar-nav{
+  display: inline-block;        /* keep it sized like an icon */
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;             /* hide the extra image */
+  flex: 0 0 44px;               /* don't stretch in flex row */
+  cursor: pointer;
+}
+
+.avatar-nav img {
+  position: absolute;
+  inset: 2px;                   /* keeps the inner ring space */
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  border-radius: 50%;
+  object-fit: cover;            /* ✅ ensures image fills circle */
+  object-position: center;      /* ✅ keeps face centered */
+  display: block;
+}
+
+
+
 /* ========== Layout container (wider) ========== */
 .container-xl{
   width:min(98vw, 1840px);

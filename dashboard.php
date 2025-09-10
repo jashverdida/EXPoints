@@ -35,8 +35,10 @@
           </div>
         </div>
         <button class="icon" title="Notifications"><i class="bi bi-bell"></i></button>
-        <div class="avatar-nav"></div>
-      </div>
+        <a href="profile.php" class="avatar-nav">
+  <img src="assets/img/lara.jpg" alt="Profile" class="avatar-img">
+</a>
+</div>
     </header>
   </div>
 

@@ -1,0 +1,45 @@
+/* Admin extensions reusing tokens from index.css */
+
+.admin-grid{
+  display:grid;
+  grid-template-columns: 2fr 1fr;
+  gap:24px;
+}
+
+.admin-card{
+  border:1.5px solid var(--line);
+  border-radius:1.2rem;
+  background:linear-gradient(180deg,#12225ae6,#0b1537e6);
+  box-shadow:0 18px 50px #0008;
+  padding:1.25rem 1.25rem 1.5rem;
+}
+
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.metric{border:1px solid var(--line);border-radius:.9rem;padding:1rem 1.1rem;background:rgba(255,255,255,.06);text-align:center}
+.m-num{display:block;font-weight:800;font-size:1.6rem}
+.m-label{display:block;color:#cfe0ff}
+
+.activity{margin:0;padding-left:1.1rem}
+.activity li{margin:.35rem 0}
+
+.links{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.quick{display:block;text-decoration:none;color:var(--ink);border:1px solid var(--line);border-radius:.9rem;padding:1rem 1.1rem;background:rgba(255,255,255,.06)}
+.quick i{margin-right:.5rem;color:var(--brand)}
+
+/* Reporting menus */
+.card-post.report{position:relative}
+.admin-menu{position:absolute;right:12px;bottom:64px;min-width:200px;padding:.35rem;border-radius:.7rem;border:1px solid var(--line);background:#0d1733;box-shadow:0 14px 34px #0009;display:none}
+.admin-menu.show{display:block}
+.admin-menu button{display:flex;align-items:center;gap:.5rem;width:100%;padding:.6rem .75rem;background:transparent;border:0;color:var(--ink);text-align:left}
+.admin-menu button i{color:#3aa8ff}
+
+.admin-table{--bs-table-bg: transparent}
+
+@media (max-width:1200px){
+  .admin-grid{grid-template-columns:1fr}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .links{grid-template-columns:1fr}
+}
+
+
+

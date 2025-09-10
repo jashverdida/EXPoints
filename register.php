@@ -100,5 +100,93 @@
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Firebase Registration Script -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAX8oYh-i_9Qe2RU8qNUidmx0OWrIJZPFY",
+    authDomain: "expoints-d6461.firebaseapp.com",
+    projectId: "expoints-d6461",
+    storageBucket: "expoints-d6461.firebasestorage.app",
+    messagingSenderId: "798336813425",
+    appId: "1:798336813425:web:38cd94cc67234738a00ed0",
+    measurementId: "G-EV96R3ZL8D"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+
+  // Handle form submission
+  document.querySelector('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const firstName = document.getElementById('firstName').value;
+    const lastName = document.getElementById('lastName').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPass').value;
+    const confirmPassword = document.getElementById('regPass2').value;
+
+    // Basic validation
+    if (!firstName || !lastName || !email || !password) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      alert('Password must be at least 6 characters long');
+      return;
+    }
+
+    try {
+      // Create user with Firebase
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Get Firebase ID Token
+      const idToken = await user.getIdToken();
+
+      // Send user data to backend - PHP will handle Firestore sync with Admin SDK
+      const userData = {
+        idToken: idToken,
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        uid: user.uid,
+        password: password
+      };
+
+      fetch("register_user.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(userData)
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          // Redirect to dashboard immediately - no alert
+          window.location.href = "dashboard.php";
+        } else {
+          alert("Registration failed: " + data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Backend error:', error);
+        alert('Registration failed: ' + error.message);
+      });
+
+    } catch (error) {
+      console.error('Firebase error:', error);
+      alert("Registration failed: " + error.message);
+    }
+  });
+</script>
 </body>
 </html>

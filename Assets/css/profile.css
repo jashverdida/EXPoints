@@ -233,3 +233,63 @@ body{
 .corner-icon.right{
   right:18px;
 }
+
+.edit-controls
+{
+  position:absolute;
+  top:12px;
+  right:16px;
+  left: auto;
+  display:flex;
+  gap:8px;
+  z-index:999; /* make sure it sits above the card contents */
+}
+
+.btn-light-subtle
+{
+  background:#ffffff14;
+  color:#fff;
+  border:1px solid #ffffff2a;
+}
+
+.modal-backdrop
+{
+  position:fixed;
+  inset:0;
+  background:#0009;
+  display:grid;
+  place-items:center;
+  z-index:1050;
+}
+
+.modal-card
+{
+  background:#0c1636;
+  border:1px solid var(--line);
+  color:#fff;
+  padding:20px;
+  border-radius:14px;
+  width:min(380px,90vw);
+  box-shadow:0 12px 40px #000b;
+}
+
+.d-none
+{
+  display:none !important;
+}
+
+/* push name down only during editing so it won't collide with buttons */
+.card-glass.editing .content-shift{
+  margin-top: 40px;
+}
+
+/* tiny polish for the small url input inserted into the Favorite Game card */
+#game_url_input{
+  margin-bottom: 8px;
+}
+
+/* keep the Favorite Game card intact */
+.img-edit-wrap{
+  width: 100%;
+}
+

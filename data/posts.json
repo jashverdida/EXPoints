@@ -1,0 +1,22 @@
+[
+    {
+        "id": 1,
+        "game": "cyberpunk-2077",
+        "title": "Very Glitchy Game",
+        "content": "in PS4 Cyberpunk 2077 isnt very good as there are so many different bugs",
+        "username": "YourUsername",
+        "likes": 0,
+        "comments": 0,
+        "created_at": "2025-09-18 22:43:53"
+    },
+    {
+        "id": 2,
+        "game": "baldurs-gate-3",
+        "title": "Game of the year!",
+        "content": "This is the best game!",
+        "username": "YourUsername",
+        "likes": 0,
+        "comments": 0,
+        "created_at": "2025-09-18 22:44:17"
+    }
+]

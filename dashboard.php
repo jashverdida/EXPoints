@@ -1,3 +1,39 @@
+<?php
+// Handle form submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['action']) && $_POST['action'] === 'create_post') {
+        // Redirect to posts.php for processing
+        header('Location: posts.php');
+        exit;
+    }
+}
+
+// Get posts from file storage
+$postsFile = 'data/posts.json';
+$posts = [];
+if (file_exists($postsFile)) {
+    $postsData = file_get_contents($postsFile);
+    $posts = json_decode($postsData, true) ?: [];
+}
+
+// Handle success/error messages
+$successMessage = '';
+$errorMessage = '';
+if (isset($_GET['success'])) {
+    switch ($_GET['success']) {
+        case 'post_created':
+            $successMessage = 'Post created successfully!';
+            break;
+    }
+}
+if (isset($_GET['error'])) {
+    switch ($_GET['error']) {
+        case 'missing_fields':
+            $errorMessage = 'Please fill in all required fields.';
+            break;
+    }
+}
+?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -43,46 +79,76 @@
   </div>
 
   <main class="container-xl py-4">
-    <!-- Post a Review Form -->
+    <!-- Success/Error Messages -->
+    <?php if ($successMessage): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      <?php echo htmlspecialchars($successMessage); ?>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php endif; ?>
+    
+    <?php if ($errorMessage): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <?php echo htmlspecialchars($errorMessage); ?>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php endif; ?>
+
+    <!-- Post a Review Section -->
     <section class="card-post-form">
       <div class="row gap-3 align-items-start">
         <div class="col-auto"><div class="avatar-us"></div></div>
         <div class="col">
-          <h3 class="form-title mb-3">Post a Review</h3>
-          <form id="postForm" class="post-form">
-            <div class="form-group mb-3">
-              <label for="gameSelect" class="form-label">Select Game</label>
-              <select id="gameSelect" class="form-select" required>
-                <option value="">Choose a game to review...</option>
-                <option value="elden-ring">Elden Ring</option>
-                <option value="cyberpunk-2077">Cyberpunk 2077</option>
-                <option value="baldurs-gate-3">Baldur's Gate 3</option>
-                <option value="spider-man-2">Spider-Man 2</option>
-                <option value="zelda-totk">The Legend of Zelda: Tears of the Kingdom</option>
-                <option value="hogwarts-legacy">Hogwarts Legacy</option>
-                <option value="diablo-4">Diablo IV</option>
-                <option value="starfield">Starfield</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-            <div class="form-group mb-3">
-              <label for="postTitle" class="form-label">Review Title</label>
-              <input type="text" id="postTitle" class="form-input" placeholder="Enter your review title..." required>
-            </div>
-            <div class="form-group mb-3">
-              <label for="postContent" class="form-label">Your Review</label>
-              <textarea id="postContent" class="form-textarea" placeholder="Share your thoughts about the game..." rows="4" required></textarea>
-            </div>
-            <div class="form-actions">
-              <button type="button" id="cancelPost" class="btn-cancel">Cancel</button>
-              <button type="submit" class="btn-post">Post Review</button>
-            </div>
-          </form>
+          <!-- Simple textbox (initial state) -->
+          <div id="simplePostBox" class="simple-post-box">
+            <input type="text" id="simplePostInput" class="simple-post-input" placeholder="What's on your mind, @YourUsername?" readonly>
+          </div>
+          
+          <!-- Expanded form (hidden initially) -->
+          <div id="expandedPostForm" class="expanded-post-form" style="display: none;">
+            <h3 class="form-title mb-3">Post a Review</h3>
+            <form id="postForm" class="post-form" method="POST" action="posts.php">
+              <input type="hidden" name="action" value="create">
+              <div class="form-group mb-3">
+                <label for="gameSelect" class="form-label">Select Game</label>
+                <select id="gameSelect" name="game" class="form-select" required>
+                  <option value="">Choose a game to review...</option>
+                  <option value="elden-ring">Elden Ring</option>
+                  <option value="cyberpunk-2077">Cyberpunk 2077</option>
+                  <option value="baldurs-gate-3">Baldur's Gate 3</option>
+                  <option value="spider-man-2">Spider-Man 2</option>
+                  <option value="zelda-totk">The Legend of Zelda: Tears of the Kingdom</option>
+                  <option value="hogwarts-legacy">Hogwarts Legacy</option>
+                  <option value="diablo-4">Diablo IV</option>
+                  <option value="starfield">Starfield</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="form-group mb-3">
+                <label for="postTitle" class="form-label">Review Title</label>
+                <input type="text" id="postTitle" name="title" class="form-input" placeholder="Enter your review title..." required>
+              </div>
+              <div class="form-group mb-3">
+                <label for="postContent" class="form-label">Your Review</label>
+                <textarea id="postContent" name="content" class="form-textarea" placeholder="Share your thoughts about the game..." rows="4" required></textarea>
+              </div>
+              <div class="form-group mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" name="username" class="form-input" value="YourUsername" readonly>
+              </div>
+              <div class="form-actions">
+                <button type="button" id="cancelPost" class="btn-cancel">Cancel</button>
+                <button type="submit" class="btn-post">Post Review</button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Existing Posts (Other Users) -->
+    <!-- Dynamic Posts from Database -->
+    <?php if (empty($posts)): ?>
+    <!-- Default post when no posts exist -->
     <article class="card-post">
       <div class="post-header">
         <div class="row gap-3 align-items-start">
@@ -131,34 +197,52 @@
         </div>
       </div>
     </article>
-
-    <!-- Reply -->
-    <article class="card-reply">
-      <div class="row g-3 align-items-center">
-        <div class="col-auto"><div class="avatar-sm"></div></div>
-        <div class="col">
-          <div class="author fw-semibold">Kenji Parilla</div>
-          <div class="reply">Sounds like a skill issue ngl</div>
+    <?php else: ?>
+    <!-- Display posts from database -->
+    <?php foreach (array_reverse($posts) as $post): ?>
+    <article class="card-post" data-post-id="<?php echo $post['id']; ?>">
+      <div class="post-header">
+        <div class="row gap-3 align-items-start">
+          <div class="col-auto"><div class="avatar-lg"></div></div>
+          <div class="col">
+            <div class="game-badge"><?php echo htmlspecialchars($post['game']); ?></div>
+            <h2 class="title mb-1"><?php echo htmlspecialchars($post['title']); ?></h2>
+            <div class="handle mb-3">@<?php echo htmlspecialchars($post['username']); ?></div>
+            <p class="mb-3"><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
+            <small class="text-white">Posted on <?php echo date('M j, Y g:i A', strtotime($post['created_at'])); ?></small>
+          </div>
         </div>
-        <div class="col-auto">
-          <div class="actions">
-            <span class="a"><i class="bi bi-star"></i><b>4</b></span>
-            <span class="a"><i class="bi bi-chat-left-text"></i></span>
-            <button class="icon more" aria-label="More"><i class="bi bi-three-dots-vertical"></i></button>
+        <div class="post-menu">
+          <button class="icon more" aria-label="More"><i class="bi bi-three-dots-vertical"></i></button>
+          <div class="post-dropdown">
+            <button class="dropdown-item edit-post" data-post-id="<?php echo $post['id']; ?>"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="dropdown-item delete-post" data-post-id="<?php echo $post['id']; ?>"><i class="bi bi-trash"></i> Delete</button>
+          </div>
+        </div>
+      </div>
+      <div class="actions">
+        <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b><?php echo $post['likes']; ?></b></span>
+        <span class="a comment-btn" data-comments="<?php echo $post['comments']; ?>"><i class="bi bi-chat-left-text"></i><b><?php echo $post['comments']; ?></b></span>
+      </div>
+      <div class="comments-section" style="display: none;">
+        <div class="comments-list">
+          <!-- Comments will be loaded here -->
+        </div>
+        <div class="comment-input-section">
+          <div class="row g-3 align-items-center">
+            <div class="col-auto"><div class="avatar-sm"></div></div>
+            <div class="col">
+              <input class="comment-input" placeholder="Write a Comment on this post!" />
+            </div>
+            <div class="col-auto">
+              <button class="btn-comment">Post</button>
+            </div>
           </div>
         </div>
       </div>
     </article>
-
-    <!-- Comment -->
-    <section class="card-input">
-      <div class="row g-3 align-items-center">
-        <div class="col-auto"><div class="avatar-sm"></div></div>
-        <div class="col">
-          <input class="comment" placeholder="Write a Comment on this post!" />
-        </div>
-      </div>
-    </section>
+    <?php endforeach; ?>
+    <?php endif; ?>
   </main>
 
   <!-- Slide-in sidebar (inside the body) -->
@@ -235,6 +319,9 @@
       });
 
       // Post form functionality
+      const simplePostBox = document.getElementById('simplePostBox');
+      const simplePostInput = document.getElementById('simplePostInput');
+      const expandedPostForm = document.getElementById('expandedPostForm');
       const postForm = document.getElementById('postForm');
       const cancelPost = document.getElementById('cancelPost');
       const confirmationModal = document.getElementById('confirmationModal');
@@ -243,32 +330,36 @@
       const cancelDelete = document.getElementById('cancelDelete');
       const confirmDelete = document.getElementById('confirmDelete');
 
-      // Handle form submission
+      // Expand form when simple input is clicked
+      simplePostInput.addEventListener('click', function() {
+        simplePostBox.style.display = 'none';
+        expandedPostForm.style.display = 'block';
+        // Focus on the title input
+        document.getElementById('postTitle').focus();
+      });
+
+      // Handle form submission - let it submit naturally to posts.php
       postForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
         const gameSelect = document.getElementById('gameSelect').value;
         const postTitle = document.getElementById('postTitle').value;
         const postContent = document.getElementById('postContent').value;
+        const username = document.getElementById('username').value;
         
-        if (!gameSelect || !postTitle || !postContent) {
+        if (!gameSelect || !postTitle || !postContent || !username) {
+          e.preventDefault();
           alert('Please fill in all fields');
           return;
         }
         
-        // Create new post element
-        createNewPost(gameSelect, postTitle, postContent);
-        
-        // Reset form
-        postForm.reset();
-        
-        // Show confirmation modal
-        confirmationModal.style.display = 'flex';
+        // Form will submit to posts.php which will redirect back to dashboard
       });
 
       // Handle cancel button
       cancelPost.addEventListener('click', function() {
         postForm.reset();
+        // Collapse back to simple textbox
+        expandedPostForm.style.display = 'none';
+        simplePostBox.style.display = 'block';
       });
 
       // Close confirmation modal
@@ -454,7 +545,8 @@
         if (editBtn) {
           editBtn.addEventListener('click', function() {
             dropdown.classList.remove('show');
-            editPost(postElement);
+            const postId = editBtn.getAttribute('data-post-id');
+            editPost(postElement, postId);
           });
         }
 
@@ -462,9 +554,11 @@
         if (deleteBtn) {
           deleteBtn.addEventListener('click', function() {
             dropdown.classList.remove('show');
+            const postId = deleteBtn.getAttribute('data-post-id');
             deleteModal.style.display = 'flex';
             
             confirmDelete.onclick = function() {
+              deletePost(postId);
               postElement.remove();
               deleteModal.style.display = 'none';
             };
@@ -473,22 +567,114 @@
       }
 
       // Function to edit post
-      function editPost(postElement) {
+      function editPost(postElement, postId) {
         const titleElement = postElement.querySelector('.title');
         const contentElement = postElement.querySelector('p');
         
         const currentTitle = titleElement.textContent;
         const currentContent = contentElement.textContent;
         
-        const newTitle = prompt('Edit title:', currentTitle);
-        if (newTitle !== null && newTitle.trim() !== '') {
-          titleElement.textContent = newTitle;
-        }
+        // Create inline editing form
+        const editForm = document.createElement('div');
+        editForm.className = 'edit-form';
+        editForm.innerHTML = `
+          <div class="edit-form-container">
+            <h4 class="edit-form-title">Edit Post</h4>
+            <div class="form-group">
+              <label class="form-label">Title</label>
+              <input type="text" class="form-input edit-title-input" value="${currentTitle}" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Content</label>
+              <textarea class="form-textarea edit-content-input" rows="4">${currentContent}</textarea>
+            </div>
+            <div class="edit-form-actions">
+              <button class="btn-cancel-edit">Cancel</button>
+              <button class="btn-save-edit">Save Changes</button>
+            </div>
+          </div>
+        `;
         
-        const newContent = prompt('Edit content:', currentContent);
-        if (newContent !== null && newContent.trim() !== '') {
-          contentElement.textContent = newContent;
-        }
+        // Replace content with edit form
+        const postContent = postElement.querySelector('.col');
+        const originalContent = postContent.innerHTML;
+        postContent.innerHTML = '';
+        postContent.appendChild(editForm);
+        
+        // Add event listeners
+        const cancelBtn = editForm.querySelector('.btn-cancel-edit');
+        const saveBtn = editForm.querySelector('.btn-save-edit');
+        const titleInput = editForm.querySelector('.edit-title-input');
+        const contentInput = editForm.querySelector('.edit-content-input');
+        
+        cancelBtn.addEventListener('click', function() {
+          postContent.innerHTML = originalContent;
+        });
+        
+        saveBtn.addEventListener('click', function() {
+          const newTitle = titleInput.value.trim();
+          const newContent = contentInput.value.trim();
+          
+          if (newTitle && newContent) {
+            // Send PUT request to update post
+            updatePost(postId, newTitle, newContent);
+            titleElement.textContent = newTitle;
+            contentElement.textContent = newContent;
+            postContent.innerHTML = originalContent;
+          } else {
+            alert('Please fill in all fields');
+          }
+        });
+      }
+
+      // Function to update post via PUT request
+      function updatePost(postId, title, content) {
+        const formData = new FormData();
+        formData.append('action', 'update');
+        formData.append('id', postId);
+        formData.append('title', title);
+        formData.append('content', content);
+
+        fetch('posts.php', {
+          method: 'PUT',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log('Post updated successfully');
+          } else {
+            alert('Error updating post: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error updating post');
+        });
+      }
+
+      // Function to delete post via DELETE request
+      function deletePost(postId) {
+        const formData = new FormData();
+        formData.append('action', 'delete');
+        formData.append('id', postId);
+
+        fetch('posts.php', {
+          method: 'DELETE',
+          body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log('Post deleted successfully');
+          } else {
+            alert('Error deleting post: ' + data.message);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error deleting post');
+        });
       }
 
       // Function to add comment
@@ -503,9 +689,87 @@
               <div class="comment-author">@YourUsername</div>
               <div class="comment-text">${commentText}</div>
             </div>
+            <div class="col-auto">
+              <div class="comment-actions">
+                <button class="btn-edit-comment" title="Edit Comment"><i class="bi bi-pencil"></i></button>
+                <button class="btn-delete-comment" title="Delete Comment"><i class="bi bi-trash"></i></button>
+              </div>
+            </div>
           </div>
         `;
         commentsList.appendChild(commentElement);
+        
+        // Add event listeners for comment actions
+        addCommentEventListeners(commentElement);
+      }
+
+      // Function to add event listeners to comments
+      function addCommentEventListeners(commentElement) {
+        const editBtn = commentElement.querySelector('.btn-edit-comment');
+        const deleteBtn = commentElement.querySelector('.btn-delete-comment');
+        const commentText = commentElement.querySelector('.comment-text');
+
+        // Edit comment functionality
+        if (editBtn) {
+          editBtn.addEventListener('click', function() {
+            const currentText = commentText.textContent;
+            
+            // Create inline editing form for comment
+            const editForm = document.createElement('div');
+            editForm.className = 'comment-edit-form';
+            editForm.innerHTML = `
+              <div class="comment-edit-container">
+                <textarea class="form-textarea comment-edit-input" rows="2">${currentText}</textarea>
+                <div class="comment-edit-actions">
+                  <button class="btn-cancel-comment-edit">Cancel</button>
+                  <button class="btn-save-comment-edit">Save</button>
+                </div>
+              </div>
+            `;
+            
+            // Replace comment text with edit form
+            const commentContainer = commentText.parentElement;
+            const originalContent = commentContainer.innerHTML;
+            commentContainer.innerHTML = '';
+            commentContainer.appendChild(editForm);
+            
+            // Add event listeners
+            const cancelBtn = editForm.querySelector('.btn-cancel-comment-edit');
+            const saveBtn = editForm.querySelector('.btn-save-comment-edit');
+            const textInput = editForm.querySelector('.comment-edit-input');
+            
+            cancelBtn.addEventListener('click', function() {
+              commentContainer.innerHTML = originalContent;
+            });
+            
+            saveBtn.addEventListener('click', function() {
+              const newText = textInput.value.trim();
+              if (newText) {
+                commentText.textContent = newText;
+                commentContainer.innerHTML = originalContent;
+              } else {
+                alert('Comment cannot be empty');
+              }
+            });
+          });
+        }
+
+        // Delete comment functionality
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete this comment?')) {
+              commentElement.remove();
+              
+              // Update comment count
+              const postElement = commentElement.closest('.card-post');
+              const commentBtn = postElement.querySelector('.comment-btn');
+              const countElement = commentBtn.querySelector('b');
+              const currentCount = parseInt(countElement.textContent);
+              countElement.textContent = Math.max(0, currentCount - 1);
+              commentBtn.setAttribute('data-comments', Math.max(0, currentCount - 1));
+            }
+          });
+        }
       }
 
       // Add event listeners to existing posts
@@ -514,4 +778,6 @@
   </script>
 
 </body>
+</html>
+
 </html>

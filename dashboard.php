@@ -655,10 +655,8 @@ if (isset($_GET['error'])) {
             // Send PUT request to update post
             updatePost(postId, newTitle, newContent, function(success) {
               if (success) {
-                // Update the DOM immediately
-                titleElement.textContent = newTitle;
-                contentElement.textContent = newContent;
-                postContent.innerHTML = originalContent;
+                // Force page reload to show updated content
+                window.location.reload();
               }
             });
           } else {
@@ -868,6 +866,11 @@ if (isset($_GET['error'])) {
 
       // Add event listeners to existing posts
       document.querySelectorAll('.card-post').forEach(addPostEventListeners);
+      
+      // Add event listeners to all existing comment buttons
+      document.querySelectorAll('.comment-item').forEach(function(commentElement) {
+        addCommentEventListeners(commentElement);
+      });
     });
   </script>
 

@@ -226,7 +226,25 @@ if (isset($_GET['error'])) {
       </div>
       <div class="comments-section" style="display: none;">
         <div class="comments-list">
-          <!-- Comments will be loaded here -->
+          <?php if (isset($post['comments_list']) && !empty($post['comments_list'])): ?>
+            <?php foreach ($post['comments_list'] as $comment): ?>
+              <div class="comment-item">
+                <div class="row g-3 align-items-center">
+                  <div class="col-auto"><div class="avatar-sm"></div></div>
+                  <div class="col">
+                    <div class="comment-author">@<?php echo htmlspecialchars($comment['username']); ?></div>
+                    <div class="comment-text"><?php echo htmlspecialchars($comment['text']); ?></div>
+                  </div>
+                  <div class="col-auto">
+                    <div class="comment-actions">
+                      <button class="btn-edit-comment" title="Edit Comment"><i class="bi bi-pencil"></i></button>
+                      <button class="btn-delete-comment" title="Delete Comment"><i class="bi bi-trash"></i></button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
         </div>
         <div class="comment-input-section">
           <div class="row g-3 align-items-center">
@@ -522,14 +540,32 @@ if (isset($_GET['error'])) {
           postCommentBtn.addEventListener('click', function() {
             const commentText = commentInput.value.trim();
             if (commentText) {
-              addComment(postElement, commentText);
-              commentInput.value = '';
-              
-              // Update comment count
-              const countElement = commentBtn.querySelector('b');
-              const currentCount = parseInt(countElement.textContent);
-              countElement.textContent = currentCount + 1;
-              commentBtn.setAttribute('data-comments', currentCount + 1);
+              const postId = postElement.getAttribute('data-post-id');
+              if (postId) {
+                // Save comment to backend
+                saveComment(postId, commentText, function(success) {
+                  if (success) {
+                    addComment(postElement, commentText);
+                    commentInput.value = '';
+                    
+                    // Update comment count
+                    const countElement = commentBtn.querySelector('b');
+                    const currentCount = parseInt(countElement.textContent);
+                    countElement.textContent = currentCount + 1;
+                    commentBtn.setAttribute('data-comments', currentCount + 1);
+                  }
+                });
+              } else {
+                // Fallback for posts without data-post-id
+                addComment(postElement, commentText);
+                commentInput.value = '';
+                
+                // Update comment count
+                const countElement = commentBtn.querySelector('b');
+                const currentCount = parseInt(countElement.textContent);
+                countElement.textContent = currentCount + 1;
+                commentBtn.setAttribute('data-comments', currentCount + 1);
+              }
             }
           });
 
@@ -617,10 +653,14 @@ if (isset($_GET['error'])) {
           
           if (newTitle && newContent) {
             // Send PUT request to update post
-            updatePost(postId, newTitle, newContent);
-            titleElement.textContent = newTitle;
-            contentElement.textContent = newContent;
-            postContent.innerHTML = originalContent;
+            updatePost(postId, newTitle, newContent, function(success) {
+              if (success) {
+                // Update the DOM immediately
+                titleElement.textContent = newTitle;
+                contentElement.textContent = newContent;
+                postContent.innerHTML = originalContent;
+              }
+            });
           } else {
             alert('Please fill in all fields');
           }
@@ -628,40 +668,54 @@ if (isset($_GET['error'])) {
       }
 
       // Function to update post via PUT request
-      function updatePost(postId, title, content) {
-        const formData = new FormData();
-        formData.append('action', 'update');
-        formData.append('id', postId);
-        formData.append('title', title);
-        formData.append('content', content);
+      function updatePost(postId, title, content, callback) {
+        // Send data as URL-encoded string instead of FormData
+        const data = `action=update&id=${encodeURIComponent(postId)}&title=${encodeURIComponent(title)}&content=${encodeURIComponent(content)}`;
+
+        console.log('Sending PUT request with:', {
+          postId: postId,
+          title: title,
+          content: content
+        });
 
         fetch('posts.php', {
           method: 'PUT',
-          body: formData
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: data
         })
-        .then(response => response.json())
+        .then(response => {
+          console.log('Response status:', response.status);
+          return response.json();
+        })
         .then(data => {
+          console.log('Response data:', data);
           if (data.success) {
             console.log('Post updated successfully');
+            if (callback) callback(true);
           } else {
             alert('Error updating post: ' + data.message);
+            if (callback) callback(false);
           }
         })
         .catch(error => {
           console.error('Error:', error);
-          alert('Error updating post');
+          alert('Error updating post: ' + error.message);
+          if (callback) callback(false);
         });
       }
 
       // Function to delete post via DELETE request
       function deletePost(postId) {
-        const formData = new FormData();
-        formData.append('action', 'delete');
-        formData.append('id', postId);
+        const data = `action=delete&id=${encodeURIComponent(postId)}`;
 
         fetch('posts.php', {
           method: 'DELETE',
-          body: formData
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: data
         })
         .then(response => response.json())
         .then(data => {
@@ -674,6 +728,34 @@ if (isset($_GET['error'])) {
         .catch(error => {
           console.error('Error:', error);
           alert('Error deleting post');
+        });
+      }
+
+      // Function to save comment to backend
+      function saveComment(postId, commentText, callback) {
+        const data = `action=add_comment&post_id=${encodeURIComponent(postId)}&comment_text=${encodeURIComponent(commentText)}&username=YourUsername`;
+
+        fetch('posts.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: data
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            console.log('Comment saved successfully');
+            if (callback) callback(true);
+          } else {
+            alert('Error saving comment: ' + data.message);
+            if (callback) callback(false);
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          alert('Error saving comment');
+          if (callback) callback(false);
         });
       }
 
@@ -745,8 +827,20 @@ if (isset($_GET['error'])) {
             saveBtn.addEventListener('click', function() {
               const newText = textInput.value.trim();
               if (newText) {
+                // Update the comment text
                 commentText.textContent = newText;
+                
+                // Restore the original content with updated text
                 commentContainer.innerHTML = originalContent;
+                
+                // Update the comment text in the restored content
+                const updatedCommentText = commentContainer.querySelector('.comment-text');
+                if (updatedCommentText) {
+                  updatedCommentText.textContent = newText;
+                }
+                
+                // Re-add event listeners to the restored content
+                addCommentEventListeners(commentContainer.closest('.comment-item'));
               } else {
                 alert('Comment cannot be empty');
               }

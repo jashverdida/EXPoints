@@ -62,7 +62,8 @@ switch ($method) {
                     'username' => $username,
                     'likes' => 0,
                     'comments' => 0,
-                    'created_at' => date('Y-m-d H:i:s')
+                    'created_at' => date('Y-m-d H:i:s'),
+                    'comments_list' => []
                 ];
                 
                 $posts[] = $newPost;
@@ -76,11 +77,57 @@ switch ($method) {
                 exit;
             }
         }
+        // Add comment to post
+        elseif (isset($_POST['action']) && $_POST['action'] === 'add_comment') {
+            $postId = intval($_POST['post_id'] ?? 0);
+            $commentText = $_POST['comment_text'] ?? '';
+            $username = $_POST['username'] ?? 'YourUsername';
+            
+            if ($postId > 0 && !empty($commentText)) {
+                $posts = getPosts();
+                $found = false;
+                foreach ($posts as &$post) {
+                    if ($post['id'] == $postId) {
+                        if (!isset($post['comments_list'])) {
+                            $post['comments_list'] = [];
+                        }
+                        $post['comments_list'][] = [
+                            'id' => uniqid(),
+                            'text' => $commentText,
+                            'username' => $username,
+                            'created_at' => date('Y-m-d H:i:s')
+                        ];
+                        $post['comments'] = count($post['comments_list']);
+                        $found = true;
+                        break;
+                    }
+                }
+                
+                if ($found) {
+                    savePosts($posts);
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => 'Comment added successfully']);
+                    exit;
+                } else {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'Post not found']);
+                    exit;
+                }
+            } else {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Invalid comment data']);
+                exit;
+            }
+        }
         break;
         
     case 'PUT':
         // Update existing post
-        parse_str(file_get_contents("php://input"), $putData);
+        $input = file_get_contents("php://input");
+        parse_str($input, $putData);
+        
+        // Debug: Log the received data
+        error_log("PUT Data received: " . print_r($putData, true));
         
         if (isset($putData['action']) && $putData['action'] === 'update') {
             $id = intval($putData['id'] ?? 0);
@@ -89,20 +136,36 @@ switch ($method) {
             
             if ($id > 0 && !empty($title) && !empty($content)) {
                 $posts = getPosts();
+                $found = false;
                 foreach ($posts as &$post) {
                     if ($post['id'] == $id) {
                         $post['title'] = $title;
                         $post['content'] = $content;
                         $post['updated_at'] = date('Y-m-d H:i:s');
+                        $found = true;
                         break;
                     }
                 }
-                savePosts($posts);
                 
+                if ($found) {
+                    savePosts($posts);
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => true, 'message' => 'Post updated successfully']);
+                    exit;
+                } else {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'Post not found']);
+                    exit;
+                }
+            } else {
                 header('Content-Type: application/json');
-                echo json_encode(['success' => true, 'message' => 'Post updated successfully']);
+                echo json_encode(['success' => false, 'message' => 'Invalid data provided']);
                 exit;
             }
+        } else {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Invalid action']);
+            exit;
         }
         break;
         

@@ -10,7 +10,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="assets/css/register.css" />
+  <link rel="stylesheet" href="/EXPoints/assets/css/register.css" />
 </head>
 <body>
 <main class="container py-5 app-container">
@@ -27,11 +27,11 @@
 
         <!-- Centered logo -->
         <div class="auth-logo">
-          <img src="assets/img/EXPoints Logo.png" alt="EXPoints Logo">
+          <img src="/EXPoints/assets/img/EXPoints Logo.png" alt="EXPoints Logo">
         </div>
 
         <!-- Panda mascot -->
-        <img class="auth-panda-register" src="assets/img/registerpanda.png" alt="Register Panda">
+        <img class="auth-panda-register" src="/EXPoints/assets/img/registerpanda.png" alt="Register Panda">
       </div>
 
       <!-- Register Form -->

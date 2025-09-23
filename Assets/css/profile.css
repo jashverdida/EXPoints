@@ -273,6 +273,42 @@ body{
   box-shadow:0 12px 40px #000b;
 }
 
+/* Make ONLY the single-post editor modal larger */
+#postEditor .modal-card{
+  width: min(720px, 92vw) !important;  /* override the 380px width */
+  padding: 24px 28px;
+  border-radius: 16px;
+  min-height: 520px;
+  display: flex;
+  flex-direction: column;
+}
+
+#postEditor .actions{
+  margin-top: auto;
+}
+
+#postEditor #pe_comments{
+  min-height: 260px;
+  line-height: 1.5;
+  resize: vertical;
+  font-size: 0.95rem;
+}
+
+/* Comfortable, paragraph-style editor */
+#postEditor textarea{
+  min-height: 240px;     /* bigger typing area */
+  line-height: 1.5;
+  resize: vertical;
+  font-size: 0.95rem;
+}
+#postEditor .form-label{
+  color: #dfe7ff;
+  font-weight: 600;
+}
+#postEditor .btn{
+  min-width: 84px;
+}
+
 .d-none
 {
   display:none !important;
@@ -291,5 +327,7 @@ body{
 /* keep the Favorite Game card intact */
 .img-edit-wrap{
   width: 100%;
+  border-radius: 50% !important;
+  object-fit: cover;
 }
 

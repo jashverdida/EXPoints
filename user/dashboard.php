@@ -43,7 +43,7 @@ if (isset($_GET['error'])) {
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="assets/css/index.css">
+  <link rel="stylesheet" href="/EXPoints/assets/css/index.css">
 </head>
 <body>
 
@@ -51,7 +51,7 @@ if (isset($_GET['error'])) {
   <div class="container-xl mt-3">
     <header class="topbar">
       <a href="index.html" class="lp-brand" aria-label="+EXPoints home">
-        <img src="assets/img/EXPoints Logo.png" alt="+EXPoints" class="lp-brand-img">
+        <img src="/EXPoints/assets/img/EXPoints Logo.png" alt="+EXPoints" class="lp-brand-img">
       </a>
 
       <form class="search" role="search">
@@ -72,7 +72,7 @@ if (isset($_GET['error'])) {
         </div>
         <button class="icon" title="Notifications"><i class="bi bi-bell"></i></button>
         <a href="profile.php" class="avatar-nav">
-  <img src="assets/img/lara.jpg" alt="Profile" class="avatar-img">
+  <img src="/EXPoints/assets/img/lara.jpg" alt="Profile" class="avatar-img">
 </a>
 </div>
     </header>

@@ -7,7 +7,7 @@
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/login.css" />
+  <link rel="stylesheet" href="/EXPoints/assets/css/login.css" />
 </head>
 <body>
 
@@ -17,14 +17,14 @@
 
   <section class="auth-wrap">
     <div class="auth-card">
-      <img class="auth-mascot" src="assets/img/Login Panda Controller.png" alt="Panda mascot" />
+      <img class="auth-mascot" src="/EXPoints/assets/img/Login Panda Controller.png" alt="Panda mascot" />
 
       <a class="btn btn-play" href="index.php" aria-label="Back to Landing">
         <i class="bi bi-play-fill"></i>
       </a>
 
       <div class="auth-logo-wrap">
-        <img class="auth-logo-img" src="assets/img/EXPoints Logo.png" alt="+EXPoints" />
+        <img class="auth-logo-img" src="/EXPoints/assets/img/EXPoints Logo.png" alt="+EXPoints" />
       </div>
 
       <!-- Form -->

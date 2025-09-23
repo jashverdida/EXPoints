@@ -10,7 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Landing-only stylesheet -->
-    <link rel="stylesheet" href="assets/css/LandingPage.css" />
+    <link rel="stylesheet" href="/EXPoints/assets/css/LandingPage.css" />
   </head>
   <body>
 
@@ -18,7 +18,7 @@
     <header class="lp-header container-xl">
       <nav class="lp-nav">
         <a href="index.php" class="lp-brand">
-          <img src="assets/img/EXPoints Logo.png" alt="+EXPoints" class="lp-brand-img">
+          <img src="/EXPoints/assets/img/EXPoints Logo.png" alt="+EXPoints" class="lp-brand-img">
         </a>
 
         <ul class="lp-menu">
@@ -35,7 +35,7 @@
       <div class="lp-grid">
         <!-- Panda -->
         <div class="lp-panda">
-          <img src="assets/img/LandingPagePanda.png" alt="Panda mascot" class="lp-panda-img">
+          <img src="/EXPoints/assets/img/LandingPagePanda.png" alt="Panda mascot" class="lp-panda-img">
         </div>
 
         <!-- Copy + CTAs -->
@@ -66,11 +66,11 @@
   <aside class="posters">
     <div class="posters-track">
       <!-- A -->
-      <img class="strip" src="assets/img/BoxArt Strip - Landing Page.png" alt="Popular games strip A">
+      <img class="strip" src="/EXPoints/assets/img/BoxArt Strip - Landing Page.png" alt="Popular games strip A">
       <!-- B -->
-      <img class="strip" src="assets/img/BoxArt Strip - Landing Page 2.png" alt="Popular games strip B">
+      <img class="strip" src="/EXPoints/assets/img/BoxArt Strip - Landing Page 2.png" alt="Popular games strip B">
       <!-- A clone (for seamless loop) -->
-      <img class="strip" src="assets/img/BoxArt Strip - Landing Page.png" alt="" aria-hidden="true">
+      <img class="strip" src="/EXPoints/assets/img/BoxArt Strip - Landing Page.png" alt="" aria-hidden="true">
     </div>
   </aside>
 

@@ -10,10 +10,10 @@ $userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'User') : 'Guest';
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EXPoints • Popular</title>
+  <title>EXPoints • Games</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="assets/css/index.css">
+  <link rel="stylesheet" href="/EXPoints/assets/css/index.css">
 </head>
 <body>
 
@@ -62,23 +62,58 @@ $userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'User') : 'Guest';
   </div>
 
   <main class="container-xl py-4">
-    <h1 class="title mb-3">Popular Posts</h1>
+    <h1 class="title mb-3">Pick a Game</h1>
+    <div class="row g-3">
+      <div class="col-12 col-md-6 col-lg-4">
+        <a class="card-link d-block" href="#" onclick="filterGame('elden-ring');return false;">
+          <div class="card-post"><div class="p-3">Elden Ring</div></div>
+        </a>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+        <a class="card-link d-block" href="#" onclick="filterGame('bg3');return false;">
+          <div class="card-post"><div class="p-3">Baldur's Gate 3</div></div>
+        </a>
+      </div>
+      <div class="col-12 col-md-6 col-lg-4">
+        <a class="card-link d-block" href="#" onclick="filterGame('starfield');return false;">
+          <div class="card-post"><div class="p-3">Starfield</div></div>
+        </a>
+      </div>
+    </div>
 
-    <!-- Placeholder popular cards sorted by StarUps desc -->
-    <article class="card-post">
-      <div class="row gap-3 align-items-start">
-        <div class="col-auto"><div class="avatar-lg"></div></div>
-        <div class="col">
-          <h2 class="title mb-1">Top 10 Soulslikes</h2>
-          <div class="handle mb-3">@meta-gamer</div>
-          <p class="mb-3">A controversial list with solid arguments…</p>
+    <h2 class="title mt-4 mb-3">Posts</h2>
+    <div id="posts">
+      <article class="card-post" data-game="elden-ring">
+        <div class="row gap-3 align-items-start">
+          <div class="col-auto"><div class="avatar-lg"></div></div>
+          <div class="col">
+            <h2 class="title mb-1">Maliketh is underrated</h2>
+            <div class="handle mb-3">#elden-ring</div>
+            <p>…</p>
+          </div>
         </div>
-      </div>
-      <div class="actions">
-        <span class="a"><i class="bi bi-star"></i><b>502</b></span>
-        <span class="a"><i class="bi bi-chat-left-text"></i><b>96</b></span>
-      </div>
-    </article>
+      </article>
+      <article class="card-post" data-game="bg3">
+        <div class="row gap-3 align-items-start">
+          <div class="col-auto"><div class="avatar-lg"></div></div>
+          <div class="col">
+            <h2 class="title mb-1">Paladin Oathbreaker build</h2>
+            <div class="handle mb-3">#bg3</div>
+            <p>…</p>
+          </div>
+        </div>
+      </article>
+      <article class="card-post" data-game="starfield">
+        <div class="row gap-3 align-items-start">
+          <div class="col-auto"><div class="avatar-lg"></div></div>
+          <div class="col">
+            <h2 class="title mb-1">Shipbuilding tips</h2>
+            <div class="handle mb-3">#starfield</div>
+            <p>…</p>
+          </div>
+        </div>
+      </article>
+    </div>
   </main>
 
   <aside class="side">
@@ -97,6 +132,12 @@ $userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'User') : 'Guest';
   </aside>
 
   <script>
+    function filterGame(tag){
+      document.querySelectorAll('#posts .card-post').forEach(p => {
+        p.style.display = p.getAttribute('data-game') === tag ? '' : 'none';
+      });
+    }
+
     // Settings dropdown and navigation functionality
     document.addEventListener('DOMContentLoaded', function() {
       const settingsBtn = document.querySelector('.settings-btn');

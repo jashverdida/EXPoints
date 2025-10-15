@@ -10,6 +10,17 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
     exit();
 }
 
+// Redirect users with special roles to their dashboards
+if (isset($_SESSION['user_role'])) {
+    if ($_SESSION['user_role'] === 'admin') {
+        header('Location: ../admin/dashboard.php');
+        exit();
+    } elseif ($_SESSION['user_role'] === 'mod') {
+        header('Location: ../mod/dashboard.php');
+        exit();
+    }
+}
+
 // Simple database connection function
 function getDBConnection() {
     $host = '127.0.0.1';

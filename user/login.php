@@ -42,8 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$db) {
             $error = 'Database connection failed. Please try again later.';
         } else {
-            // Query user from database (only id, email, password - no username column)
-            $stmt = $db->prepare("SELECT id, email, password FROM users WHERE email = ?");
+            // Query user from database - include role field
+            $stmt = $db->prepare("SELECT id, email, password, role FROM users WHERE email = ?");
             $stmt->bind_param("s", $email);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -53,10 +53,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Direct password comparison (plain text - matches your database)
                 if ($password === $user['password']) {
+                    // Get user role (default to 'user' if not set)
+                    $role = $user['role'] ?? 'user';
+                    
                     // Set session variables
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['user_email'] = $user['email'];
-                    $_SESSION['username'] = $user['email']; // Use email as username since no username column exists
+                    $_SESSION['username'] = $user['email']; // Use email as username
+                    $_SESSION['user_role'] = $role;
                     $_SESSION['authenticated'] = true;
                     $_SESSION['login_time'] = time();
                     
@@ -64,9 +68,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->close();
                     $db->close();
                     
-                    // Redirect to dashboard
-                    header('Location: dashboard.php');
-                    exit();
+                    // Redirect based on role
+                    switch ($role) {
+                        case 'admin':
+                            header('Location: ../admin/dashboard.php');
+                            exit();
+                        case 'mod':
+                            header('Location: ../mod/dashboard.php');
+                            exit();
+                        case 'user':
+                        default:
+                            header('Location: dashboard.php');
+                            exit();
+                    }
                 } else {
                     $error = 'Invalid email or password';
                 }
@@ -113,6 +127,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <!-- Welcome message and panda -->
             <div class="welcome-content">
                 <h1 class="welcome-title">Welcome to EXPoints!</h1>
+                <p class="welcome-subtitle" id="rotatingText"></p>
                 <img src="../assets/img/Login Panda Controller.png" alt="Login Panda" class="panda-mascot">
             </div>
         </div>
@@ -169,6 +184,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }, 5000);
             });
         });
+        
+        // Rotating welcome text
+        const welcomeTexts = [
+            "Ready to earn more XP? Jump back in and keep leveling up!",
+            "Your next achievement awaits! log in and continue your grind!",
+            "Welcome back, gamer! The community's waiting for your next review.",
+            "Every login brings you closer to the top. Let's see what you've got!",
+            "Log in. Level up. Let's play."
+        ];
+        
+        // Select a random text on page load
+        const randomIndex = Math.floor(Math.random() * welcomeTexts.length);
+        document.getElementById('rotatingText').textContent = welcomeTexts[randomIndex];
     </script>
 </body>
 </html>
+```

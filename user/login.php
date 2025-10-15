@@ -1,117 +1,174 @@
-<!doctype html>
+<?php
+// Start session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Simple database connection
+function getDBConnection() {
+    $host = '127.0.0.1';
+    $dbname = 'expoints_db';
+    $username = 'root';
+    $password = '';
+    
+    try {
+        $mysqli = new mysqli($host, $username, $password, $dbname);
+        
+        if ($mysqli->connect_error) {
+            throw new Exception("Connection failed: " . $mysqli->connect_error);
+        }
+        
+        $mysqli->set_charset('utf8mb4');
+        return $mysqli;
+    } catch (Exception $e) {
+        error_log("Database connection error: " . $e->getMessage());
+        return null;
+    }
+}
+
+// Get error from URL
+$error = isset($_GET['error']) ? urldecode($_GET['error']) : '';
+
+// Handle login form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = trim($_POST['email'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+    
+    if (empty($email) || empty($password)) {
+        $error = 'Please enter both email and password';
+    } else {
+        $db = getDBConnection();
+        
+        if (!$db) {
+            $error = 'Database connection failed. Please try again later.';
+        } else {
+            // Query user from database (only id, email, password - no username column)
+            $stmt = $db->prepare("SELECT id, email, password FROM users WHERE email = ?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows === 1) {
+                $user = $result->fetch_assoc();
+                
+                // Direct password comparison (plain text - matches your database)
+                if ($password === $user['password']) {
+                    // Set session variables
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['user_email'] = $user['email'];
+                    $_SESSION['username'] = $user['email']; // Use email as username since no username column exists
+                    $_SESSION['authenticated'] = true;
+                    $_SESSION['login_time'] = time();
+                    
+                    // Close connection
+                    $stmt->close();
+                    $db->close();
+                    
+                    // Redirect to dashboard
+                    header('Location: dashboard.php');
+                    exit();
+                } else {
+                    $error = 'Invalid email or password';
+                }
+            } else {
+                $error = 'Invalid email or password';
+            }
+            
+            $stmt->close();
+            $db->close();
+        }
+    }
+}
+?>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EXPoints • Login</title>
-
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  <link rel="stylesheet" href="/EXPoints/assets/css/login.css" />
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EXPoints • Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="../assets/css/login.css" rel="stylesheet">
 </head>
 <body>
-
-<main class="container app-container">
-
-  <h1 class="auth-hero text-center">Welcome back Gamer! Ready to Login?</h1>
-
-  <section class="auth-wrap">
-    <div class="auth-card">
-      <img class="auth-mascot" src="/EXPoints/assets/img/Login Panda Controller.png" alt="Panda mascot" />
-
-      <a class="btn btn-play" href="index.php" aria-label="Back to Landing">
-        <i class="bi bi-play-fill"></i>
-      </a>
-
-      <div class="auth-logo-wrap">
-        <img class="auth-logo-img" src="/EXPoints/assets/img/EXPoints Logo.png" alt="+EXPoints" />
-      </div>
-
-      <!-- Form -->
-      <form id="loginForm" novalidate>
-        <div class="mb-3">
-          <label class="form-label">Email</label>
-          <input id="email" type="email" class="form-control input-glass" placeholder="Enter Valid Email" required>
+    <!-- Custom Alert -->
+    <?php if ($error): ?>
+    <div class="custom-alert alert-dismissible fade show" role="alert">
+        <div class="alert-content">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <span><?php echo htmlspecialchars($error); ?></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-
-        <div class="mb-2">
-          <label class="form-label">Password</label>
-          <input id="password" type="password" class="form-control input-glass" placeholder="Enter Password" required>
-        </div>
-
-        <div class="d-flex justify-content-between align-items-center mb-3 small">
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="remember">
-            <label class="form-check-label" for="remember">Remember Me</label>
-          </div>
-          <a href="forgot.php" class="link-light text-decoration-none">Forgot Password?</a>
-        </div>
-
-        <button type="submit" class="btn btn-brand w-100 mb-3">LOGIN</button>
-
-        <div class="auth-divider my-3">OR</div>
-
-        <button type="button" class="btn btn-google w-100">
-          <span class="g-logo">G</span>
-          Log in with Google
-        </button>
-      </form>
     </div>
-  </section>
-</main>
+    <?php endif; ?>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="split-screen-container">
+        <!-- LEFT SIDE - Blue Welcome Section -->
+        <div class="left-side">
+            <!-- Logo at top left -->
+            <div class="logo-container">
+                <img src="../assets/img/EXPoints Logo.png" alt="EXPoints Logo" class="top-logo">
+            </div>
+            
+            <!-- Welcome message and panda -->
+            <div class="welcome-content">
+                <h1 class="welcome-title">Welcome to EXPoints!</h1>
+                <img src="../assets/img/Login Panda Controller.png" alt="Login Panda" class="panda-mascot">
+            </div>
+        </div>
 
-<!-- Firebase Login Script -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        <!-- RIGHT SIDE - White Login Form -->
+        <div class="right-side">
+            <div class="login-form-container">
+                <h2 class="login-title">Login to Your Account</h2>
+                <p class="login-subtitle">Enter your credentials to access your account</p>
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAX8oYh-i_9Qe2RU8qNUidmx0OWrIJZPFY",
-    authDomain: "expoints-d6461.firebaseapp.com",
-    projectId: "expoints-d6461",
-    storageBucket: "expoints-d6461.firebasestorage.app",
-    messagingSenderId: "798336813425",
-    appId: "1:798336813425:web:38cd94cc67234738a00ed0",
-    measurementId: "G-EV96R3ZL8D"
-  };
+                <form method="POST" action="login.php">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address</label>
+                        <input type="email" class="form-control input-glass" id="email" name="email" required 
+                               placeholder="Enter your email">
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control input-glass" id="password" name="password" required
+                               placeholder="Enter your password">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-brand w-100 mb-3">LOGIN</button>
+                    
+                    <div class="text-center mb-3">
+                        <a href="forgot.php" class="forgot-link">Forgot Password?</a>
+                    </div>
+                    
+                    <div class="auth-divider my-3">OR</div>
+                    
+                    <button type="button" class="btn btn-google w-100">
+                        <span class="g-logo">G</span> 
+                        Login with Google
+                    </button>
+                </form>
+                
+                <div class="register-link">
+                    Don't have an account? <a href="register.php">Register here</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-
-  document.getElementById("loginForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    const email = document.getElementById("email").value;
-    const password = document.getElementById("password").value;
-
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Get Firebase ID Token
-      const idToken = await user.getIdToken();
-
-      // Send token to backend for PHP session
-      fetch("verify.php", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken })
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          window.location.href = "dashboard.php";
-        } else {
-          alert("Login failed: " + data.error);
-        }
-      });
-
-    } catch (error) {
-      alert("Error: " + error.message);
-    }
-  });
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Auto-hide alerts after 5 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.custom-alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    if (alert) {
+                        bootstrap.Alert.getOrCreateInstance(alert).close();
+                    }
+                }, 5000);
+            });
+        });
+    </script>
 </body>
 </html>

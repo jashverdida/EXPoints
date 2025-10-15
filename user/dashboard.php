@@ -1,39 +1,130 @@
 <?php
-// Handle form submissions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['action']) && $_POST['action'] === 'create_post') {
-        // Redirect to posts.php for processing
-        header('Location: posts.php');
-        exit;
+// Start session
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// Check authentication
+if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
+    header('Location: login.php?error=' . urlencode('Please login to continue'));
+    exit();
+}
+
+// Simple database connection function
+function getDBConnection() {
+    $host = '127.0.0.1';
+    $dbname = 'expoints_db';
+    $username = 'root';
+    $password = '';
+    
+    try {
+        $mysqli = new mysqli($host, $username, $password, $dbname);
+        
+        if ($mysqli->connect_error) {
+            throw new Exception("Connection failed: " . $mysqli->connect_error);
+        }
+        
+        $mysqli->set_charset('utf8mb4');
+        return $mysqli;
+    } catch (Exception $e) {
+        error_log("Database connection error: " . $e->getMessage());
+        return null;
     }
 }
 
-// Get posts from file storage
-$postsFile = 'data/posts.json';
-$posts = [];
-if (file_exists($postsFile)) {
-    $postsData = file_get_contents($postsFile);
-    $posts = json_decode($postsData, true) ?: [];
-}
+// Get user info
+$username = $_SESSION['username'] ?? 'User';
+$user_email = $_SESSION['user_email'] ?? '';
 
-// Handle success/error messages
-$successMessage = '';
+// Initialize variables
+$posts = [];
 $errorMessage = '';
+$successMessage = '';
+
+// Check for success/error messages
 if (isset($_GET['success'])) {
     switch ($_GET['success']) {
         case 'post_created':
-            $successMessage = 'Post created successfully!';
+            $successMessage = 'Your review has been posted successfully!';
             break;
+        default:
+            $successMessage = htmlspecialchars($_GET['success']);
     }
 }
+
 if (isset($_GET['error'])) {
-    switch ($_GET['error']) {
-        case 'missing_fields':
-            $errorMessage = 'Please fill in all required fields.';
-            break;
+    $errorMessage = htmlspecialchars(urldecode($_GET['error']));
+}
+
+// Get database connection
+$db = getDBConnection();
+
+if ($db) {
+    try {
+        // Create tables if they don't exist
+        $db->query("CREATE TABLE IF NOT EXISTS posts (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            game VARCHAR(255) NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            content TEXT NOT NULL,
+            username VARCHAR(100) NOT NULL,
+            user_email VARCHAR(255),
+            likes INT DEFAULT 0,
+            comments INT DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_created_at (created_at),
+            INDEX idx_user_email (user_email)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+        $db->query("CREATE TABLE IF NOT EXISTS comments (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            post_id INT NOT NULL,
+            username VARCHAR(100) NOT NULL,
+            user_email VARCHAR(255),
+            text TEXT NOT NULL,
+            likes INT DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+            INDEX idx_post_id (post_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+        // Get all posts with comment counts
+        $query = "SELECT p.*, 
+                  (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comment_count 
+                  FROM posts p 
+                  ORDER BY p.created_at DESC";
+        
+        $result = $db->query($query);
+        
+        if ($result) {
+            while ($post = $result->fetch_assoc()) {
+                // Get comments for this post
+                $comments_query = "SELECT id, text, username, created_at, likes 
+                                 FROM comments 
+                                 WHERE post_id = ? 
+                                 ORDER BY created_at DESC";
+                $stmt = $db->prepare($comments_query);
+                $stmt->bind_param("i", $post['id']);
+                $stmt->execute();
+                $comments_result = $stmt->get_result();
+                
+                $post['comments_list'] = [];
+                while ($comment = $comments_result->fetch_assoc()) {
+                    $post['comments_list'][] = $comment;
+                }
+                
+                $posts[] = $post;
+                $stmt->close();
+            }
+        }
+    } catch (Exception $e) {
+        error_log("Dashboard database error: " . $e->getMessage());
+        $errorMessage = "Some features may not be available";
     }
 }
 ?>
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -41,17 +132,28 @@ if (isset($_GET['error'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>EXPoints • Home</title>
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Fix CSS paths by removing /EXPoints prefix since we're using localhost:8000 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="/EXPoints/assets/css/index.css">
+  <link rel="stylesheet" href="../assets/css/index.css"> <!-- Fixed path -->
+  <link rel="stylesheet" href="../assets/css/components.css"> <!-- Fixed path -->
+  <link rel="stylesheet" href="../assets/css/utilities.css"> <!-- Fixed path -->
 </head>
 <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <span class="navbar-text">
+                Welcome, <?php echo htmlspecialchars($username); ?>!
+            </span>
+            <button class="btn btn-outline-light" onclick="logout()">Logout</button>
+        </div>
+    </nav>
 
   <!-- Top bar -->
   <div class="container-xl mt-3">
     <header class="topbar">
-      <a href="index.html" class="lp-brand" aria-label="+EXPoints home">
-        <img src="/EXPoints/assets/img/EXPoints Logo.png" alt="+EXPoints" class="lp-brand-img">
+      <a href="dashboard.php" class="lp-brand" aria-label="+EXPoints home">
+        <img src="../assets/img/EXPoints Logo.png" alt="+EXPoints" class="lp-brand-img">
       </a>
 
       <form class="search" role="search">
@@ -134,8 +236,9 @@ if (isset($_GET['error'])) {
               </div>
               <div class="form-group mb-3">
                 <label for="username" class="form-label">Username</label>
-                <input type="text" id="username" name="username" class="form-input" value="YourUsername" readonly>
+                <input type="text" id="username" name="username" class="form-input" value="<?php echo htmlspecialchars($username); ?>" readonly>
               </div>
+              <input type="hidden" name="email" value="<?php echo htmlspecialchars($_SESSION['user_email']); ?>"
               <div class="form-actions">
                 <button type="button" id="cancelPost" class="btn-cancel">Cancel</button>
                 <button type="submit" class="btn-post">Post Review</button>
@@ -234,11 +337,23 @@ if (isset($_GET['error'])) {
                   <div class="col">
                     <div class="comment-author">@<?php echo htmlspecialchars($comment['username']); ?></div>
                     <div class="comment-text"><?php echo htmlspecialchars($comment['text']); ?></div>
+                    <div class="comment-footer">
+                      <span class="comment-like-btn" data-comment-id="<?php echo $comment['id']; ?>" data-liked="false">
+                        <i class="bi bi-star"></i>
+                        <span class="like-count"><?php echo isset($comment['likes']) ? $comment['likes'] : '0'; ?></span>
+                      </span>
+                    </div>
                   </div>
                   <div class="col-auto">
                     <div class="comment-actions">
-                      <button class="btn-edit-comment" title="Edit Comment"><i class="bi bi-pencil"></i></button>
-                      <button class="btn-delete-comment" title="Delete Comment"><i class="bi bi-trash"></i></button>
+                      <?php if ($comment['username'] === $username): ?>
+                        <button class="btn-edit-comment" title="Edit Comment" data-comment-id="<?php echo $comment['id']; ?>">
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn-delete-comment" title="Delete Comment" data-comment-id="<?php echo $comment['id']; ?>">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      <?php endif; ?>
                     </div>
                   </div>
                 </div>
@@ -871,10 +986,75 @@ if (isset($_GET['error'])) {
       document.querySelectorAll('.comment-item').forEach(function(commentElement) {
         addCommentEventListeners(commentElement);
       });
+
+      // Handle comment star-ups
+      document.querySelectorAll('.comment-like-btn').forEach(function(button) {
+        button.addEventListener('click', function() {
+          const commentId = this.getAttribute('data-comment-id');
+          const isLiked = this.getAttribute('data-liked') === 'true';
+          const likeCount = this.querySelector('.like-count');
+          const starIcon = this.querySelector('i');
+          
+          fetch('posts.php', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `action=like_comment&comment_id=${commentId}&unlike=${isLiked}`
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              const currentLikes = parseInt(likeCount.textContent);
+              if (isLiked) {
+                likeCount.textContent = currentLikes - 1;
+                this.setAttribute('data-liked', 'false');
+                starIcon.classList.remove('bi-star-fill');
+                starIcon.classList.add('bi-star');
+              } else {
+                likeCount.textContent = currentLikes + 1;
+                this.setAttribute('data-liked', 'true');
+                starIcon.classList.remove('bi-star');
+                starIcon.classList.add('bi-star-fill');
+              }
+            }
+          });
+        });
+      });
     });
   </script>
 
-</body>
-</html>
+  <style>
+    .comment-footer {
+      margin-top: 0.5rem;
+    }
+    
+    .comment-like-btn {
+      cursor: pointer;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 1rem;
+      font-size: 0.875rem;
+      background: transparent;
+      border: none;
+      transition: all 0.2s ease;
+    }
+    
+    .comment-like-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .comment-like-btn[data-liked="true"] i {
+      color: #ffd700;
+    }
+    
+    .comment-like-btn i {
+      transition: color 0.2s ease;
+    }
+  </style>
 
+</body>
 </html>

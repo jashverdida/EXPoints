@@ -13,7 +13,7 @@ $userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'User') : 'Guest';
   <title>EXPoints • Games</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="/EXPoints/assets/css/index.css">
+  <link rel="stylesheet" href="../assets/css/index.css">
 </head>
 <body>
 
@@ -21,7 +21,7 @@ $userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'User') : 'Guest';
   <div class="container-xl mt-3">
     <header class="topbar">
       <a href="dashboard.php" class="lp-brand" aria-label="+EXPoints dashboard">
-        <img src="assets/img/EXPoints Logo.png" alt="+EXPoints" class="lp-brand-img">
+        <img src="../assets/img/EXPoints Logo.png" alt="+EXPoints" class="lp-brand-img">
       </a>
 
       <form class="search" role="search">

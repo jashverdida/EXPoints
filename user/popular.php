@@ -1,4 +1,4 @@
-<?php
+87<?php
 session_start();
 
 // Check if user is authenticated (but don't redirect if not - allow guest browsing)
@@ -13,6 +13,7 @@ $userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'User') : 'Guest';
   <title>EXPoints • Popular</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="../assets/css/popular.css">
   <link rel="stylesheet" href="assets/css/index.css">
 </head>
 <body>

@@ -186,4 +186,9 @@ class EXPointsDB {
         return $this->db->updateDocument($collection, $documentId, ['starUps' => 1]);
     }
 }
+
+define('DB_HOST', 'localhost');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+define('DB_NAME', 'expoints_db');
 ?>

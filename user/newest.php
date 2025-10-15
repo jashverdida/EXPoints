@@ -13,7 +13,7 @@ $userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'User') : 'Guest';
   <title>EXPoints • Newest</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-  <link rel="stylesheet" href="/EXPoints/assets/css/index.css">
+  <link rel="stylesheet" href="../assets/css/newest.css">
 </head>
 <body>
 

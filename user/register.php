@@ -10,94 +10,85 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
   <!-- Styles -->
-  <link rel="stylesheet" href="/EXPoints/assets/css/register.css" />
+  <link rel="stylesheet" href="../assets/css/register.css">
 </head>
 <body>
-<main class="container py-5 app-container">
-  <h1 class="auth-hero text-center mb-4">Register! And Discuss your favorite Games!</h1>
-
-  <section class="auth-wrap">
-    <div class="auth-card p-4 p-md-5">
-      <!-- Header -->
-      <div class="auth-head mb-3 position-relative">
-        <!-- Back button -->
-        <a class="btn btn-back" href="index.php" aria-label="Back">
-          <i class="bi bi-chevron-left"></i>
-        </a>
-
-        <!-- Centered logo -->
-        <div class="auth-logo">
-          <img src="/EXPoints/assets/img/EXPoints Logo.png" alt="EXPoints Logo">
+  <div class="split-screen-container">
+    <!-- LEFT SIDE - White Register Form -->
+    <div class="left-side">
+      <div class="register-form-container">
+        <!-- Logo at top left (overlays on white side) -->
+        <div class="logo-container">
+          <img src="../assets/img/EXPoints Logo.png" alt="EXPoints Logo" class="top-logo">
         </div>
 
-        <!-- Panda mascot -->
-        <img class="auth-panda-register" src="/EXPoints/assets/img/registerpanda.png" alt="Register Panda">
+        <h2 class="register-title">Create Your Account</h2>
+        <p class="register-subtitle">Join EXPoints and start discussing your favorite games!</p>
+
+        <!-- Register Form -->
+        <form action="dashboard.php" method="get" novalidate>
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="firstName" class="form-label">First Name</label>
+              <input id="firstName" class="form-control input-pill" placeholder="First Name" required>
+            </div>
+            <div class="col-md-6">
+              <label for="middleName" class="form-label">Middle Name</label>
+              <input id="middleName" class="form-control input-pill" placeholder="Middle Name">
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="lastName" class="form-label">Last Name</label>
+              <input id="lastName" class="form-control input-pill" placeholder="Last Name" required>
+            </div>
+            <div class="col-md-6">
+              <label for="suffix" class="form-label">Suffix</label>
+              <input id="suffix" class="form-control input-pill" placeholder="Suffix (optional)">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="regEmail" class="form-label">Email or Phone Number</label>
+            <input id="regEmail" type="email" class="form-control input-pill" placeholder="Enter your email or phone number" required>
+          </div>
+
+          <div class="mb-3">
+            <label for="regPass" class="form-label">Create Password</label>
+            <input id="regPass" type="password" class="form-control input-pill" placeholder="Enter password" required>
+          </div>
+
+          <div class="mb-4">
+            <label for="regPass2" class="form-label">Confirm Password</label>
+            <input id="regPass2" type="password" class="form-control input-pill" placeholder="Re-enter password" required>
+          </div>
+
+          <button type="submit" class="btn btn-brand w-100 mb-3">CONTINUE</button>
+
+          <div class="auth-divider my-3">OR</div>
+
+          <button type="button" class="btn btn-google w-100">
+            <span class="g-logo">G</span> 
+            Register with Google
+          </button>
+        </form>
+
+        <div class="login-link">
+          Already have an account? <a href="login.php">Login here</a>
+        </div>
       </div>
-
-      <!-- Register Form -->
-      <form action="dashboard.php" method="get" novalidate>
-        <div class="row g-2 align-items-center mb-3">
-          <label for="firstName" class="col-12 col-md-5 col-form-label field-label">First Name</label>
-          <div class="col-12 col-md-7">
-            <input id="firstName" class="form-control input-pill" placeholder="Enter First Name..." required>
-          </div>
-        </div>
-
-        <div class="row g-2 align-items-center mb-3">
-          <label for="middleName" class="col-12 col-md-5 col-form-label field-label">Middle Name</label>
-          <div class="col-12 col-md-7">
-            <input id="middleName" class="form-control input-pill" placeholder="Enter Middle Name...">
-          </div>
-        </div>
-
-        <div class="row g-2 align-items-center mb-3">
-          <label for="lastName" class="col-12 col-md-5 col-form-label field-label">Last Name</label>
-          <div class="col-12 col-md-7">
-            <input id="lastName" class="form-control input-pill" placeholder="Enter Last Name..." required>
-          </div>
-        </div>
-
-        <div class="row g-2 align-items-center mb-3">
-          <label for="suffix" class="col-12 col-md-5 col-form-label field-label">Suffix</label>
-          <div class="col-12 col-md-7">
-            <input id="suffix" class="form-control input-pill" placeholder="Enter Suffix (optional)">
-          </div>
-        </div>
-
-        <div class="row g-2 align-items-center mb-3">
-          <label for="regEmail" class="col-12 col-md-5 col-form-label field-label">Email or Phone No.</label>
-          <div class="col-12 col-md-7">
-            <input id="regEmail" type="email" class="form-control input-pill" placeholder="Enter Valid Email or Phone No." required>
-          </div>
-        </div>
-
-        <div class="row g-2 align-items-center mb-3">
-          <label for="regPass" class="col-12 col-md-5 col-form-label field-label">Create Password</label>
-          <div class="col-12 col-md-7">
-            <input id="regPass" type="password" class="form-control input-pill" placeholder="Enter Password" required>
-          </div>
-        </div>
-
-        <div class="row g-2 align-items-center mb-4">
-          <label for="regPass2" class="col-12 col-md-5 col-form-label field-label">Confirm Password</label>
-          <div class="col-12 col-md-7">
-            <input id="regPass2" type="password" class="form-control input-pill" placeholder="Re-enter Password" required>
-          </div>
-        </div>
-
-        <!-- CONTINUE button -->
-        <button type="submit" class="btn btn-brand w-100 mb-3">CONTINUE</button>
-
-        <div class="auth-divider my-3">OR</div>
-
-        <button type="button" class="btn btn-google w-100">
-          <span class="g-logo">G</span> 
-          Register with Google
-        </button>
-      </form>
     </div>
-  </section>
-</main>
+
+    <!-- RIGHT SIDE - Blue Welcome Section -->
+    <div class="right-side">
+      <div class="welcome-content">
+        <h1 class="welcome-title">Join the EXPoints Community!</h1>
+        <p class="welcome-subtitle">Connect with gamers worldwide and share your gaming experiences</p>
+        <img src="../assets/img/registerpanda.png" alt="Register Panda" class="panda-mascot">
+      </div>
+    </div>
+  </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 

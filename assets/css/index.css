@@ -401,6 +401,7 @@ main.container-xl > * + *{
 .card-post{
   position:relative;
   padding-bottom:2.75rem;
+  margin-bottom: 1.5rem;
 }
 
 .card-post .actions{

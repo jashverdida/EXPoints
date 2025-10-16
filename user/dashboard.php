@@ -220,7 +220,7 @@ if ($db) {
           <!-- Expanded form (hidden initially) -->
           <div id="expandedPostForm" class="expanded-post-form" style="display: none;">
             <h3 class="form-title mb-3">Post a Review</h3>
-            <form id="postForm" class="post-form" method="POST" action="posts.php">
+            <form id="postForm" class="post-form">
               <input type="hidden" name="action" value="create">
               <div class="form-group mb-3">
                 <label for="gameSelect" class="form-label">Select Game</label>
@@ -249,7 +249,7 @@ if ($db) {
                 <label for="username" class="form-label">Username</label>
                 <input type="text" id="username" name="username" class="form-input" value="<?php echo htmlspecialchars($username); ?>" readonly>
               </div>
-              <input type="hidden" name="email" value="<?php echo htmlspecialchars($_SESSION['user_email']); ?>"
+              <input type="hidden" name="email" value="<?php echo htmlspecialchars($_SESSION['user_email']); ?>">
               <div class="form-actions">
                 <button type="button" id="cancelPost" class="btn-cancel">Cancel</button>
                 <button type="submit" class="btn-post">Post Review</button>
@@ -260,133 +260,29 @@ if ($db) {
       </div>
     </section>
 
-    <!-- Dynamic Posts from Database -->
-    <?php if (empty($posts)): ?>
-    <!-- Default post when no posts exist -->
-    <article class="card-post">
-      <div class="post-header">
-        <div class="row gap-3 align-items-start">
-          <div class="col-auto"><div class="avatar-lg"></div></div>
-          <div class="col">
-            <h2 class="title mb-1">Elden Ring Shadow of The Erdtree is BAD</h2>
-            <div class="handle mb-3">@BethesdaFan321</div>
-            <p class="mb-3">I give this DLC a 7/10. Quantity doesn't mean quality and I think many people highly rated the DLC just because of the amount of additional ER content.</p>
-            <p class="mb-0">Even if I'm more positive than you, I quite felt the same way. My biggest disappointment regarding the build up of some bosses was the pink boss (I forgot her name). I loved that boss and overall I think most major bosses are spectacular, but she appeared and disappeared randomly within a region mostly unrelated to her. I don't think she even talked during the fight.</p>
-          </div>
-        </div>
-        <div class="post-menu">
-          <button class="icon more" aria-label="More"><i class="bi bi-three-dots-vertical"></i></button>
-          <div class="post-dropdown">
-            <button class="dropdown-item edit-post"><i class="bi bi-pencil"></i> Edit</button>
-            <button class="dropdown-item delete-post"><i class="bi bi-trash"></i> Delete</button>
-          </div>
-        </div>
-      </div>
-      <div class="actions">
-        <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b>50</b></span>
-        <span class="a comment-btn" data-comments="4"><i class="bi bi-chat-left-text"></i><b>4</b></span>
-      </div>
-      <div class="comments-section" style="display: none;">
-        <div class="comments-list">
-          <div class="comment-item">
-            <div class="row g-3 align-items-center">
-              <div class="col-auto"><div class="avatar-sm"></div></div>
-              <div class="col">
-                <div class="comment-author">Kenji Parilla</div>
-                <div class="comment-text">Sounds like a skill issue ngl</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="comment-input-section">
-          <div class="row g-3 align-items-center">
-            <div class="col-auto"><div class="avatar-sm"></div></div>
+    <!-- Dynamic Posts Container -->
+    <div id="postsContainer">
+      <!-- Posts will be loaded here dynamically -->
+      <!-- Default dummy post for reference -->
+      <article class="card-post" data-post-id="dummy">
+        <div class="post-header">
+          <div class="row gap-3 align-items-start">
+            <div class="col-auto"><div class="avatar-lg"></div></div>
             <div class="col">
-              <input class="comment-input" placeholder="Write a Comment on this post!" />
-            </div>
-            <div class="col-auto">
-              <button class="btn-comment">Post</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </article>
-    <?php else: ?>
-    <!-- Display posts from database -->
-    <?php foreach (array_reverse($posts) as $post): ?>
-    <article class="card-post" data-post-id="<?php echo $post['id']; ?>">
-      <div class="post-header">
-        <div class="row gap-3 align-items-start">
-          <div class="col-auto"><div class="avatar-lg"></div></div>
-          <div class="col">
-            <div class="game-badge"><?php echo htmlspecialchars($post['game']); ?></div>
-            <h2 class="title mb-1"><?php echo htmlspecialchars($post['title']); ?></h2>
-            <div class="handle mb-3">@<?php echo htmlspecialchars($post['username']); ?></div>
-            <p class="mb-3"><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
-            <small class="text-white">Posted on <?php echo date('M j, Y g:i A', strtotime($post['created_at'])); ?></small>
-          </div>
-        </div>
-        <div class="post-menu">
-          <button class="icon more" aria-label="More"><i class="bi bi-three-dots-vertical"></i></button>
-          <div class="post-dropdown">
-            <button class="dropdown-item edit-post" data-post-id="<?php echo $post['id']; ?>"><i class="bi bi-pencil"></i> Edit</button>
-            <button class="dropdown-item delete-post" data-post-id="<?php echo $post['id']; ?>"><i class="bi bi-trash"></i> Delete</button>
-          </div>
-        </div>
-      </div>
-      <div class="actions">
-        <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b><?php echo $post['likes']; ?></b></span>
-        <span class="a comment-btn" data-comments="<?php echo $post['comments']; ?>"><i class="bi bi-chat-left-text"></i><b><?php echo $post['comments']; ?></b></span>
-      </div>
-      <div class="comments-section" style="display: none;">
-        <div class="comments-list">
-          <?php if (isset($post['comments_list']) && !empty($post['comments_list'])): ?>
-            <?php foreach ($post['comments_list'] as $comment): ?>
-              <div class="comment-item">
-                <div class="row g-3 align-items-center">
-                  <div class="col-auto"><div class="avatar-sm"></div></div>
-                  <div class="col">
-                    <div class="comment-author">@<?php echo htmlspecialchars($comment['username']); ?></div>
-                    <div class="comment-text"><?php echo htmlspecialchars($comment['text']); ?></div>
-                    <div class="comment-footer">
-                      <span class="comment-like-btn" data-comment-id="<?php echo $comment['id']; ?>" data-liked="false">
-                        <i class="bi bi-star"></i>
-                        <span class="like-count"><?php echo isset($comment['likes']) ? $comment['likes'] : '0'; ?></span>
-                      </span>
-                    </div>
-                  </div>
-                  <div class="col-auto">
-                    <div class="comment-actions">
-                      <?php if ($comment['username'] === $username): ?>
-                        <button class="btn-edit-comment" title="Edit Comment" data-comment-id="<?php echo $comment['id']; ?>">
-                          <i class="bi bi-pencil"></i>
-                        </button>
-                        <button class="btn-delete-comment" title="Delete Comment" data-comment-id="<?php echo $comment['id']; ?>">
-                          <i class="bi bi-trash"></i>
-                        </button>
-                      <?php endif; ?>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            <?php endforeach; ?>
-          <?php endif; ?>
-        </div>
-        <div class="comment-input-section">
-          <div class="row g-3 align-items-center">
-            <div class="col-auto"><div class="avatar-sm"></div></div>
-            <div class="col">
-              <input class="comment-input" placeholder="Write a Comment on this post!" />
-            </div>
-            <div class="col-auto">
-              <button class="btn-comment">Post</button>
+              <h2 class="title mb-1">Elden Ring Shadow of The Erdtree is BAD</h2>
+              <div class="handle mb-3">@BethesdaFan321</div>
+              <p class="mb-3">I give this DLC a 7/10. Quantity doesn't mean quality and I think many people highly rated the DLC just because of the amount of additional ER content.</p>
+              <p class="mb-0">Even if I'm more positive than you, I quite felt the same way. My biggest disappointment regarding the build up of some bosses was the pink boss (I forgot her name). I loved that boss and overall I think most major bosses are spectacular, but she appeared and disappeared randomly within a region mostly unrelated to her. I don't think she even talked during the fight.</p>
             </div>
           </div>
         </div>
-      </div>
-    </article>
-    <?php endforeach; ?>
-    <?php endif; ?>
+        <div class="actions">
+          <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b>50</b></span>
+          <span class="a comment-btn" data-comments="4"><i class="bi bi-chat-left-text"></i><b>4</b></span>
+        </div>
+      </article>
+    </div>
+    <!-- End of posts container -->
   </main>
 
   <!-- Slide-in sidebar (inside the body) -->
@@ -1065,7 +961,190 @@ if ($db) {
     .comment-like-btn i {
       transition: color 0.2s ease;
     }
+    
+    .liked .bi-star {
+      display: none;
+    }
+    
+    .liked .bi-star-fill {
+      color: #ffd700 !important;
+    }
+    
+    .post-menu {
+      position: relative;
+    }
+    
+    .post-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: rgba(25, 35, 75, 0.95);
+      border: 1px solid rgba(194, 213, 255, 0.2);
+      border-radius: 0.5rem;
+      min-width: 150px;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      margin-top: 0.25rem;
+    }
+    
+    .post-dropdown.show {
+      display: block;
+    }
+    
+    .post-dropdown .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: transparent;
+      border: none;
+      color: white;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .post-dropdown .dropdown-item:hover {
+      background: rgba(56, 160, 255, 0.2);
+    }
+    
+    .post-dropdown .dropdown-item i {
+      font-size: 0.875rem;
+    }
+    
+    .edit-form {
+      padding: 1rem;
+      background: rgba(15, 30, 90, 0.3);
+      border-radius: 0.5rem;
+    }
+    
+    .form-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+    
+    /* Custom Modal Styles */
+    .custom-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      animation: fadeIn 0.2s ease;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    .custom-modal-content {
+      background: linear-gradient(135deg, #08122e 0%, #0c1f6f 100%);
+      border: 2px solid rgba(56, 160, 255, 0.3);
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      animation: slideDown 0.3s ease;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+    
+    @keyframes slideDown {
+      from { 
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to { 
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .modal-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+    
+    .modal-icon i {
+      color: #38a0ff;
+    }
+    
+    .modal-icon.warning i {
+      color: #ffc107;
+    }
+    
+    .success-modal .modal-icon i {
+      color: #28a745;
+    }
+    
+    .custom-modal-content h3 {
+      color: white;
+      font-size: 1.25rem;
+      margin-bottom: 1.5rem;
+      font-weight: 500;
+    }
+    
+    .modal-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+    
+    .modal-btn {
+      padding: 0.75rem 2rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1rem;
+    }
+    
+    .modal-btn.btn-cancel {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .modal-btn.btn-cancel:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .modal-btn.btn-confirm {
+      background: #38a0ff;
+      color: white;
+    }
+    
+    .modal-btn.btn-confirm:hover {
+      background: #2c8de0;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(56, 160, 255, 0.4);
+    }
+    
+    .success-modal .modal-btn {
+      background: #28a745;
+      color: white;
+      padding: 0.75rem 3rem;
+    }
+    
+    .success-modal .modal-btn:hover {
+      background: #218838;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+    }
   </style>
+
+  <!-- Dashboard Posts Management Script -->
+  <script src="../assets/js/dashboard-posts.js?v=<?php echo time(); ?>"></script>
 
 </body>
 </html>

@@ -33,12 +33,84 @@ body{
   font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
   color:var(--ink);
   background:
-    radial-gradient(900px 600px at 15% 15%, #1b378d66 0%, #0000 60%),
-    radial-gradient(800px 520px at 85% 80%, #1a3a9060 0%, #0000 60%),
-    linear-gradient(145deg,var(--bg1),var(--bg2));
+    /* Animated grid pattern overlay */
+    linear-gradient(90deg, rgba(56, 160, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(56, 160, 255, 0.03) 1px, transparent 1px),
+    /* Glowing orbs */
+    radial-gradient(circle at 20% 20%, rgba(56, 160, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(27, 55, 141, 0.2) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(26, 58, 144, 0.1) 0%, transparent 60%),
+    /* Diagonal gradient stripes */
+    linear-gradient(135deg, transparent 0%, rgba(56, 160, 255, 0.02) 50%, transparent 100%),
+    /* Base gradient */
+    linear-gradient(145deg, #0a1344 0%, #0f1e5a 50%, #0c1b4d 100%);
+  background-size: 
+    50px 50px,
+    50px 50px,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%;
+  background-position:
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0,
+    0 0;
   overflow-x:hidden;
   font-size:clamp(1.06rem, 0.65rem + 0.55vw, 1.2rem);
   line-height:1.48;
+  position: relative;
+}
+
+/* Animated background pulse effect */
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: 
+    radial-gradient(circle at 30% 40%, rgba(56, 160, 255, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 70% 60%, rgba(27, 55, 141, 0.12) 0%, transparent 40%);
+  animation: backgroundPulse 20s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes backgroundPulse {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-5%, -5%) scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+/* Ensure content is above background effects and particles */
+.container,
+.container-xl,
+aside {
+  position: relative;
+  z-index: 2;
+}
+
+/* Header should be above all content */
+header {
+  position: relative;
+  z-index: 1001;
+}
+
+/* Main content below header but above background */
+main {
+  position: relative;
+  z-index: 2;
 }
 
 /* Top-right avatar (clickable) */
@@ -61,6 +133,7 @@ body{
   object-fit: cover;            /* ✅ ensures image fills circle */
   object-position: center;      /* ✅ keeps face centered */
   display: block;
+  z-index: 3;                   /* Above any pseudo-elements */
 }
 
 
@@ -228,17 +301,8 @@ main.container-xl > *{
 }
 
 .avatar-nav::after{
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  right: 2px;
-  bottom: 2px;
-  background-image: url('../img/lara.jpg');
-  background-size: cover;
-  background-position: center;
-  border-radius: 50%;
-  z-index: 2;
+  /* Disabled - using <img> tag instead of CSS background */
+  display: none;
 }
 
 /* avatar-us styling */
@@ -276,6 +340,8 @@ main.container-xl > *{
   border:1.5px solid var(--line);
   border-radius:1.35rem;
   background:linear-gradient(180deg,#12225ae6,#0b1537e6);
+  position: relative;
+  z-index: 1;
 }
 
 main.container-xl{
@@ -340,31 +406,13 @@ main.container-xl > * + *{
 
 /* Avatar images */
 .avatar-lg::after{
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  right: 2px;
-  bottom: 2px;
-  background-image: url('../img/cat1.jpg');
-  background-size: cover;
-  background-position: center;
-  border-radius: 50%;
-  z-index: 2;
+  /* Disabled - using <img> tag instead of CSS background */
+  display: none;
 }
 
 .avatar-sm::after{
-  content: '';
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  right: 2px;
-  bottom: 2px;
-  background-image: url('../img/beluga.jpg');
-  background-size: cover;
-  background-position: center;
-  border-radius: 50%;
-  z-index: 2;
+  /* Disabled - using <img> tag instead of CSS background */
+  display: none;
 }
 
 /* actions */
@@ -534,6 +582,19 @@ main.container-xl > * + *{
 
 .side-bottom{
   margin-top:auto;
+}
+
+/* Logout button styling */
+.logout-btn-sidebar {
+  border-color: #ff4444 !important;
+  color: #ff4444 !important;
+  box-shadow: 0 0 0 5px rgba(255, 68, 68, 0.15), inset 0 0 18px #0006 !important;
+}
+
+.logout-btn-sidebar:hover {
+  background: rgba(255, 68, 68, 0.1) !important;
+  box-shadow: 0 0 0 7px rgba(255, 68, 68, 0.25) !important;
+  transform: translateY(-2px);
 }
 
 /* ========== Responsive (smaller screens) ========== */

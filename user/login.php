@@ -56,10 +56,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Get user role (default to 'user' if not set)
                     $role = $user['role'] ?? 'user';
                     
+                    // Get username from user_info table
+                    $userInfoStmt = $db->prepare("SELECT username FROM user_info WHERE user_id = ?");
+                    $userInfoStmt->bind_param("i", $user['id']);
+                    $userInfoStmt->execute();
+                    $userInfoResult = $userInfoStmt->get_result();
+                    
+                    $username = $user['email']; // Default to email if username not found
+                    if ($userInfoResult->num_rows === 1) {
+                        $userInfoData = $userInfoResult->fetch_assoc();
+                        $username = $userInfoData['username'];
+                    }
+                    $userInfoStmt->close();
+                    
                     // Set session variables
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['user_email'] = $user['email'];
-                    $_SESSION['username'] = $user['email']; // Use email as username
+                    $_SESSION['username'] = $username; // Use actual username from user_info table
                     $_SESSION['user_role'] = $role;
                     $_SESSION['authenticated'] = true;
                     $_SESSION['login_time'] = time();

@@ -46,11 +46,13 @@ function getDBConnection() {
 // Get user info
 $username = $_SESSION['username'] ?? 'User';
 $user_email = $_SESSION['user_email'] ?? '';
+$userId = $_SESSION['user_id'] ?? null;
 
 // Initialize variables
 $posts = [];
 $errorMessage = '';
 $successMessage = '';
+$userProfilePicture = '../assets/img/cat1.jpg'; // Default profile picture
 
 // Check for success/error messages
 if (isset($_GET['success'])) {
@@ -72,6 +74,20 @@ $db = getDBConnection();
 
 if ($db) {
     try {
+        // Get user's profile picture from database
+        if ($userId) {
+            $profileStmt = $db->prepare("SELECT profile_picture FROM user_info WHERE user_id = ?");
+            $profileStmt->bind_param("i", $userId);
+            $profileStmt->execute();
+            $profileResult = $profileStmt->get_result();
+            if ($profileData = $profileResult->fetch_assoc()) {
+                if (!empty($profileData['profile_picture'])) {
+                    $userProfilePicture = $profileData['profile_picture'];
+                }
+            }
+            $profileStmt->close();
+        }
+        
         // Create tables if they don't exist
         $db->query("CREATE TABLE IF NOT EXISTS posts (
             id INT AUTO_INCREMENT PRIMARY KEY,
@@ -97,13 +113,15 @@ if ($db) {
             likes INT DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
-            INDEX idx_post_id (post_id)
+            INDEX idx_post_id (post_id)T
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-        // Get all posts with comment counts
+        // Get all posts with comment counts and author profile pictures
         $query = "SELECT p.*, 
-                  (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comment_count 
+                  (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comment_count,
+                  ui.profile_picture as author_profile_picture
                   FROM posts p 
+                  LEFT JOIN user_info ui ON p.username = ui.username
                   ORDER BY p.created_at DESC";
         
         $result = $db->query($query);
@@ -131,7 +149,7 @@ if ($db) {
         }
     } catch (Exception $e) {
         error_log("Dashboard database error: " . $e->getMessage());
-        $errorMessage = "Some features may not be available";
+        // Silently log error without showing message to user
     }
 }
 ?>
@@ -151,15 +169,9 @@ if ($db) {
   <link rel="stylesheet" href="../assets/css/utilities.css"> <!-- Fixed path -->
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <span class="navbar-text">
-                Welcome, <?php echo htmlspecialchars($username); ?>!
-            </span>
-            <button class="btn btn-outline-light" onclick="logout()">Logout</button>
-        </div>
-    </nav>
-
+  <!-- PlayStation Button Particles Background -->
+  <div class="particles-container" id="particlesContainer"></div>
+  
   <!-- Top bar -->
   <div class="container-xl mt-3">
     <header class="topbar">
@@ -174,18 +186,9 @@ if ($db) {
 
       <div class="right">
         <button class="icon" title="Filter"><i class="bi bi-funnel"></i></button>
-        <div class="settings-dropdown">
-          <button class="icon settings-btn" title="Settings"><i class="bi bi-gear"></i></button>
-          <div class="dropdown-menu">
-            <button class="dropdown-item logout-btn">
-              <i class="bi bi-box-arrow-right"></i>
-              Logout
-            </button>
-          </div>
-        </div>
         <button class="icon" title="Notifications"><i class="bi bi-bell"></i></button>
         <a href="profile.php" class="avatar-nav">
-  <img src="/EXPoints/assets/img/lara.jpg" alt="Profile" class="avatar-img">
+  <img src="<?php echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" class="avatar-img">
 </a>
 </div>
     </header>
@@ -210,11 +213,15 @@ if ($db) {
     <!-- Post a Review Section -->
     <section class="card-post-form">
       <div class="row gap-3 align-items-start">
-        <div class="col-auto"><div class="avatar-us"></div></div>
+        <div class="col-auto">
+          <div class="avatar-us">
+            <img src="<?php echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" style="position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px; width: calc(100% - 4px); height: calc(100% - 4px); object-fit: cover; border-radius: 50%; z-index: 3;">
+          </div>
+        </div>
         <div class="col">
           <!-- Simple textbox (initial state) -->
           <div id="simplePostBox" class="simple-post-box">
-            <input type="text" id="simplePostInput" class="simple-post-input" placeholder="What's on your mind, @YourUsername?" readonly>
+            <input type="text" id="simplePostInput" class="simple-post-input" placeholder="What's on your mind, @<?php echo htmlspecialchars($username); ?>?" readonly>
           </div>
           
           <!-- Expanded form (hidden initially) -->
@@ -226,16 +233,20 @@ if ($db) {
                 <label for="gameSelect" class="form-label">Select Game</label>
                 <select id="gameSelect" name="game" class="form-select" required>
                   <option value="">Choose a game to review...</option>
-                  <option value="elden-ring">Elden Ring</option>
-                  <option value="cyberpunk-2077">Cyberpunk 2077</option>
-                  <option value="baldurs-gate-3">Baldur's Gate 3</option>
-                  <option value="spider-man-2">Spider-Man 2</option>
-                  <option value="zelda-totk">The Legend of Zelda: Tears of the Kingdom</option>
-                  <option value="hogwarts-legacy">Hogwarts Legacy</option>
-                  <option value="diablo-4">Diablo IV</option>
-                  <option value="starfield">Starfield</option>
-                  <option value="other">Other</option>
+                  <option value="Elden Ring">Elden Ring</option>
+                  <option value="Cyberpunk 2077">Cyberpunk 2077</option>
+                  <option value="Baldur's Gate 3">Baldur's Gate 3</option>
+                  <option value="Spider-Man 2">Spider-Man 2</option>
+                  <option value="The Legend of Zelda: Tears of the Kingdom">The Legend of Zelda: Tears of the Kingdom</option>
+                  <option value="Hogwarts Legacy">Hogwarts Legacy</option>
+                  <option value="Diablo IV">Diablo IV</option>
+                  <option value="Starfield">Starfield</option>
+                  <option value="Other">Other</option>
                 </select>
+              </div>
+              <div class="form-group mb-3" id="customGameGroup" style="display: none;">
+                <label for="customGame" class="form-label">Specify Game Name</label>
+                <input type="text" id="customGame" name="custom_game" class="form-input" placeholder="Enter the game name...">
               </div>
               <div class="form-group mb-3">
                 <label for="postTitle" class="form-label">Review Title</label>
@@ -263,24 +274,6 @@ if ($db) {
     <!-- Dynamic Posts Container -->
     <div id="postsContainer">
       <!-- Posts will be loaded here dynamically -->
-      <!-- Default dummy post for reference -->
-      <article class="card-post" data-post-id="dummy">
-        <div class="post-header">
-          <div class="row gap-3 align-items-start">
-            <div class="col-auto"><div class="avatar-lg"></div></div>
-            <div class="col">
-              <h2 class="title mb-1">Elden Ring Shadow of The Erdtree is BAD</h2>
-              <div class="handle mb-3">@BethesdaFan321</div>
-              <p class="mb-3">I give this DLC a 7/10. Quantity doesn't mean quality and I think many people highly rated the DLC just because of the amount of additional ER content.</p>
-              <p class="mb-0">Even if I'm more positive than you, I quite felt the same way. My biggest disappointment regarding the build up of some bosses was the pink boss (I forgot her name). I loved that boss and overall I think most major bosses are spectacular, but she appeared and disappeared randomly within a region mostly unrelated to her. I don't think she even talked during the fight.</p>
-            </div>
-          </div>
-        </div>
-        <div class="actions">
-          <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b>50</b></span>
-          <span class="a comment-btn" data-comments="4"><i class="bi bi-chat-left-text"></i><b>4</b></span>
-        </div>
-      </article>
     </div>
     <!-- End of posts container -->
   </main>
@@ -290,14 +283,29 @@ if ($db) {
     <span class="side-hotspot"></span>
     <div class="side-inner">
       <div class="side-box">
-        <button class="side-btn" title="Home"><i class="bi bi-house"></i></button>
-        <button class="side-btn" title="Bookmarks"><i class="bi bi-bookmark"></i></button>
-        <button class="side-btn" title="Games"><i class="bi bi-grid-3x3-gap"></i></button>
-        <button class="side-btn" title="Popular"><i class="bi bi-compass"></i></button>
-        <button class="side-btn side-bottom" title="Newest"><i class="bi bi-star-fill"></i></button>
+        <button class="side-btn" onclick="window.location.href='dashboard.php'" title="Home"><i class="bi bi-house"></i></button>
+        <button class="side-btn" onclick="window.location.href='bookmarks.php'" title="Bookmarks"><i class="bi bi-bookmark"></i></button>
+        <button class="side-btn" onclick="window.location.href='games.php'" title="Games"><i class="bi bi-grid-3x3-gap"></i></button>
+        <button class="side-btn" onclick="window.location.href='popular.php'" title="Popular"><i class="bi bi-compass"></i></button>
+        <button class="side-btn" onclick="window.location.href='newest.php'" title="Newest"><i class="bi bi-star-fill"></i></button>
+        <button class="side-btn side-bottom logout-btn-sidebar" title="Logout"><i class="bi bi-box-arrow-right"></i></button>
       </div>
     </div>
   </aside>
+
+  <!-- Profile Hover Modal -->
+  <div id="profileHoverModal" class="profile-hover-modal">
+    <div class="profile-hover-content">
+      <div class="profile-hover-avatar">
+        <img id="hoverProfilePic" src="" alt="Profile">
+        <div id="hoverProfileLevel" class="hover-level-badge">LVL 1</div>
+      </div>
+      <div class="profile-hover-info">
+        <h4 id="hoverProfileUsername" class="hover-username">Username</h4>
+        <div id="hoverProfileExp" class="hover-exp">0 EXP</div>
+      </div>
+    </div>
+  </div>
 
   <!-- Confirmation Modal -->
   <div id="confirmationModal" class="modal-overlay">
@@ -330,33 +338,76 @@ if ($db) {
     </div>
   </div>
 
+  <!-- Welcome Modal -->
+  <div id="welcomeModal" class="welcome-modal-overlay">
+    <div class="welcome-modal-content">
+      <div class="welcome-panda-container">
+        <img src="../assets/img/Login Panda Controller.png" alt="Welcome Panda" class="welcome-panda-img">
+      </div>
+      <h1 class="welcome-title">Welcome, <?php echo htmlspecialchars($username); ?>!</h1>
+      <p class="welcome-message">Let's make this space positive and fun. Please share only appropriate and respectful content. Thanks for keeping it chill!</p>
+      <button id="welcomeUnderstood" class="welcome-btn">Understood!</button>
+    </div>
+  </div>
+
   <script>
-    // Settings dropdown functionality
+    // Logout and Welcome Modal functionality
     document.addEventListener('DOMContentLoaded', function() {
-      const settingsBtn = document.querySelector('.settings-btn');
-      const dropdownMenu = document.querySelector('.dropdown-menu');
-      const logoutBtn = document.querySelector('.logout-btn');
+      const logoutBtn = document.querySelector('.logout-btn-sidebar');
       
-      // Toggle dropdown when settings button is clicked
-      settingsBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        dropdownMenu.classList.toggle('show');
-      });
+      // Welcome Modal functionality
+      const welcomeModal = document.getElementById('welcomeModal');
+      const welcomeUnderstoodBtn = document.getElementById('welcomeUnderstood');
+      let hideTimeout;
       
-      // Close dropdown when clicking outside
-      document.addEventListener('click', function(e) {
-        if (!e.target.closest('.settings-dropdown')) {
-          dropdownMenu.classList.remove('show');
-        }
-      });
+      // Function to hide modal
+      function hideWelcomeModal() {
+        clearTimeout(hideTimeout);
+        welcomeModal.style.opacity = '0';
+        setTimeout(() => {
+          welcomeModal.style.display = 'none';
+        }, 500);
+      }
+      
+      // Check if user just logged in (using sessionStorage to show only once per session)
+      if (!sessionStorage.getItem('welcomeShown')) {
+        // Show welcome modal
+        welcomeModal.style.display = 'flex';
+        sessionStorage.setItem('welcomeShown', 'true');
+        
+        // Start hide timer (3 seconds)
+        hideTimeout = setTimeout(() => {
+          hideWelcomeModal();
+        }, 3000);
+        
+        // Reset timer on hover
+        welcomeModal.addEventListener('mouseenter', function() {
+          clearTimeout(hideTimeout);
+        });
+        
+        // Restart timer when mouse leaves
+        welcomeModal.addEventListener('mouseleave', function() {
+          hideTimeout = setTimeout(() => {
+            hideWelcomeModal();
+          }, 3000);
+        });
+        
+        // Close modal when "Understood!" button is clicked
+        welcomeUnderstoodBtn.addEventListener('click', function() {
+          hideWelcomeModal();
+        });
+      }
       
       // Handle logout button click
-      logoutBtn.addEventListener('click', function() {
-        // Optional: Add logout logic here (clear session storage, etc.)
-        
-        // Redirect to landing page
-        window.location.href = 'index.php';
-      });
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+          // Clear welcome modal flag on logout
+          sessionStorage.removeItem('welcomeShown');
+          
+          // Redirect to landing page
+          window.location.href = 'index.php';
+        });
+      }
 
       // Post form functionality
       const simplePostBox = document.getElementById('simplePostBox');
@@ -932,6 +983,110 @@ if ($db) {
   </script>
 
   <style>
+    /* Custom game input transition */
+    #customGameGroup {
+      transition: all 0.3s ease;
+      overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+    }
+    
+    #customGameGroup[style*="display: block"] {
+      max-height: 100px;
+      opacity: 1;
+    }
+    
+    /* Profile Hover Modal */
+    .profile-hover-modal {
+      position: fixed;
+      display: none;
+      z-index: 10000;
+      pointer-events: none;
+    }
+    
+    .profile-hover-content {
+      background: linear-gradient(135deg, rgba(18, 34, 90, 0.98) 0%, rgba(11, 21, 55, 0.98) 100%);
+      border: 2px solid rgba(56, 160, 255, 0.4);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 160, 255, 0.2);
+      backdrop-filter: blur(20px);
+      min-width: 280px;
+      animation: slideInUp 0.2s ease-out;
+    }
+    
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .profile-hover-avatar {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1rem;
+    }
+    
+    .profile-hover-avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid rgba(56, 160, 255, 0.5);
+      box-shadow: 0 0 20px rgba(56, 160, 255, 0.3);
+    }
+    
+    .hover-level-badge {
+      position: absolute;
+      bottom: -5px;
+      right: -5px;
+      background: linear-gradient(135deg, #38a0ff, #1b378d);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.5rem;
+      border-radius: 1rem;
+      border: 2px solid rgba(11, 21, 55, 0.9);
+      box-shadow: 0 2px 10px rgba(56, 160, 255, 0.4);
+    }
+    
+    .profile-hover-info {
+      text-align: center;
+    }
+    
+    .hover-username {
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem 0;
+    }
+    
+    .hover-exp {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+    }
+    
+    /* Make profile pictures clickable */
+    .user-profile-avatar {
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .user-profile-avatar:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px rgba(56, 160, 255, 0.5);
+    }
+    
     .comment-footer {
       margin-top: 0.5rem;
     }
@@ -972,6 +1127,32 @@ if ($db) {
     
     .post-menu {
       position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .bookmark-btn {
+      position: relative;
+      z-index: 10;
+      transition: all 0.3s ease;
+    }
+    
+    .bookmark-btn i {
+      transition: all 0.3s ease;
+    }
+    
+    .bookmark-btn:hover {
+      background: rgba(56, 160, 255, 0.2);
+      transform: scale(1.1);
+    }
+    
+    .bookmark-btn.bookmarked i {
+      color: #38a0ff;
+    }
+    
+    .bookmark-btn:not(.bookmarked):hover i {
+      color: #38a0ff;
     }
     
     .post-dropdown {
@@ -1141,10 +1322,367 @@ if ($db) {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
     }
+    
+    /* Comments section styling */
+    .comments-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(194, 213, 255, 0.2);
+    }
+    
+    .comments-list {
+      margin-bottom: 1rem;
+    }
+    
+    .comment-item {
+      padding: 1rem;
+      background: rgba(15, 30, 90, 0.3);
+      border-radius: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .comment-author {
+      color: var(--brand);
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    
+    .comment-text {
+      color: #fff;
+      line-height: 1.5;
+    }
+    
+    .comment-input-container {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    
+    .comment-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      background: rgba(15, 30, 90, 0.5);
+      border: 1px solid rgba(194, 213, 255, 0.2);
+      border-radius: 0.5rem;
+      color: white;
+      font-size: 0.95rem;
+    }
+    
+    .comment-input:focus {
+      outline: none;
+      border-color: var(--brand);
+    }
+    
+    .comment-input::placeholder {
+      color: var(--muted);
+    }
+    
+    .comment-submit-btn {
+      padding: 0.75rem 1.5rem;
+      background: var(--brand);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .comment-submit-btn:hover {
+      background: #2c8de0;
+      transform: translateY(-2px);
+    }
+    
+    /* Welcome Modal Styling */
+    .welcome-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 1;
+      transition: opacity 0.5s ease;
+      backdrop-filter: blur(8px);
+    }
+    
+    .welcome-modal-content {
+      background: linear-gradient(135deg, #0f1e5a 0%, #1a2f7a 50%, #0c1f6f 100%);
+      border: 2px solid rgba(56, 160, 255, 0.4);
+      border-radius: 1.5rem;
+      padding: 3rem 2.5rem;
+      max-width: 600px;
+      width: 90%;
+      text-align: center;
+      animation: welcomeSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(56, 160, 255, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .welcome-modal-content::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(56, 160, 255, 0.1) 0%, transparent 70%);
+      animation: welcomeGlow 3s ease-in-out infinite;
+    }
+    
+    @keyframes welcomeSlideIn {
+      from {
+        transform: translateY(-100px) scale(0.8);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes welcomeGlow {
+      0%, 100% {
+        opacity: 0.3;
+      }
+      50% {
+        opacity: 0.6;
+      }
+    }
+    
+    .welcome-panda-container {
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .welcome-panda-img {
+      width: 180px;
+      height: 180px;
+      object-fit: contain;
+      animation: welcomePandaBounce 2s ease-in-out infinite;
+      filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+    }
+    
+    @keyframes welcomePandaBounce {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+    
+    .welcome-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 1rem;
+      text-shadow: 0 2px 10px rgba(56, 160, 255, 0.5);
+      position: relative;
+      z-index: 1;
+      background: linear-gradient(135deg, #ffffff 0%, #38a0ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .welcome-message {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.7;
+      margin: 0;
+      position: relative;
+      z-index: 1;
+      max-width: 500px;
+      margin: 0 auto 1.5rem auto;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+    
+    .welcome-btn {
+      padding: 0.875rem 2.5rem;
+      background: linear-gradient(135deg, #38a0ff 0%, #2c8de0 100%);
+      color: white;
+      border: none;
+      border-radius: 0.75rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 1;
+      box-shadow: 0 4px 15px rgba(56, 160, 255, 0.4);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .welcome-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 25px rgba(56, 160, 255, 0.6);
+      background: linear-gradient(135deg, #2c8de0 0%, #1a6dbf 100%);
+    }
+    
+    .welcome-btn:active {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 15px rgba(56, 160, 255, 0.5);
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      .welcome-modal-content {
+        padding: 2rem 1.5rem;
+      }
+      
+      .welcome-panda-img {
+        width: 140px;
+        height: 140px;
+      }
+      
+      .welcome-title {
+        font-size: 2rem;
+      }
+      
+      .welcome-message {
+        font-size: 1rem;
+      }
+      
+      .welcome-btn {
+        font-size: 1rem;
+        padding: 0.75rem 2rem;
+      }
+    }
+    
+    /* PlayStation Particles Background */
+    .particles-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    
+    .particle {
+      position: absolute;
+      opacity: 0;
+      animation: floatUp linear infinite;
+    }
+    
+    /* X Button (Cross) */
+    .particle-x {
+      width: 30px;
+      height: 30px;
+      color: rgba(56, 160, 255, 0.4);
+      font-size: 28px;
+      font-weight: bold;
+      line-height: 30px;
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
+    
+    /* O Button (Circle) */
+    .particle-o {
+      width: 28px;
+      height: 28px;
+      border: 3px solid rgba(255, 85, 100, 0.4);
+      border-radius: 50%;
+    }
+    
+    /* Square Button */
+    .particle-square {
+      width: 26px;
+      height: 26px;
+      background: rgba(255, 130, 200, 0.4);
+      border-radius: 3px;
+    }
+    
+    /* Triangle Button */
+    .particle-triangle {
+      width: 0;
+      height: 0;
+      border-left: 15px solid transparent;
+      border-right: 15px solid transparent;
+      border-bottom: 26px solid rgba(100, 255, 150, 0.4);
+    }
+    
+    @keyframes floatUp {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.6;
+      }
+      90% {
+        opacity: 0.4;
+      }
+      100% {
+        transform: translateY(-100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
   </style>
 
   <!-- Dashboard Posts Management Script -->
   <script src="../assets/js/dashboard-posts.js?v=<?php echo time(); ?>"></script>
+  
+  <!-- PlayStation Particles Script -->
+  <script>
+    // Create PlayStation button particles
+    function createParticles() {
+      const container = document.getElementById('particlesContainer');
+      const particleTypes = ['x', 'o', 'square', 'triangle'];
+      const particleCount = 15; // Number of particles
+      
+      for (let i = 0; i < particleCount; i++) {
+        setTimeout(() => {
+          const particle = document.createElement('div');
+          const type = particleTypes[Math.floor(Math.random() * particleTypes.length)];
+          
+          particle.className = `particle particle-${type}`;
+          
+          // Random horizontal position
+          particle.style.left = Math.random() * 100 + '%';
+          
+          // Random animation duration (15-30 seconds)
+          const duration = 15 + Math.random() * 15;
+          particle.style.animationDuration = duration + 's';
+          
+          // Random delay
+          const delay = Math.random() * 10;
+          particle.style.animationDelay = delay + 's';
+          
+          // Random size variation (0.7x to 1.3x)
+          const scale = 0.7 + Math.random() * 0.6;
+          particle.style.transform = `scale(${scale})`;
+          
+          // Add X content for cross
+          if (type === 'x') {
+            particle.textContent = '×';
+          }
+          
+          container.appendChild(particle);
+          
+          // Remove and recreate particle after animation completes
+          particle.addEventListener('animationiteration', () => {
+            particle.style.left = Math.random() * 100 + '%';
+            const newDuration = 15 + Math.random() * 15;
+            particle.style.animationDuration = newDuration + 's';
+          });
+        }, i * 200); // Stagger particle creation
+      }
+    }
+    
+    // Initialize particles when page loads
+    document.addEventListener('DOMContentLoaded', createParticles);
+  </script>
 
 </body>
 </html>

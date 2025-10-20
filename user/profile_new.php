@@ -47,7 +47,9 @@ $userStmt = $db->prepare("
         ui.suffix,
         ui.bio,
         ui.profile_picture,
-        ui.exp_points
+        ui.exp_points,
+        ui.favorite_game_id,
+        ui.favorite_genres
     FROM users u
     LEFT JOIN user_info ui ON u.id = ui.user_id
     WHERE u.id = ?

@@ -12,6 +12,50 @@
   <!-- Styles -->
   <link rel="stylesheet" href="../assets/css/register.css">
   <style>
+    /* Back Button for Register Page */
+    .back-button-register {
+      position: absolute;
+      top: 2rem;
+      right: 2rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, rgba(56, 160, 255, 0.15), rgba(12, 31, 111, 0.1));
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(56, 160, 255, 0.3);
+      border-radius: 50px;
+      color: #0c1f6f;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+      z-index: 10;
+      box-shadow: 0 4px 15px rgba(56, 160, 255, 0.1);
+    }
+
+    .back-button-register:hover {
+      background: linear-gradient(135deg, rgba(56, 160, 255, 0.25), rgba(12, 31, 111, 0.15));
+      border-color: #38a0ff;
+      color: #38a0ff;
+      transform: translateX(5px);
+      box-shadow: 0 6px 20px rgba(56, 160, 255, 0.3);
+    }
+
+    .back-button-register i {
+      font-size: 1.1rem;
+      transition: transform 0.3s ease;
+      order: 2;
+    }
+
+    .back-button-register:hover i {
+      transform: translateX(3px);
+    }
+
+    .back-button-register span {
+      order: 1;
+    }
+    
     /* Username Modal Styles */
     .username-modal-backdrop {
       position: fixed;
@@ -149,7 +193,13 @@
     <!-- LEFT SIDE - White Register Form -->
     <div class="left-side">
       <div class="register-form-container">
-        <!-- Logo at top left (overlays on white side) -->
+        <!-- Back button at top right -->
+        <a href="../index.php" class="back-button-register">
+          <span>Back to Home</span>
+          <i class="bi bi-arrow-right"></i>
+        </a>
+        
+        <!-- Logo -->
         <div class="logo-container">
           <img src="../assets/img/EXPoints Logo.png" alt="EXPoints Logo" class="top-logo">
         </div>

@@ -1,4 +1,4 @@
-// Bookmarks Page JavaScript
+// Newest Posts Page JavaScript - Full Functionality with Like/Comment Add/Edit/Delete
 
 // Facebook-style time ago function
 function timeAgo(dateString) {
@@ -37,55 +37,35 @@ function escapeHtml(text) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const bookmarksContainer = document.getElementById('bookmarksContainer');
+    const postsContainer = document.getElementById('postsContainer');
     
-    // Load bookmarked posts
-    function loadBookmarks() {
-        console.log('Loading bookmarked posts...'); // Debug
-        fetch('../api/posts.php?action=get_bookmarked_posts')
+    // Create stars background
+    createStars();
+    
+    // Load newest posts
+    function loadNewestPosts() {
+        console.log('Loading newest posts...');
+        fetch('../api/posts.php?action=get_newest_posts')
             .then(response => response.json())
             .then(data => {
-                console.log('API Response:', data); // Debug
+                console.log('API Response:', data);
                 if (data.success) {
-                    if (data.posts.length === 0) {
-                        showEmptyState();
-                    } else {
-                        renderBookmarks(data.posts);
-                    }
+                    displayNewestPosts(data);
                 } else {
-                    console.error('API returned error:', data.error);
-                    showError('Error loading bookmarks: ' + data.error);
+                    showError('Error loading newest posts: ' + data.error);
                 }
             })
             .catch(error => {
-                console.error('Error loading bookmarks:', error);
-                showError('Error loading bookmarks');
+                console.error('Error loading newest posts:', error);
+                showError('Error loading newest posts');
             });
-    }
-    
-    // Show empty state
-    function showEmptyState() {
-        bookmarksContainer.innerHTML = `
-            <div class="empty-state">
-                <i class="bi bi-bookmark"></i>
-                <p style="color: rgba(255, 255, 255, 0.6); font-size: 1.5rem; margin-bottom: 0.5rem;">
-                    Your Collection is Empty
-                </p>
-                <p style="color: rgba(255, 255, 255, 0.4); font-size: 1.1rem;">
-                    Start saving your favorite reviews to build your treasure chest!
-                </p>
-                <a href="dashboard.php" class="cta-button">
-                    <i class="bi bi-search"></i> Discover Posts
-                </a>
-            </div>
-        `;
     }
     
     // Show error
     function showError(message) {
-        bookmarksContainer.innerHTML = `
+        postsContainer.innerHTML = `
             <div class="empty-state">
-                <i class="bi bi-exclamation-triangle" style="color: rgba(255, 107, 107, 0.5);"></i>
+                <i class="bi bi-exclamation-triangle"></i>
                 <p style="color: rgba(255, 255, 255, 0.8); font-size: 1.3rem;">${message}</p>
                 <button onclick="location.reload()" class="cta-button">
                     <i class="bi bi-arrow-clockwise"></i> Try Again
@@ -94,37 +74,75 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
     
-    // Render bookmarked posts
-    function renderBookmarks(posts) {
-        console.log('Rendering', posts.length, 'bookmarks'); // Debug
+    // Display newest posts with stats
+    function displayNewestPosts(data) {
+        const posts = data.posts || [];
+        const stats = data.stats || {};
         
         // Update stats
-        document.getElementById('totalBookmarks').textContent = posts.length;
-        const uniqueGames = [...new Set(posts.map(p => p.game))];
-        document.getElementById('totalGames').textContent = uniqueGames.length;
+        if (stats.total_posts !== undefined) {
+            const totalPostsEl = document.getElementById('totalPosts');
+            if (totalPostsEl) totalPostsEl.textContent = stats.total_posts;
+        }
         
-        bookmarksContainer.innerHTML = '';
+        // Calculate today's posts
+        const now = new Date();
+        const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const todayPosts = posts.filter(post => {
+            const postDate = new Date(post.created_at);
+            return postDate >= startOfDay;
+        });
+        const todayPostsEl = document.getElementById('todayPosts');
+        if (todayPostsEl) todayPostsEl.textContent = todayPosts.length;
+        
+        if (posts.length === 0) {
+            postsContainer.innerHTML = `
+                <div class="empty-state">
+                    <i class="bi bi-star-fill"></i>
+                    <p style="color: rgba(255, 255, 255, 0.6); font-size: 1.5rem; margin-bottom: 0.5rem;">
+                        No Posts Yet
+                    </p>
+                    <p style="color: rgba(255, 255, 255, 0.4); font-size: 1.1rem;">
+                        Be the first to share your thoughts!
+                    </p>
+                    <a href="dashboard.php" class="cta-button">
+                        <i class="bi bi-plus-circle"></i> Create Post
+                    </a>
+                </div>
+            `;
+            return;
+        }
+        
+        postsContainer.innerHTML = '';
         posts.forEach((post, index) => {
-            console.log(`Creating bookmark ${index + 1}:`, post.title); // Debug
             const postElement = document.createElement('div');
-            postElement.innerHTML = createPostHTML(post, index);
+            postElement.innerHTML = createPostCard(post);
             const postNode = postElement.firstElementChild;
-            bookmarksContainer.appendChild(postNode);
+            postsContainer.appendChild(postNode);
             addPostEventListeners(postNode);
         });
     }
     
-    // Create HTML for a single post with treasure theme
-    function createPostHTML(post, index) {
+    // Create post card HTML
+    function createPostCard(post) {
         const likeIcon = post.user_liked ? 'bi-star-fill' : 'bi-star';
         const likeClass = post.user_liked ? 'liked' : '';
+        const bookmarkIcon = post.user_bookmarked ? 'bi-bookmark-fill' : 'bi-bookmark';
+        const bookmarkClass = post.user_bookmarked ? 'bookmarked' : '';
         const profilePicture = post.author_profile_picture || '../assets/img/cat1.jpg';
         const timestamp = timeAgo(post.created_at);
-        const bookmarkedBadge = '<span class="bookmarked-badge"><i class="bi bi-bookmark-fill"></i> Saved</span>';
+        
+        // Check if post is NEW (< 1 hour old)
+        const postDate = new Date(post.created_at);
+        const now = new Date();
+        const hoursDiff = (now - postDate) / (1000 * 60 * 60);
+        const isNew = hoursDiff < 1;
+        
+        const newBadge = isNew ? '<div class="new-badge">🌟 NEW</div>' : '';
         
         return `
             <article class="card-post" data-post-id="${post.id}">
-                ${bookmarkedBadge}
+                ${newBadge}
                 <div class="post-header">
                     <div class="row gap-3 align-items-start">
                         <div class="col-auto">
@@ -146,8 +164,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </div>
                     <div class="post-menu">
-                        <button class="icon bookmark-btn bookmarked" data-post-id="${post.id}" title="Remove from Collection" aria-label="Remove Bookmark">
-                            <i class="bi bi-bookmark-fill"></i>
+                        <button class="icon bookmark-btn ${bookmarkClass}" data-post-id="${post.id}" title="Bookmark" aria-label="Bookmark">
+                            <i class="bi ${bookmarkIcon}"></i>
                         </button>
                     </div>
                 </div>
@@ -172,7 +190,51 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
     
-    // Add event listeners to a post
+    // Get time badge text
+    function getTimeBadge(createdAt) {
+        const postDate = new Date(createdAt);
+        const now = new Date();
+        const diffMs = now - postDate;
+        const diffMins = Math.floor(diffMs / (1000 * 60));
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+        
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays < 7) return `${diffDays}d ago`;
+        return postDate.toLocaleDateString();
+    }
+    
+    // Create animated stars
+    function createStars() {
+        const starsBg = document.getElementById('starsBg');
+        if (!starsBg) return;
+        
+        // Create twinkling stars
+        for (let i = 0; i < 100; i++) {
+            const star = document.createElement('div');
+            star.className = 'star';
+            star.style.left = Math.random() * 100 + '%';
+            star.style.top = Math.random() * 100 + '%';
+            star.style.animationDelay = Math.random() * 3 + 's';
+            star.style.animationDuration = (2 + Math.random() * 2) + 's';
+            starsBg.appendChild(star);
+        }
+        
+        // Create shooting stars
+        for (let i = 0; i < 5; i++) {
+            const shootingStar = document.createElement('div');
+            shootingStar.className = 'shooting-star';
+            shootingStar.style.left = Math.random() * 100 + '%';
+            shootingStar.style.top = Math.random() * 50 + '%';
+            shootingStar.style.animationDelay = Math.random() * 10 + 's';
+            shootingStar.style.animationDuration = (1 + Math.random()) + 's';
+            starsBg.appendChild(shootingStar);
+        }
+    }
+    
+    // Add event listeners to post
     function addPostEventListeners(postElement) {
         const postId = postElement.dataset.postId;
         
@@ -188,7 +250,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const bookmarkBtn = postElement.querySelector('.bookmark-btn');
         if (bookmarkBtn) {
             bookmarkBtn.addEventListener('click', function() {
-                toggleBookmark(postId, this, postElement);
+                toggleBookmark(postId, this);
             });
         }
         
@@ -214,7 +276,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 addComment(postId, postElement);
             });
             
-            // Allow Enter key to submit
             commentInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -222,37 +283,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
-        
-        // More menu toggle
-        const moreBtn = postElement.querySelector('.more');
-        const dropdown = postElement.querySelector('.post-dropdown');
-        if (moreBtn && dropdown) {
-            moreBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                
-                // Close all other dropdowns first
-                document.querySelectorAll('.post-dropdown').forEach(d => {
-                    if (d !== dropdown) {
-                        d.classList.remove('show');
-                    }
-                });
-                
-                // Toggle current dropdown
-                dropdown.classList.toggle('show');
-            });
-        }
     }
     
-    // Close all dropdowns when clicking outside
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.post-menu')) {
-            document.querySelectorAll('.post-dropdown').forEach(dropdown => {
-                dropdown.classList.remove('show');
-            });
-        }
-    });
-    
-    // Toggle like on post
+    // Toggle like
     function toggleLike(postId, button) {
         fetch(`../api/posts.php?action=like&post_id=${postId}`, {
             method: 'POST'
@@ -281,48 +314,35 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => console.error('Error toggling like:', error));
     }
     
-    // Toggle bookmark on post
-    function toggleBookmark(postId, button, postElement) {
+    // Toggle bookmark
+    function toggleBookmark(postId, button) {
         fetch(`../api/posts.php?action=bookmark&post_id=${postId}`, {
             method: 'POST'
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                if (!data.bookmarked) {
-                    // Bookmark removed - fade out and remove post from collection
-                    postElement.style.opacity = '0';
-                    postElement.style.transform = 'scale(0.95)';
-                    
-                    setTimeout(() => {
-                        postElement.remove();
-                        
-                        // Update stats and check if collection is empty
-                        const remainingPosts = bookmarksContainer.querySelectorAll('.post-card');
-                        if (remainingPosts.length === 0) {
-                            showEmptyState();
-                        } else {
-                            // Update stats
-                            document.getElementById('totalBookmarks').textContent = remainingPosts.length;
-                            const games = [...new Set(Array.from(remainingPosts).map(p => {
-                                const gameEl = p.querySelector('.post-game');
-                                return gameEl ? gameEl.textContent : '';
-                            }).filter(g => g))];
-                            document.getElementById('totalGames').textContent = games.length;
-                        }
-                    }, 300);
+                const icon = button.querySelector('i');
+                
+                if (data.bookmarked) {
+                    icon.classList.remove('bi-bookmark');
+                    icon.classList.add('bi-bookmark-fill');
+                    button.classList.add('bookmarked');
+                } else {
+                    icon.classList.remove('bi-bookmark-fill');
+                    icon.classList.add('bi-bookmark');
+                    button.classList.remove('bookmarked');
                 }
             }
         })
         .catch(error => console.error('Error toggling bookmark:', error));
     }
     
-    // Load comments for a post
+    // Load comments
     function loadComments(postId, postElement) {
         const commentsList = postElement.querySelector('.comments-list');
         const currentUserId = parseInt(document.body.dataset.userId) || 0;
         
-        // Show loading state
         commentsList.innerHTML = '<p style="color: rgba(255, 255, 255, 0.5); text-align: center; padding: 1rem;">Loading comments...</p>';
         
         fetch(`../api/posts.php?action=get_comments&post_id=${postId}`)
@@ -331,25 +351,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (data.success) {
                     commentsList.innerHTML = '';
                     
-                    // Update comment count in button
+                    // Update comment count
                     const commentBtn = postElement.querySelector('.comment-btn');
                     if (commentBtn) {
                         const countB = commentBtn.querySelector('b');
-                        if (countB) {
-                            countB.textContent = data.comments.length;
-                        }
+                        if (countB) countB.textContent = data.comments.length;
                         commentBtn.dataset.comments = data.comments.length;
                     }
                     
                     if (data.comments.length === 0) {
-                        commentsList.innerHTML = '<p style="color: rgba(255, 255, 255, 0.5); text-align: center; padding: 1rem;">No comments yet. Be the first to comment!</p>';
+                        commentsList.innerHTML = '<p style="color: rgba(255, 255, 255, 0.5); text-align: center; padding: 1rem;">No comments yet. Be the first!</p>';
                     } else {
                         data.comments.forEach(comment => {
                             const commentElement = createCommentHTML(comment, currentUserId);
                             commentsList.insertAdjacentHTML('beforeend', commentElement);
                         });
                         
-                        // Add event listeners to comment actions
                         commentsList.querySelectorAll('.comment-item').forEach(commentItem => {
                             addCommentEventListeners(commentItem, postId, postElement);
                         });
@@ -364,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // Create HTML for a comment
+    // Create comment HTML
     function createCommentHTML(comment, currentUserId) {
         const profilePicture = comment.commenter_profile_picture || '../assets/img/cat1.jpg';
         const likeIcon = comment.user_liked ? 'bi-star-fill' : 'bi-star';
@@ -399,7 +416,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <button class="icon more-comment" style="border: 0; background: transparent; color: rgba(255, 255, 255, 0.6); cursor: pointer; padding: 0.25rem;">
                                 <i class="bi bi-three-dots-vertical"></i>
                             </button>
-                            <div class="comment-dropdown" style="display: none; position: absolute; right: 0; top: 100%; background: #1a0033; border: 1px solid rgba(251, 197, 49, 0.3); border-radius: 8px; padding: 0.5rem; min-width: 120px; z-index: 1000; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
+                            <div class="comment-dropdown" style="display: none; position: absolute; right: 0; top: 100%; background: #1a0033; border: 1px solid rgba(167, 139, 250, 0.3); border-radius: 8px; padding: 0.5rem; min-width: 120px; z-index: 1000; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
                                 <button class="dropdown-item edit-comment" style="width: 100%; text-align: left; padding: 0.5rem; border: none; background: transparent; color: white; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 0.5rem;">
                                     <i class="bi bi-pencil"></i> Edit
                                 </button>
@@ -415,9 +432,8 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
     
-    // Add event listeners to comment actions
+    // Add comment event listeners
     function addCommentEventListeners(commentItem, postId, postElement) {
-        // Comment like button
         const likeBtn = commentItem.querySelector('.comment-like-btn');
         if (likeBtn) {
             likeBtn.addEventListener('click', function() {
@@ -425,23 +441,18 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // More menu toggle
         const moreBtn = commentItem.querySelector('.more-comment');
         const dropdown = commentItem.querySelector('.comment-dropdown');
         if (moreBtn && dropdown) {
             moreBtn.addEventListener('click', function(e) {
                 e.stopPropagation();
-                
-                // Close all other dropdowns
                 document.querySelectorAll('.comment-dropdown').forEach(d => {
                     if (d !== dropdown) d.style.display = 'none';
                 });
-                
                 dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
             });
         }
         
-        // Edit comment
         const editBtn = commentItem.querySelector('.edit-comment');
         if (editBtn) {
             editBtn.addEventListener('click', function() {
@@ -449,7 +460,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // Delete comment
         const deleteBtn = commentItem.querySelector('.delete-comment');
         if (deleteBtn) {
             deleteBtn.addEventListener('click', function() {
@@ -492,9 +502,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const commentInput = postElement.querySelector('.comment-input');
         const commentText = commentInput.value.trim();
         
-        if (!commentText) {
-            return;
-        }
+        if (!commentText) return;
         
         fetch('../api/posts.php?action=add_comment', {
             method: 'POST',
@@ -590,14 +598,14 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.className = 'custom-modal';
         modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;';
         modal.innerHTML = `
-            <div style="background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 0, 40, 0.95)); border: 2px solid rgba(251, 197, 49, 0.3); border-radius: 1.5rem; padding: 2rem; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
+            <div style="background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(30, 0, 60, 0.95)); border: 2px solid rgba(167, 139, 250, 0.4); border-radius: 1.5rem; padding: 2rem; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
                 <div style="text-align: center; margin-bottom: 1.5rem;">
-                    <i class="bi bi-question-circle-fill" style="font-size: 3rem; color: rgba(251, 197, 49, 0.8);"></i>
+                    <i class="bi bi-question-circle-fill" style="font-size: 3rem; color: rgba(167, 139, 250, 0.8);"></i>
                 </div>
                 <h3 style="color: white; text-align: center; margin-bottom: 2rem; font-size: 1.25rem;">${message}</h3>
                 <div style="display: flex; gap: 1rem; justify-content: center;">
                     <button class="modal-btn btn-cancel" style="flex: 1; padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 0.75rem; color: white; cursor: pointer; font-weight: 600; transition: all 0.3s;">No</button>
-                    <button class="modal-btn btn-confirm" style="flex: 1; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, rgba(251, 197, 49, 0.8), rgba(243, 156, 18, 0.8)); border: none; border-radius: 0.75rem; color: #0a0a0a; cursor: pointer; font-weight: 700; transition: all 0.3s;">Yes</button>
+                    <button class="modal-btn btn-confirm" style="flex: 1; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, rgba(167, 139, 250, 0.8), rgba(139, 92, 246, 0.8)); border: none; border-radius: 0.75rem; color: white; cursor: pointer; font-weight: 700; transition: all 0.3s;">Yes</button>
                 </div>
             </div>
         `;
@@ -616,15 +624,15 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.className = 'custom-modal';
         modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;';
         modal.innerHTML = `
-            <div style="background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 0, 40, 0.95)); border: 2px solid rgba(251, 197, 49, 0.3); border-radius: 1.5rem; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
+            <div style="background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(30, 0, 60, 0.95)); border: 2px solid rgba(167, 139, 250, 0.4); border-radius: 1.5rem; padding: 2rem; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
                 <div style="text-align: center; margin-bottom: 1rem;">
-                    <i class="bi bi-pencil-square" style="font-size: 2.5rem; color: rgba(251, 197, 49, 0.8);"></i>
+                    <i class="bi bi-pencil-square" style="font-size: 2.5rem; color: rgba(167, 139, 250, 0.8);"></i>
                 </div>
                 <h3 style="color: white; text-align: center; margin-bottom: 1.5rem; font-size: 1.25rem;">${title}</h3>
-                <textarea class="edit-modal-textarea" style="width: 100%; min-height: 120px; padding: 1rem; background: rgba(0, 0, 0, 0.5); border: 2px solid rgba(251, 197, 49, 0.3); border-radius: 0.75rem; color: white; font-family: 'Poppins', sans-serif; font-size: 1rem; resize: vertical; margin-bottom: 1.5rem;">${escapeHtml(currentText)}</textarea>
+                <textarea class="edit-modal-textarea" style="width: 100%; min-height: 120px; padding: 1rem; background: rgba(0, 0, 0, 0.5); border: 2px solid rgba(167, 139, 250, 0.4); border-radius: 0.75rem; color: white; font-family: 'Poppins', sans-serif; font-size: 1rem; resize: vertical; margin-bottom: 1.5rem;">${escapeHtml(currentText)}</textarea>
                 <div style="display: flex; gap: 1rem; justify-content: center;">
                     <button class="modal-btn btn-cancel" style="flex: 1; padding: 0.75rem 1.5rem; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 0.75rem; color: white; cursor: pointer; font-weight: 600; transition: all 0.3s;">Cancel</button>
-                    <button class="modal-btn btn-save" style="flex: 1; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, rgba(251, 197, 49, 0.8), rgba(243, 156, 18, 0.8)); border: none; border-radius: 0.75rem; color: #0a0a0a; cursor: pointer; font-weight: 700; transition: all 0.3s;">Save</button>
+                    <button class="modal-btn btn-save" style="flex: 1; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, rgba(167, 139, 250, 0.8), rgba(139, 92, 246, 0.8)); border: none; border-radius: 0.75rem; color: white; cursor: pointer; font-weight: 700; transition: all 0.3s;">Save</button>
                 </div>
             </div>
         `;
@@ -654,30 +662,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Show alert message
-    function showAlert(message, type) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
-        alertDiv.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
-        
-        const container = document.querySelector('.container-xl');
-        container.insertBefore(alertDiv, container.firstChild);
-        
-        setTimeout(() => {
-            alertDiv.remove();
-        }, 5000);
-    }
-    
-    // Escape HTML to prevent XSS
+    // Escape HTML
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
     
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.comment-menu')) {
+            document.querySelectorAll('.comment-dropdown').forEach(dropdown => {
+                dropdown.style.display = 'none';
+            });
+        }
+    });
+    
     // Initial load
-    loadBookmarks();
+    loadNewestPosts();
 });

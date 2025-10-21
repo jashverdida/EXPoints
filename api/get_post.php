@@ -4,86 +4,113 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Set JSON header
+header('Content-Type: application/json');
+
 // Check authentication
 if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
-    header('Content-Type: application/json');
     echo json_encode(['success' => false, 'message' => 'Not authenticated']);
     exit;
-}
-
-// Simple database connection function
-function getDBConnection() {
-    $host = '127.0.0.1';
-    $dbname = 'expoints_db';
-    $username = 'root';
-    $password = '';
-    
-    try {
-        $mysqli = new mysqli($host, $username, $password, $dbname);
-        
-        if ($mysqli->connect_error) {
-            throw new Exception("Connection failed: " . $mysqli->connect_error);
-        }
-        
-        $mysqli->set_charset('utf8mb4');
-        return $mysqli;
-    } catch (Exception $e) {
-        error_log("Database connection error: " . $e->getMessage());
-        return null;
-    }
 }
 
 // Get post ID from request
 $post_id = intval($_GET['id'] ?? 0);
 
 if ($post_id <= 0) {
-    header('Content-Type: application/json');
     echo json_encode(['success' => false, 'message' => 'Invalid post ID']);
     exit;
 }
 
-// Get database connection
-$db = getDBConnection();
+// Database connection
+$host = '127.0.0.1';
+$dbname = 'expoints_db';
+$username = 'root';
+$password = '';
 
-if (!$db) {
-    header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Database connection failed']);
+try {
+    $db = new mysqli($host, $username, $password, $dbname);
+    
+    if ($db->connect_error) {
+        throw new Exception("Connection failed: " . $db->connect_error);
+    }
+    
+    $db->set_charset('utf8mb4');
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'message' => 'Database connection failed', 'error' => $e->getMessage()]);
     exit;
 }
 
+// Fetch post from posts table
 try {
-    // Fetch post details
-    $stmt = $db->prepare("SELECT id, game, title, content, username, user_email, likes, comments, created_at, updated_at FROM posts WHERE id = ?");
+    $query = "SELECT id, game, title, content, username, user_id, likes, comments, created_at, updated_at FROM posts WHERE id = ?";
+    $stmt = $db->prepare($query);
+    
+    if (!$stmt) {
+        throw new Exception("Prepare failed: " . $db->error);
+    }
+    
     $stmt->bind_param("i", $post_id);
-    $stmt->execute();
+    
+    if (!$stmt->execute()) {
+        throw new Exception("Execute failed: " . $stmt->error);
+    }
+    
     $result = $stmt->get_result();
     
     if ($result->num_rows === 0) {
-        header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => 'Post not found']);
+        $stmt->close();
+        $db->close();
         exit;
     }
     
     $post = $result->fetch_assoc();
     $stmt->close();
     
-    // Get comments for this post
-    $comments_stmt = $db->prepare("SELECT id, username, text, likes, created_at FROM comments WHERE post_id = ? ORDER BY created_at DESC");
-    $comments_stmt->bind_param("i", $post_id);
-    $comments_stmt->execute();
-    $comments_result = $comments_stmt->get_result();
+    // Rename fields to match expected format
+    $post['like_count'] = $post['likes'];
+    $post['comment_count'] = $post['comments'];
+    unset($post['likes']);
+    unset($post['comments']);
     
-    $comments = [];
-    while ($comment = $comments_result->fetch_assoc()) {
-        $comments[] = $comment;
+    // Get user info from user_info table
+    $profile_picture = null;
+    $exp_points = 0;
+    
+    // Try to get user info by user_id first
+    if (!empty($post['user_id'])) {
+        $user_stmt = $db->prepare("SELECT profile_picture, exp_points FROM user_info WHERE user_id = ?");
+        $user_stmt->bind_param("i", $post['user_id']);
+        $user_stmt->execute();
+        $user_result = $user_stmt->get_result();
+        if ($user_result->num_rows > 0) {
+            $user_info = $user_result->fetch_assoc();
+            $profile_picture = $user_info['profile_picture'];
+            $exp_points = $user_info['exp_points'];
+        }
+        $user_stmt->close();
     }
-    $comments_stmt->close();
     
-    $post['comments_list'] = $comments;
+    // If no user_id or no match, try by username
+    if (empty($profile_picture) && !empty($post['username'])) {
+        $user_stmt = $db->prepare("SELECT profile_picture, exp_points FROM user_info WHERE username = ?");
+        $user_stmt->bind_param("s", $post['username']);
+        $user_stmt->execute();
+        $user_result = $user_stmt->get_result();
+        if ($user_result->num_rows > 0) {
+            $user_info = $user_result->fetch_assoc();
+            $profile_picture = $user_info['profile_picture'];
+            $exp_points = $user_info['exp_points'];
+        }
+        $user_stmt->close();
+    }
+    
+    // Set profile picture (use default if none found)
+    $post['profile_picture'] = !empty($profile_picture) ? $profile_picture : '../assets/img/default-avatar.png';
+    $post['exp_points'] = $exp_points;
     
     $db->close();
     
-    header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
         'post' => $post
@@ -91,7 +118,13 @@ try {
     
 } catch (Exception $e) {
     error_log("Get post error: " . $e->getMessage());
-    header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Error fetching post']);
+    echo json_encode([
+        'success' => false, 
+        'message' => 'Error fetching post',
+        'error' => $e->getMessage()
+    ]);
+    if (isset($db)) {
+        $db->close();
+    }
 }
 ?>

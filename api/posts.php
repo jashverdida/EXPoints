@@ -110,7 +110,8 @@ switch ($action) {
         
     case 'delete':
         // Delete post
-        $postId = intval($_POST['post_id'] ?? $_GET['post_id'] ?? 0);
+        $input = json_decode(file_get_contents('php://input'), true);
+        $postId = intval($input['post_id'] ?? $_POST['post_id'] ?? $_GET['post_id'] ?? 0);
         
         if ($postId <= 0) {
             echo json_encode(['success' => false, 'error' => 'Invalid post ID']);
@@ -143,7 +144,8 @@ switch ($action) {
         
     case 'like':
         // Toggle like on post
-        $postId = intval($_POST['post_id'] ?? $_GET['post_id'] ?? 0);
+        $input = json_decode(file_get_contents('php://input'), true);
+        $postId = intval($input['post_id'] ?? $_POST['post_id'] ?? $_GET['post_id'] ?? 0);
         
         if ($postId <= 0) {
             echo json_encode(['success' => false, 'error' => 'Invalid post ID']);
@@ -234,7 +236,8 @@ switch ($action) {
     
     case 'bookmark':
         // Toggle bookmark on post
-        $postId = intval($_POST['post_id'] ?? $_GET['post_id'] ?? 0);
+        $input = json_decode(file_get_contents('php://input'), true);
+        $postId = intval($input['post_id'] ?? $_POST['post_id'] ?? $_GET['post_id'] ?? 0);
         
         if ($postId <= 0) {
             echo json_encode(['success' => false, 'error' => 'Invalid post ID']);
@@ -356,8 +359,9 @@ switch ($action) {
     
     case 'add_comment':
         // Add a comment to a post
-        $postId = intval($_POST['post_id'] ?? 0);
-        $comment = trim($_POST['comment'] ?? '');
+        $input = json_decode(file_get_contents('php://input'), true);
+        $postId = intval($input['post_id'] ?? $_POST['post_id'] ?? 0);
+        $comment = trim($input['comment'] ?? $_POST['comment'] ?? '');
         
         if ($postId <= 0 || empty($comment)) {
             echo json_encode(['success' => false, 'error' => 'Invalid data']);
@@ -378,7 +382,8 @@ switch ($action) {
     
     case 'like_comment':
         // Toggle like on a comment
-        $commentId = intval($_POST['comment_id'] ?? $_GET['comment_id'] ?? 0);
+        $input = json_decode(file_get_contents('php://input'), true);
+        $commentId = intval($input['comment_id'] ?? $_POST['comment_id'] ?? $_GET['comment_id'] ?? 0);
         
         if ($commentId <= 0) {
             echo json_encode(['success' => false, 'error' => 'Invalid comment ID']);
@@ -429,9 +434,10 @@ switch ($action) {
     
     case 'add_reply':
         // Add a reply to a comment
-        $parentCommentId = intval($_POST['parent_comment_id'] ?? 0);
-        $postId = intval($_POST['post_id'] ?? 0);
-        $comment = trim($_POST['comment'] ?? '');
+        $input = json_decode(file_get_contents('php://input'), true);
+        $parentCommentId = intval($input['comment_id'] ?? $input['parent_comment_id'] ?? $_POST['parent_comment_id'] ?? 0);
+        $postId = intval($input['post_id'] ?? $_POST['post_id'] ?? 0);
+        $comment = trim($input['comment'] ?? $_POST['comment'] ?? '');
         
         if ($parentCommentId <= 0 || $postId <= 0 || empty($comment)) {
             echo json_encode(['success' => false, 'error' => 'Invalid data']);
@@ -494,6 +500,188 @@ switch ($action) {
         }
         
         echo json_encode(['success' => true, 'replies' => $replies]);
+        $stmt->close();
+        break;
+    
+    case 'update_comment':
+        // Update a comment or reply
+        $input = json_decode(file_get_contents('php://input'), true);
+        $commentId = intval($input['comment_id'] ?? $_POST['comment_id'] ?? 0);
+        $comment = trim($input['comment_text'] ?? $input['comment'] ?? $_POST['comment'] ?? '');
+        
+        if ($commentId <= 0 || empty($comment)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid data']);
+            exit();
+        }
+        
+        // Verify user owns this comment
+        $checkStmt = $db->prepare("SELECT id FROM post_comments WHERE id = ? AND user_id = ?");
+        $checkStmt->bind_param("ii", $commentId, $userId);
+        $checkStmt->execute();
+        $checkResult = $checkStmt->get_result();
+        
+        if ($checkResult->num_rows === 0) {
+            echo json_encode(['success' => false, 'message' => 'You do not have permission to edit this comment']);
+            $checkStmt->close();
+            exit();
+        }
+        $checkStmt->close();
+        
+        $stmt = $db->prepare("UPDATE post_comments SET comment = ? WHERE id = ?");
+        $stmt->bind_param("si", $comment, $commentId);
+        
+        if ($stmt->execute()) {
+            echo json_encode(['success' => true, 'message' => 'Comment updated successfully']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to update comment']);
+        }
+        $stmt->close();
+        break;
+    
+    case 'delete_comment':
+        // Delete a comment or reply
+        $input = json_decode(file_get_contents('php://input'), true);
+        $commentId = intval($input['comment_id'] ?? $_POST['comment_id'] ?? 0);
+        
+        if ($commentId <= 0) {
+            echo json_encode(['success' => false, 'message' => 'Invalid comment ID']);
+            exit();
+        }
+        
+        // Verify user owns this comment
+        $checkStmt = $db->prepare("SELECT id, parent_comment_id FROM post_comments WHERE id = ? AND user_id = ?");
+        $checkStmt->bind_param("ii", $commentId, $userId);
+        $checkStmt->execute();
+        $checkResult = $checkStmt->get_result();
+        
+        if ($checkResult->num_rows === 0) {
+            echo json_encode(['success' => false, 'message' => 'You do not have permission to delete this comment']);
+            $checkStmt->close();
+            exit();
+        }
+        
+        $commentData = $checkResult->fetch_assoc();
+        $parentCommentId = $commentData['parent_comment_id'];
+        $checkStmt->close();
+        
+        // Delete the comment
+        $stmt = $db->prepare("DELETE FROM post_comments WHERE id = ?");
+        $stmt->bind_param("i", $commentId);
+        
+        if ($stmt->execute()) {
+            // If this was a reply, decrement the parent comment's reply count
+            if ($parentCommentId) {
+                $db->query("UPDATE post_comments SET reply_count = GREATEST(0, reply_count - 1) WHERE id = $parentCommentId");
+            }
+            
+            echo json_encode(['success' => true, 'message' => 'Comment deleted successfully']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed to delete comment']);
+        }
+        $stmt->close();
+        break;
+    
+    case 'get_popular_posts':
+        // Get posts ordered by like count (most popular first)
+        $stmt = $db->prepare("
+            SELECT 
+                p.id,
+                p.game,
+                p.title,
+                p.content,
+                p.username,
+                p.user_id,
+                p.created_at,
+                (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as like_count,
+                (SELECT COUNT(*) FROM post_comments WHERE post_id = p.id) as comment_count,
+                (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id AND user_id = ?) as user_liked,
+                (SELECT COUNT(*) FROM post_bookmarks WHERE post_id = p.id AND user_id = ?) as user_bookmarked,
+                ui.profile_picture as author_profile_picture,
+                ui.exp_points
+            FROM posts p
+            LEFT JOIN user_info ui ON p.user_id = ui.user_id
+            ORDER BY like_count DESC, p.created_at DESC
+        ");
+        $stmt->bind_param("ii", $userId, $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $posts = [];
+        $totalLikes = 0;
+        $totalComments = 0;
+        
+        while ($row = $result->fetch_assoc()) {
+            $row['user_liked'] = (bool)$row['user_liked'];
+            $row['user_bookmarked'] = (bool)$row['user_bookmarked'];
+            $row['is_owner'] = ($row['user_id'] === $userId);
+            $row['exp_points'] = (int)($row['exp_points'] ?? 0);
+            
+            if (empty($row['author_profile_picture'])) {
+                $row['author_profile_picture'] = '../assets/img/cat1.jpg';
+            }
+            
+            $totalLikes += (int)$row['like_count'];
+            $totalComments += (int)$row['comment_count'];
+            $posts[] = $row;
+        }
+        
+        $stats = [
+            'total_posts' => count($posts),
+            'total_likes' => $totalLikes,
+            'total_comments' => $totalComments
+        ];
+        
+        echo json_encode(['success' => true, 'posts' => $posts, 'stats' => $stats]);
+        $stmt->close();
+        break;
+    
+    case 'get_newest_posts':
+        // Get posts ordered by creation date (newest first)
+        $stmt = $db->prepare("
+            SELECT 
+                p.id,
+                p.game,
+                p.title,
+                p.content,
+                p.username,
+                p.user_id,
+                p.created_at,
+                (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as like_count,
+                (SELECT COUNT(*) FROM post_comments WHERE post_id = p.id) as comment_count,
+                (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id AND user_id = ?) as user_liked,
+                (SELECT COUNT(*) FROM post_bookmarks WHERE post_id = p.id AND user_id = ?) as user_bookmarked,
+                ui.profile_picture as author_profile_picture,
+                ui.exp_points
+            FROM posts p
+            LEFT JOIN user_info ui ON p.user_id = ui.user_id
+            ORDER BY p.created_at DESC
+        ");
+        $stmt->bind_param("ii", $userId, $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $posts = [];
+        $totalPosts = 0;
+        
+        while ($row = $result->fetch_assoc()) {
+            $row['user_liked'] = (bool)$row['user_liked'];
+            $row['user_bookmarked'] = (bool)$row['user_bookmarked'];
+            $row['is_owner'] = ($row['user_id'] === $userId);
+            $row['exp_points'] = (int)($row['exp_points'] ?? 0);
+            
+            if (empty($row['author_profile_picture'])) {
+                $row['author_profile_picture'] = '../assets/img/cat1.jpg';
+            }
+            
+            $totalPosts++;
+            $posts[] = $row;
+        }
+        
+        $stats = [
+            'total_posts' => $totalPosts
+        ];
+        
+        echo json_encode(['success' => true, 'posts' => $posts, 'stats' => $stats]);
         $stmt->close();
         break;
         

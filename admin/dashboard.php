@@ -114,41 +114,131 @@ if ($db) {
     
     body {
       font-family: "Poppins", sans-serif !important;
-      background: radial-gradient(900px 600px at 15% 15%, #1b378d66 0%, #0000 60%),
-                  radial-gradient(800px 520px at 85% 80%, #1a3a9060 0%, #0000 60%),
-                  linear-gradient(145deg, #08122e, #0c1f6f) !important;
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3d 50%, #0d1b3a 100%);
       min-height: 100vh;
       color: #f6f9ff;
+      position: relative;
+      overflow-x: hidden;
     }
     
+    /* Animated Background Particles */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(30, 58, 138, 0.3) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(37, 99, 235, 0.2) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%);
+      animation: float 20s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    
+    @keyframes float {
+      0%, 100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: translate(-5%, -5%) scale(1.05);
+        opacity: 0.8;
+      }
+    }
+    
+    /* Floating Emoji Particles */
+    .particles-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    
+    .particle {
+      position: absolute;
+      font-size: 2rem;
+      opacity: 0.08;
+      filter: brightness(0) saturate(100%) invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(100%) contrast(100%);
+      animation: floatEmoji 25s infinite ease-in-out;
+    }
+    
+    @keyframes floatEmoji {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      25% { transform: translateY(-30px) rotate(90deg); }
+      50% { transform: translateY(-60px) rotate(180deg); }
+      75% { transform: translateY(-30px) rotate(270deg); }
+    }
+    
+    .container-xl {
+      position: relative;
+      z-index: 1;
+    }
     .admin-badge {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%);
       color: white;
-      padding: 0.25rem 0.75rem;
-      border-radius: 1rem;
+      padding: 0.35rem 1rem;
+      border-radius: 1.5rem;
       font-size: 0.85rem;
       font-weight: 600;
       display: inline-block;
       margin-left: 0.5rem;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.6);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 4px 15px rgba(59, 130, 246, 0.6); }
+      50% { transform: scale(1.05); box-shadow: 0 4px 25px rgba(59, 130, 246, 0.8); }
+    } 50% { transform: scale(1.05); box-shadow: 0 4px 25px rgba(245, 87, 108, 0.7); }
     }
     
     .topbar {
-      background: rgba(15, 30, 90, 0.6);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(194, 213, 255, 0.2);
+      background: linear-gradient(135deg, rgba(30, 58, 138, 0.3), rgba(37, 99, 235, 0.2));
+      backdrop-filter: blur(15px);
+      border: 2px solid rgba(59, 130, 246, 0.4);
       padding: 1rem 1.5rem;
-      border-radius: 0.75rem;
+      border-radius: 1rem;
       margin-bottom: 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 8px 32px rgba(59, 130, 246, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .topbar::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
+      animation: shine 3s infinite;
+    }
+    
+    @keyframes shine {
+      0% { left: -100%; }
+      100% { left: 100%; }
     }
     
     .topbar .lp-brand-img {
       max-height: 50px;
       width: auto;
-      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+      filter: drop-shadow(0 4px 8px rgba(59, 130, 246, 0.6));
+      transition: transform 0.3s;
+    }
+    
+    .topbar .lp-brand-img:hover {
+      transform: scale(1.05);
     }
     
     .topbar .right {
@@ -161,11 +251,13 @@ if ($db) {
       color: white;
       font-size: 1.25rem;
       text-decoration: none;
-      transition: opacity 0.3s;
+      transition: all 0.3s;
+      position: relative;
     }
     
     .topbar .icon:hover {
-      opacity: 0.8;
+      color: #ef4444;
+      transform: translateY(-2px);
     }
     
     .admin-grid {
@@ -175,19 +267,48 @@ if ($db) {
     }
     
     .admin-card {
-      background: rgba(15, 30, 90, 0.6);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(194, 213, 255, 0.2);
-      border-radius: 0.75rem;
-      padding: 1.5rem;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      background: linear-gradient(135deg, rgba(30, 58, 138, 0.2), rgba(37, 99, 235, 0.15));
+      backdrop-filter: blur(15px);
+      border: 2px solid rgba(59, 130, 246, 0.4);
+      border-radius: 1.25rem;
+      padding: 2rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .admin-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.2), transparent);
+      transition: left 0.5s;
+    }
+    
+    .admin-card:hover::before {
+      left: 100%;
+    }
+    
+    .admin-card:hover {
+      transform: translateY(-10px) scale(1.02);
+      border-color: #ef4444;
+      box-shadow: 0 20px 60px rgba(239, 68, 68, 0.5), 
+                  0 0 40px rgba(239, 68, 68, 0.3);
     }
     
     .section-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      color: #f5576c;
+      font-size: 1.5rem;
+      font-weight: 800;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: inline-block;
     }
     
     .metrics {
@@ -198,24 +319,36 @@ if ($db) {
     
     .metric {
       text-align: center;
-      padding: 1rem;
-      background: rgba(245, 87, 108, 0.1);
-      border: 1px solid rgba(245, 87, 108, 0.2);
-      border-radius: 0.5rem;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, rgba(30, 58, 138, 0.3), rgba(37, 99, 235, 0.2));
+      border: 2px solid rgba(59, 130, 246, 0.4);
+      border-radius: 1rem;
+      transition: all 0.3s;
+    }
+    
+    .metric:hover {
+      transform: scale(1.05);
+      border-color: #ef4444;
+      box-shadow: 0 8px 24px rgba(239, 68, 68, 0.5);
     }
     
     .m-num {
       display: block;
-      font-size: 2rem;
-      font-weight: 700;
-      color: #f5576c;
+      font-size: 2.5rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
     
     .m-label {
       display: block;
       font-size: 0.875rem;
-      color: #cfe0ff;
-      margin-top: 0.25rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
     
     .activity {
@@ -224,11 +357,17 @@ if ($db) {
     }
     
     .activity li {
-      padding: 0.75rem;
-      border-bottom: 1px solid #e9ecef;
+      padding: 1rem;
+      border-bottom: 1px solid rgba(59, 130, 246, 0.3);
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.75rem;
+      transition: all 0.3s;
+    }
+    
+    .activity li:hover {
+      background: rgba(239, 68, 68, 0.1);
+      padding-left: 1.5rem;
     }
     
     .activity li:last-child {
@@ -236,17 +375,25 @@ if ($db) {
     }
     
     .activity li i {
-      color: #f5576c;
+      color: #ef4444;
+      font-size: 1.25rem;
     }
     
     .btn-admin {
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%);
       color: white;
       border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
       font-weight: 600;
-      transition: transform 0.2s;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5);
+    }
+    
+    .btn-admin:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6);
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
     }
     
     .btn-admin:hover {
@@ -255,7 +402,9 @@ if ($db) {
     }
   </style>
 </head>
-<body style="background: #f8f9fa;">
+<body>
+
+  <div class="particles-bg" id="particlesBg"></div>
 
   <div class="container-xl mt-3">
     <header class="topbar">
@@ -336,12 +485,15 @@ if ($db) {
           <a href="../user/dashboard.php" class="btn btn-admin">
             <i class="bi bi-compass"></i> View User Feed
           </a>
-          <button class="btn btn-outline-secondary" onclick="alert('Feature coming soon!')">
+          <a href="ban-appeals.php" class="btn btn-admin" style="background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);">
+            <i class="bi bi-gavel"></i> Ban Appeals
+          </a>
+          <a href="manage-users.php" class="btn btn-outline-secondary">
             <i class="bi bi-people"></i> Manage Users
-          </button>
-          <button class="btn btn-outline-secondary" onclick="alert('Feature coming soon!')">
+          </a>
+          <a href="manage-moderators.php" class="btn btn-outline-secondary">
             <i class="bi bi-shield-check"></i> Manage Moderators
-          </button>
+          </a>
           <button class="btn btn-outline-secondary" onclick="alert('Feature coming soon!')">
             <i class="bi bi-flag"></i> View Reports
           </button>
@@ -378,5 +530,27 @@ if ($db) {
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Create floating emoji particles
+    function createParticles() {
+      const particlesBg = document.getElementById('particlesBg');
+      const emojis = ['👑', '🔐', '🛡️', '⚙️', '✨', '📊'];
+      const particleCount = 15;
+
+      for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 5 + 's';
+        particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+        particlesBg.appendChild(particle);
+      }
+    }
+
+    // Initialize particles on page load
+    createParticles();
+  </script>
 </body>
 </html>

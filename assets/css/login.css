@@ -94,8 +94,47 @@ body{
   position: relative;
 }
 
+/* Back Button */
+.back-button {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50px;
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+  transform: translateX(-5px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.back-button i {
+  font-size: 1.1rem;
+  transition: transform 0.3s ease;
+}
+
+.back-button:hover i {
+  transform: translateX(-3px);
+}
+
 .logo-container {
   margin-bottom: 2rem;
+  margin-top: 3rem;
 }
 
 .top-logo {
@@ -124,12 +163,13 @@ body{
 }
 
 .welcome-subtitle {
-  font-size: 1.1rem;
+  font-size: 1.25rem;
   color: var(--muted);
   margin-bottom: 3rem;
   line-height: 1.6;
   max-width: 600px;
   padding: 0 1rem;
+  font-weight: 500;
 }
 
 .panda-mascot {
@@ -342,8 +382,15 @@ body{
   }
   
   .welcome-subtitle {
-    font-size: 1rem;
+    font-size: 1.05rem;
     margin-bottom: 2rem;
+  }
+  
+  .back-button {
+    top: 1.5rem;
+    left: 1.5rem;
+    padding: 0.6rem 1.2rem;
+    font-size: 0.9rem;
   }
   
   .panda-mascot {

@@ -42,8 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$db) {
             $error = 'Database connection failed. Please try again later.';
         } else {
-            // Query user from database - include role field
-            $stmt = $db->prepare("SELECT id, email, password, role FROM users WHERE email = ?");
+            // Query user from database - include role field and disabled status
+            $stmt = $db->prepare("SELECT id, email, password, role, is_disabled, disabled_reason, disabled_at, disabled_by FROM users WHERE email = ?");
             $stmt->bind_param("s", $email);
             $stmt->execute();
             $result = $stmt->get_result();
@@ -56,18 +56,60 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Get user role (default to 'user' if not set)
                     $role = $user['role'] ?? 'user';
                     
-                    // Get username from user_info table
-                    $userInfoStmt = $db->prepare("SELECT username FROM user_info WHERE user_id = ?");
+                    // Check if moderator account is disabled
+                    $is_disabled = $user['is_disabled'] ?? 0;
+                    if ($role === 'mod' && $is_disabled == 1) {
+                        // Set disabled info in session for disabled.php to display
+                        $_SESSION['disabled_reason'] = $user['disabled_reason'] ?? 'Your account has been disabled by an administrator.';
+                        $_SESSION['disabled_at'] = $user['disabled_at'];
+                        $_SESSION['disabled_by'] = $user['disabled_by'];
+                        
+                        // Close connection
+                        $stmt->close();
+                        $db->close();
+                        
+                        // Redirect to disabled page
+                        header('Location: disabled.php');
+                        exit();
+                    }
+                    
+                    // Get username and ban status from user_info table
+                    $userInfoStmt = $db->prepare("SELECT username, is_banned, ban_reason, banned_at, banned_by FROM user_info WHERE user_id = ?");
                     $userInfoStmt->bind_param("i", $user['id']);
                     $userInfoStmt->execute();
                     $userInfoResult = $userInfoStmt->get_result();
                     
                     $username = $user['email']; // Default to email if username not found
+                    $is_banned = 0;
+                    $ban_reason = '';
+                    $banned_at = '';
+                    $banned_by = '';
+                    
                     if ($userInfoResult->num_rows === 1) {
                         $userInfoData = $userInfoResult->fetch_assoc();
                         $username = $userInfoData['username'];
+                        $is_banned = $userInfoData['is_banned'] ?? 0;
+                        $ban_reason = $userInfoData['ban_reason'] ?? '';
+                        $banned_at = $userInfoData['banned_at'] ?? '';
+                        $banned_by = $userInfoData['banned_by'] ?? '';
                     }
                     $userInfoStmt->close();
+                    
+                    // Check if user is banned
+                    if ($is_banned == 1) {
+                        // Set ban info in session for banned.php to display
+                        $_SESSION['ban_reason'] = $ban_reason;
+                        $_SESSION['banned_at'] = $banned_at;
+                        $_SESSION['banned_by'] = $banned_by;
+                        
+                        // Close connection
+                        $stmt->close();
+                        $db->close();
+                        
+                        // Redirect to banned page
+                        header('Location: banned.php');
+                        exit();
+                    }
                     
                     // Set session variables
                     $_SESSION['user_id'] = $user['id'];
@@ -132,7 +174,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="split-screen-container">
         <!-- LEFT SIDE - Blue Welcome Section -->
         <div class="left-side">
-            <!-- Logo at top left -->
+            <!-- Back button at top left -->
+            <a href="../index.php" class="back-button">
+                <i class="bi bi-arrow-left"></i> Back to Home
+            </a>
+            
+            <!-- Logo -->
             <div class="logo-container">
                 <img src="../assets/img/EXPoints Logo.png" alt="EXPoints Logo" class="top-logo">
             </div>

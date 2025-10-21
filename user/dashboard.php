@@ -165,8 +165,6 @@ if ($db) {
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="../assets/css/index.css"> <!-- Fixed path -->
-  <link rel="stylesheet" href="../assets/css/components.css"> <!-- Fixed path -->
-  <link rel="stylesheet" href="../assets/css/utilities.css"> <!-- Fixed path -->
 </head>
 <body>
   <!-- PlayStation Button Particles Background -->
@@ -1356,6 +1354,8 @@ if ($db) {
       display: flex;
       gap: 0.75rem;
       align-items: center;
+      margin-bottom: 4rem; /* Add space to prevent overlap with like/comment buttons */
+      padding-top: 1rem;
     }
     
     .comment-input {
@@ -1629,6 +1629,11 @@ if ($db) {
       }
     }
   </style>
+
+  <!-- Set current user ID for JavaScript -->
+  <script>
+    const currentUserId = <?php echo json_encode($userId); ?>;
+  </script>
 
   <!-- Dashboard Posts Management Script -->
   <script src="../assets/js/dashboard-posts.js?v=<?php echo time(); ?>"></script>

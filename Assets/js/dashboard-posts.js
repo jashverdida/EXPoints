@@ -467,6 +467,32 @@ document.addEventListener('DOMContentLoaded', function() {
                                 hideReplyInput(commentId);
                             });
                         });
+                        
+                        // Add event listeners for comment edit/delete menus
+                        commentsList.querySelectorAll('.more-comment').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                const dropdown = this.nextElementSibling;
+                                document.querySelectorAll('.comment-dropdown').forEach(d => {
+                                    if (d !== dropdown) d.style.display = 'none';
+                                });
+                                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                            });
+                        });
+                        
+                        commentsList.querySelectorAll('.edit-comment').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                const commentItem = this.closest('.comment-item');
+                                editComment(commentItem, postId);
+                            });
+                        });
+                        
+                        commentsList.querySelectorAll('.delete-comment').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                const commentItem = this.closest('.comment-item');
+                                deleteComment(commentItem, postId, postElement);
+                            });
+                        });
                     }
                 } else {
                     commentsList.innerHTML = '<p style="color: #ff6b6b; text-align: center;">Error loading comments</p>';
@@ -484,9 +510,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const likeIcon = comment.user_liked ? 'bi-star-fill' : 'bi-star';
         const likeClass = comment.user_liked ? 'liked' : '';
         const timestamp = timeAgo(comment.created_at);
+        const isOwner = comment.user_id == currentUserId;
         
         return `
-            <div class="comment-item" data-comment-id="${comment.id}">
+            <div class="comment-item" data-comment-id="${comment.id}" data-user-id="${comment.user_id}">
                 <div class="row g-3 align-items-start">
                     <div class="col-auto">
                         <div class="avatar-sm user-profile-avatar" 
@@ -497,7 +524,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <img src="${escapeHtml(profilePicture)}" alt="Profile" style="position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px; width: calc(100% - 4px); height: calc(100% - 4px); object-fit: cover; border-radius: 50%; z-index: 3;">
                         </div>
                     </div>
-                    <div class="col">
+                    <div class="col" style="position: relative;">
                         <div class="comment-author">@${escapeHtml(comment.username)}</div>
                         <div class="comment-text">${escapeHtml(comment.comment)}</div>
                         <div class="comment-actions" style="display: flex; gap: 1rem; margin-top: 0.5rem; font-size: 0.875rem;">
@@ -515,6 +542,21 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </button>
                             ` : ''}
                         </div>
+                        ${isOwner ? `
+                        <div class="comment-menu" style="position: absolute; top: 0; right: 0;">
+                            <button class="icon more-comment" style="border: 0; background: transparent; color: rgba(255, 255, 255, 0.6); cursor: pointer; padding: 0.25rem;">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <div class="comment-dropdown" style="display: none; position: absolute; right: 0; top: 100%; background: #1a0033; border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 8px; padding: 0.5rem; min-width: 120px; z-index: 1000; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
+                                <button class="dropdown-item edit-comment" style="width: 100%; text-align: left; padding: 0.5rem; border: none; background: transparent; color: white; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                                <button class="dropdown-item delete-comment" style="width: 100%; text-align: left; padding: 0.5rem; border: none; background: transparent; color: #ff4444; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                        ` : ''}
                         <div class="replies-container" data-comment-id="${comment.id}" style="margin-top: 1rem; margin-left: 1rem; display: none;"></div>
                         <div class="reply-input-container" data-comment-id="${comment.id}" style="margin-top: 1rem; display: none;">
                             <input type="text" class="reply-input" placeholder="Write a reply..." style="width: 100%; padding: 0.5rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 0.5rem; color: white;">
@@ -717,6 +759,32 @@ document.addEventListener('DOMContentLoaded', function() {
                                 toggleCommentLike(replyId, this);
                             });
                         });
+                        
+                        // Add event listeners for reply edit/delete menus
+                        repliesContainer.querySelectorAll('.more-reply').forEach(btn => {
+                            btn.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                const dropdown = this.nextElementSibling;
+                                document.querySelectorAll('.comment-dropdown').forEach(d => {
+                                    if (d !== dropdown) d.style.display = 'none';
+                                });
+                                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                            });
+                        });
+                        
+                        repliesContainer.querySelectorAll('.edit-reply').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                const replyItem = this.closest('.reply-item');
+                                editReply(replyItem, parentCommentId);
+                            });
+                        });
+                        
+                        repliesContainer.querySelectorAll('.delete-reply').forEach(btn => {
+                            btn.addEventListener('click', function() {
+                                const replyItem = this.closest('.reply-item');
+                                deleteReply(replyItem, parentCommentId);
+                            });
+                        });
                     }
                 } else {
                     repliesContainer.innerHTML = '<p style="color: #ff6b6b; text-align: center;">Error loading replies</p>';
@@ -734,18 +802,24 @@ document.addEventListener('DOMContentLoaded', function() {
         const likeIcon = reply.user_liked ? 'bi-star-fill' : 'bi-star';
         const likeClass = reply.user_liked ? 'liked' : '';
         const timestamp = timeAgo(reply.created_at);
+        const isOwner = reply.user_id == currentUserId;
         
         return `
-            <div class="reply-item" data-comment-id="${reply.id}" style="margin-bottom: 1rem;">
+            <div class="reply-item" data-comment-id="${reply.id}" data-user-id="${reply.user_id}" style="margin-bottom: 1rem;">
                 <div class="row g-3 align-items-start">
                     <div class="col-auto">
-                        <div class="avatar-sm" style="width: 32px; height: 32px;">
+                        <div class="avatar-sm user-profile-avatar" 
+                             data-user-id="${reply.user_id}" 
+                             data-username="${escapeHtml(reply.username)}"
+                             data-profile-picture="${escapeHtml(profilePicture)}"
+                             data-exp="${reply.exp_points || 0}"
+                             style="width: 32px; height: 32px;">
                             <img src="${escapeHtml(profilePicture)}" alt="Profile" style="position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px; width: calc(100% - 4px); height: calc(100% - 4px); object-fit: cover; border-radius: 50%; z-index: 3;">
                         </div>
                     </div>
-                    <div class="col">
+                    <div class="col" style="position: relative;">
                         <div class="comment-author">@${escapeHtml(reply.username)}</div>
-                        <div class="comment-text">${escapeHtml(reply.comment)}</div>
+                        <div class="reply-text">${escapeHtml(reply.comment)}</div>
                         <div class="comment-actions" style="display: flex; gap: 1rem; margin-top: 0.5rem; font-size: 0.875rem;">
                             <button class="comment-like-btn ${likeClass}" data-comment-id="${reply.id}" style="background: none; border: none; color: rgba(255, 255, 255, 0.6); cursor: pointer; padding: 0; display: flex; align-items: center; gap: 0.25rem;">
                                 <i class="bi ${likeIcon}"></i>
@@ -753,6 +827,21 @@ document.addEventListener('DOMContentLoaded', function() {
                             </button>
                             <span class="comment-time" style="color: rgba(255, 255, 255, 0.4);">${timestamp}</span>
                         </div>
+                        ${isOwner ? `
+                        <div class="comment-menu" style="position: absolute; top: 0; right: 0;">
+                            <button class="icon more-reply" style="border: 0; background: transparent; color: rgba(255, 255, 255, 0.6); cursor: pointer; padding: 0.25rem;">
+                                <i class="bi bi-three-dots-vertical"></i>
+                            </button>
+                            <div class="comment-dropdown" style="display: none; position: absolute; right: 0; top: 100%; background: #1a0033; border: 1px solid rgba(124, 58, 237, 0.3); border-radius: 8px; padding: 0.5rem; min-width: 120px; z-index: 1000; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
+                                <button class="dropdown-item edit-reply" style="width: 100%; text-align: left; padding: 0.5rem; border: none; background: transparent; color: white; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="bi bi-pencil"></i> Edit
+                                </button>
+                                <button class="dropdown-item delete-reply" style="width: 100%; text-align: left; padding: 0.5rem; border: none; background: transparent; color: #ff4444; cursor: pointer; border-radius: 4px; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="bi bi-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                        ` : ''}
                     </div>
                 </div>
             </div>
@@ -934,11 +1023,219 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Show edit modal
+    function showEditModal(title, currentText, onSave) {
+        const modal = document.createElement('div');
+        modal.className = 'custom-modal';
+        modal.innerHTML = `
+            <div class="custom-modal-content" style="max-width: 500px;">
+                <div class="modal-icon">
+                    <i class="bi bi-pencil-square"></i>
+                </div>
+                <h3>${title}</h3>
+                <textarea class="edit-modal-textarea" style="
+                    width: 100%;
+                    min-height: 100px;
+                    padding: 1rem;
+                    background: rgba(15, 30, 90, 0.5);
+                    border: 1px solid rgba(56, 160, 255, 0.3);
+                    border-radius: 0.5rem;
+                    color: white;
+                    font-family: 'Poppins', sans-serif;
+                    font-size: 1rem;
+                    resize: vertical;
+                    margin-bottom: 1.5rem;
+                ">${escapeHtml(currentText)}</textarea>
+                <div class="modal-buttons">
+                    <button class="modal-btn btn-cancel" data-action="cancel">Cancel</button>
+                    <button class="modal-btn btn-confirm" data-action="save">Save</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        const textarea = modal.querySelector('.edit-modal-textarea');
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+        
+        // Handle button clicks
+        modal.querySelector('[data-action="cancel"]').addEventListener('click', function() {
+            modal.remove();
+        });
+        
+        modal.querySelector('[data-action="save"]').addEventListener('click', function() {
+            const newText = textarea.value.trim();
+            if (newText !== '' && newText !== currentText) {
+                modal.remove();
+                onSave(newText);
+            } else if (newText === '') {
+                alert('Text cannot be empty');
+            } else {
+                modal.remove();
+            }
+        });
+        
+        // Allow Enter key with Ctrl to save
+        textarea.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                modal.querySelector('[data-action="save"]').click();
+            }
+        });
+    }
+    
     // Escape HTML to prevent XSS
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
+    }
+    
+    // Edit comment function
+    function editComment(commentItem, postId) {
+        const commentId = commentItem.getAttribute('data-comment-id');
+        const commentTextElem = commentItem.querySelector('.comment-text');
+        const currentText = commentTextElem.textContent.trim();
+        
+        showEditModal('Edit your comment:', currentText, (newText) => {
+            fetch('../api/posts.php?action=update_comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    comment_id: parseInt(commentId),
+                    comment: newText
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    commentTextElem.textContent = newText;
+                    // Hide dropdown
+                    const dropdown = commentItem.querySelector('.comment-dropdown');
+                    if (dropdown) dropdown.style.display = 'none';
+                } else {
+                    alert('Failed to edit comment: ' + (data.error || data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error editing comment: ' + error.message);
+            });
+        });
+    }
+    
+    // Delete comment function
+    function deleteComment(commentItem, postId, postElement) {
+        const commentId = commentItem.getAttribute('data-comment-id');
+        
+        showConfirmModal('Are you sure you want to delete this comment?', () => {
+            fetch('../api/posts.php?action=delete_comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    comment_id: parseInt(commentId)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload comments for this post
+                    const commentsList = postElement.querySelector('.comments-list');
+                    if (commentsList) {
+                        loadComments(postId, commentsList, postElement);
+                    }
+                    
+                    // Update comment count
+                    const commentCountElem = postElement.querySelector('.comment-count');
+                    if (commentCountElem) {
+                        const currentCount = parseInt(commentCountElem.textContent) || 0;
+                        if (currentCount > 0) {
+                            commentCountElem.textContent = currentCount - 1;
+                        }
+                    }
+                } else {
+                    alert('Failed to delete comment: ' + (data.error || data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting comment: ' + error.message);
+            });
+        });
+    }
+    
+    // Edit reply function
+    function editReply(replyItem, parentCommentId) {
+        const replyId = replyItem.getAttribute('data-comment-id');
+        const replyTextElem = replyItem.querySelector('.reply-text');
+        const currentText = replyTextElem.textContent.trim();
+        
+        showEditModal('Edit your reply:', currentText, (newText) => {
+            fetch('../api/posts.php?action=update_comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    comment_id: parseInt(replyId),
+                    comment: newText
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    replyTextElem.textContent = newText;
+                    // Hide dropdown
+                    const dropdown = replyItem.querySelector('.comment-dropdown');
+                    if (dropdown) dropdown.style.display = 'none';
+                } else {
+                    alert('Failed to edit reply: ' + (data.error || data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error editing reply: ' + error.message);
+            });
+        });
+    }
+    
+    // Delete reply function
+    function deleteReply(replyItem, parentCommentId) {
+        const replyId = replyItem.getAttribute('data-comment-id');
+        
+        showConfirmModal('Are you sure you want to delete this reply?', () => {
+            fetch('../api/posts.php?action=delete_comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    comment_id: parseInt(replyId)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Find the comment item and reload replies
+                    const commentItem = replyItem.closest('.comment-item');
+                    if (commentItem) {
+                        const repliesContainer = commentItem.querySelector('.replies-container');
+                        if (repliesContainer) {
+                            loadReplies(parentCommentId, repliesContainer);
+                        }
+                    }
+                } else {
+                    alert('Failed to delete reply: ' + (data.error || data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting reply: ' + error.message);
+            });
+        });
     }
     
     // Profile Hover Modal functionality

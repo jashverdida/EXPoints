@@ -419,24 +419,32 @@ main.container-xl > * + *{
 .actions{
   display:flex;
   align-items:center;
-  gap:24px;
+  gap:32px;
   color:#cfe0ff;
-  font-size:1.02rem;
+  font-size:2rem; /* 2x bigger */
 }
 
 .actions .a{
   display:flex;
   align-items:center;
-  gap:8px;
+  gap:12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.actions .a:hover {
+  transform: scale(1.1);
 }
 
 .actions i{
   color:var(--brand);
+  font-size: 2rem; /* 2x bigger */
 }
 
 .actions b{
   font-weight:700;
   color:#fff;
+  font-size: 1.5rem; /* 2x bigger */
 }
 
 .actions .more{

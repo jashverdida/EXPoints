@@ -25,7 +25,7 @@
           <li><a href="#" class="lp-link">About</a></li>
           <li><a href="#" class="lp-link">Support</a></li>
           <li><a href="#" class="lp-link">Meet the Devs!</a></li>
-          <li><a href="#" class="lp-link">Discover</a></li>
+          <li><a href="../discover.php" class="lp-link">Discover</a></li>
         </ul>
       </nav>
     </header>

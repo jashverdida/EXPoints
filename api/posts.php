@@ -152,6 +152,15 @@ switch ($action) {
             exit();
         }
         
+        // Get post author's user_id for EXP update
+        $authorStmt = $db->prepare("SELECT user_id FROM posts WHERE id = ?");
+        $authorStmt->bind_param("i", $postId);
+        $authorStmt->execute();
+        $authorResult = $authorStmt->get_result();
+        $postAuthor = $authorResult->fetch_assoc();
+        $postAuthorId = $postAuthor['user_id'] ?? null;
+        $authorStmt->close();
+        
         // Check if user already liked this post
         $checkStmt = $db->prepare("SELECT id FROM post_likes WHERE post_id = ? AND user_id = ?");
         $checkStmt->bind_param("ii", $postId, $userId);
@@ -174,6 +183,12 @@ switch ($action) {
             $liked = true;
         }
         
+        // Update post author's EXP (5 EXP per like)
+        if ($postAuthorId) {
+            require_once '../includes/ExpSystem.php';
+            $authorStats = ExpSystem::updateUserExp($db, $postAuthorId);
+        }
+        
         // Get updated like count
         $countStmt = $db->prepare("SELECT COUNT(*) as like_count FROM post_likes WHERE post_id = ?");
         $countStmt->bind_param("i", $postId);
@@ -194,6 +209,8 @@ switch ($action) {
         
     case 'get_posts':
         // Get all posts with like status for current user and author profile pictures
+        require_once '../includes/ExpSystem.php';
+        
         $stmt = $db->prepare("
             SELECT 
                 p.id,
@@ -223,6 +240,7 @@ switch ($action) {
             $row['user_bookmarked'] = (bool)$row['user_bookmarked'];
             $row['is_owner'] = ($row['user_id'] === $userId);
             $row['exp_points'] = (int)($row['exp_points'] ?? 0);
+            $row['level'] = ExpSystem::calculateLevel($row['exp_points']);
             // Set default profile picture if none exists
             if (empty($row['author_profile_picture'])) {
                 $row['author_profile_picture'] = '../assets/img/cat1.jpg';
@@ -390,6 +408,15 @@ switch ($action) {
             exit();
         }
         
+        // Get comment author's user_id for EXP update
+        $authorStmt = $db->prepare("SELECT user_id FROM post_comments WHERE id = ?");
+        $authorStmt->bind_param("i", $commentId);
+        $authorStmt->execute();
+        $authorResult = $authorStmt->get_result();
+        $commentAuthor = $authorResult->fetch_assoc();
+        $commentAuthorId = $commentAuthor['user_id'] ?? null;
+        $authorStmt->close();
+        
         // Check if user already liked this comment
         $checkStmt = $db->prepare("SELECT id FROM comment_likes WHERE comment_id = ? AND user_id = ?");
         $checkStmt->bind_param("ii", $commentId, $userId);
@@ -418,6 +445,12 @@ switch ($action) {
             $db->query("UPDATE post_comments SET like_count = like_count + 1 WHERE id = $commentId");
             
             $liked = true;
+        }
+        
+        // Update comment author's EXP (5 EXP per like)
+        if ($commentAuthorId) {
+            require_once '../includes/ExpSystem.php';
+            $authorStats = ExpSystem::updateUserExp($db, $commentAuthorId);
         }
         
         // Get updated like count

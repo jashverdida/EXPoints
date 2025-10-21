@@ -717,9 +717,6 @@ if ($db) {
               <option value="title">Search by Title</option>
               <option value="author">Search by Author</option>
             </select>
-            <button class="btn btn-mod" onclick="searchPosts()">
-              <i class="bi bi-search"></i> Search
-            </button>
           </div>
         </div>
         
@@ -749,9 +746,6 @@ if ($db) {
                         <button class="btn btn-sm btn-mod" onclick="viewPost(<?php echo $post['id']; ?>)" title="View Post">
                           <i class="bi bi-eye"></i>
                         </button>
-                        <button class="btn btn-sm btn-warning" onclick="hidePost(<?php echo $post['id']; ?>)" title="Hide Post">
-                          <i class="bi bi-eye-slash"></i>
-                        </button>
                         <button class="btn btn-sm btn-danger" onclick="flagForBan(<?php echo $post['id']; ?>, '<?php echo htmlspecialchars($post['username']); ?>')" title="Flag for Ban Review">
                           <i class="bi bi-flag-fill"></i>
                         </button>
@@ -776,9 +770,6 @@ if ($db) {
           <a href="ban-reviews.php" class="btn btn-outline-secondary">
             <i class="bi bi-flag"></i> Review Reports
           </a>
-          <button class="btn btn-outline-secondary" onclick="alert('Feature coming soon!')">
-            <i class="bi bi-person-x"></i> Manage Users
-          </button>
         </div>
       </section>
     </div>
@@ -1019,9 +1010,6 @@ if ($db) {
                 <button class="btn btn-sm btn-mod" onclick="viewPost(${post.id})" title="View Post">
                   <i class="bi bi-eye"></i>
                 </button>
-                <button class="btn btn-sm btn-warning" onclick="hidePost(${post.id})" title="Hide Post">
-                  <i class="bi bi-eye-slash"></i>
-                </button>
                 <button class="btn btn-sm btn-danger" onclick="flagForBan(${post.id}, '${escapeHtml(post.username)}')" title="Flag for Ban Review">
                   <i class="bi bi-flag-fill"></i>
                 </button>
@@ -1049,9 +1037,6 @@ if ($db) {
               <button class="btn btn-sm btn-mod" onclick="viewPost(${post.id})" title="View Post">
                 <i class="bi bi-eye"></i>
               </button>
-              <button class="btn btn-sm btn-warning" onclick="hidePost(${post.id})" title="Hide Post">
-                <i class="bi bi-eye-slash"></i>
-              </button>
               <button class="btn btn-sm btn-danger" onclick="flagForBan(${post.id}, '${escapeHtml(post.username)}')" title="Flag for Ban Review">
                 <i class="bi bi-flag-fill"></i>
               </button>
@@ -1061,11 +1046,14 @@ if ($db) {
       `).join('');
     }
     
-    // Enable search on Enter key
-    document.getElementById('searchInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        searchPosts();
-      }
+    // Enable real-time search on input
+    document.getElementById('searchInput').addEventListener('input', function() {
+      searchPosts();
+    });
+    
+    // Also update search when filter type changes
+    document.getElementById('searchType').addEventListener('change', function() {
+      searchPosts();
     });
     
     // Create floating emoji particles

@@ -48,6 +48,10 @@ $username = $_SESSION['username'] ?? 'User';
 $user_email = $_SESSION['user_email'] ?? '';
 $userId = $_SESSION['user_id'] ?? null;
 
+// Get search parameters
+$searchQuery = isset($_GET['search']) ? trim($_GET['search']) : '';
+$searchFilter = isset($_GET['filter']) ? $_GET['filter'] : 'title'; // Default: title
+
 // Initialize variables
 $posts = [];
 $errorMessage = '';
@@ -109,22 +113,52 @@ if ($db) {
             post_id INT NOT NULL,
             username VARCHAR(100) NOT NULL,
             user_email VARCHAR(255),
+            user_id INT,
             text TEXT NOT NULL,
             likes INT DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
-            INDEX idx_post_id (post_id)T
+            INDEX idx_post_id (post_id),
+            INDEX idx_user_id (user_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
         // Get all posts with comment counts and author profile pictures
+        // Build search query based on filter
         $query = "SELECT p.*, 
                   (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comment_count,
                   ui.profile_picture as author_profile_picture
                   FROM posts p 
                   LEFT JOIN user_info ui ON p.username = ui.username
-                  ORDER BY p.created_at DESC";
+                  WHERE (p.hidden IS NULL OR p.hidden = 0)";
         
-        $result = $db->query($query);
+        // Add search conditions if search query exists
+        if (!empty($searchQuery)) {
+            switch ($searchFilter) {
+                case 'author':
+                    $query .= " AND p.username LIKE ?";
+                    break;
+                case 'content':
+                    $query .= " AND p.content LIKE ?";
+                    break;
+                case 'title':
+                default:
+                    $query .= " AND p.title LIKE ?";
+                    break;
+            }
+        }
+        
+        $query .= " ORDER BY p.created_at DESC";
+        
+        // Prepare and execute query
+        if (!empty($searchQuery)) {
+            $stmt = $db->prepare($query);
+            $searchParam = '%' . $searchQuery . '%';
+            $stmt->bind_param("s", $searchParam);
+            $stmt->execute();
+            $result = $stmt->get_result();
+        } else {
+            $result = $db->query($query);
+        }
         
         if ($result) {
             while ($post = $result->fetch_assoc()) {
@@ -133,10 +167,10 @@ if ($db) {
                                  FROM comments 
                                  WHERE post_id = ? 
                                  ORDER BY created_at DESC";
-                $stmt = $db->prepare($comments_query);
-                $stmt->bind_param("i", $post['id']);
-                $stmt->execute();
-                $comments_result = $stmt->get_result();
+                $comment_stmt = $db->prepare($comments_query);
+                $comment_stmt->bind_param("i", $post['id']);
+                $comment_stmt->execute();
+                $comments_result = $comment_stmt->get_result();
                 
                 $post['comments_list'] = [];
                 while ($comment = $comments_result->fetch_assoc()) {
@@ -144,6 +178,10 @@ if ($db) {
                 }
                 
                 $posts[] = $post;
+                $comment_stmt->close();
+            }
+            
+            if (!empty($searchQuery)) {
                 $stmt->close();
             }
         }
@@ -177,13 +215,14 @@ if ($db) {
         <img src="../assets/img/EXPoints Logo.png" alt="+EXPoints" class="lp-brand-img">
       </a>
 
-      <form class="search" role="search">
-        <input type="text" placeholder="Search for a Review, a Game, Anything" />
-        <button class="icon" type="submit" aria-label="Search"><i class="bi bi-search"></i></button>
-      </form>
+      <div class="search">
+        <input type="text" id="searchInput" placeholder="Search for a Review, a Game, Anything" autocomplete="off" />
+        <input type="hidden" id="searchFilterInput" value="title" />
+        <button class="icon" aria-label="Search"><i class="bi bi-search"></i></button>
+      </div>
 
       <div class="right">
-        <button class="icon" title="Filter"><i class="bi bi-funnel"></i></button>
+        <button class="icon" id="filterButton" title="Filter" type="button"><i class="bi bi-funnel"></i></button>
         <button class="icon" title="Notifications"><i class="bi bi-bell"></i></button>
         <a href="profile.php" class="avatar-nav">
   <img src="<?php echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" class="avatar-img">
@@ -192,7 +231,41 @@ if ($db) {
     </header>
   </div>
 
+  <!-- Filter Dropdown Modal -->
+  <div class="filter-dropdown" id="filterDropdown" style="display: none;">
+    <div class="filter-dropdown-content">
+      <h6 class="filter-dropdown-title"><i class="bi bi-funnel-fill"></i> Search By</h6>
+      <div class="filter-options">
+        <button class="filter-option active" data-filter="title">
+          <i class="bi bi-file-text"></i> Post Title
+        </button>
+        <button class="filter-option" data-filter="author">
+          <i class="bi bi-person"></i> Author
+        </button>
+        <button class="filter-option" data-filter="content">
+          <i class="bi bi-align-left"></i> Content
+        </button>
+      </div>
+    </div>
+  </div>
+
   <main class="container-xl py-4">
+    <!-- Search Results Info (dynamic) -->
+    <div class="search-results-info" id="searchResultsInfo" style="display: none;">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <i class="bi bi-search"></i>
+          Showing results for "<strong id="searchQueryDisplay"></strong>" in 
+          <span class="badge bg-primary" id="searchFilterDisplay">Title</span>
+        </div>
+        <button class="btn btn-sm btn-outline-secondary" id="clearSearchBtn">
+          <i class="bi bi-x-circle"></i> Clear Search
+        </button>
+      </div>
+      <div class="text-muted mt-2" id="searchResultsCount">
+      </div>
+    </div>
+    
     <!-- Success/Error Messages -->
     <?php if ($successMessage): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -981,6 +1054,11 @@ if ($db) {
   </script>
 
   <style>
+    /* Search animations and transitions */
+    .card-post {
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    
     /* Custom game input transition */
     #customGameGroup {
       transition: all 0.3s ease;
@@ -1637,6 +1715,164 @@ if ($db) {
 
   <!-- Dashboard Posts Management Script -->
   <script src="../assets/js/dashboard-posts.js?v=<?php echo time(); ?>"></script>
+  
+  <!-- Search Filter Functionality -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const filterButton = document.getElementById('filterButton');
+      const filterDropdown = document.getElementById('filterDropdown');
+      const filterOptions = document.querySelectorAll('.filter-option');
+      const searchFilterInput = document.getElementById('searchFilterInput');
+      const searchInput = document.getElementById('searchInput');
+      const searchResultsInfo = document.getElementById('searchResultsInfo');
+      const searchQueryDisplay = document.getElementById('searchQueryDisplay');
+      const searchFilterDisplay = document.getElementById('searchFilterDisplay');
+      const searchResultsCount = document.getElementById('searchResultsCount');
+      const clearSearchBtn = document.getElementById('clearSearchBtn');
+      
+      let currentFilter = 'title'; // Default filter
+      
+      // Real-time search functionality (like games.php)
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        performSearch(searchTerm, currentFilter);
+      });
+      
+      // Perform client-side search
+      function performSearch(searchTerm, filterType) {
+        const postCards = document.querySelectorAll('.card-post');
+        let visibleCount = 0;
+        
+        if (searchTerm === '') {
+          // Show all posts when search is empty
+          postCards.forEach(card => {
+            card.style.display = 'block';
+            card.style.opacity = '1';
+            card.style.transform = 'translateY(0)';
+          });
+          searchResultsInfo.style.display = 'none';
+          return;
+        }
+        
+        // Filter posts based on search term and filter type
+        postCards.forEach(card => {
+          let matchFound = false;
+          
+          switch(filterType) {
+            case 'title':
+              const titleElement = card.querySelector('.title');
+              if (titleElement) {
+                const title = titleElement.textContent.toLowerCase();
+                matchFound = title.includes(searchTerm);
+              }
+              break;
+              
+            case 'author':
+              const handleElement = card.querySelector('.handle');
+              if (handleElement) {
+                const username = handleElement.textContent.toLowerCase().replace('@', '');
+                matchFound = username.includes(searchTerm);
+              }
+              break;
+              
+            case 'content':
+              const contentElement = card.querySelector('.col p');
+              if (contentElement) {
+                const content = contentElement.textContent.toLowerCase();
+                matchFound = content.includes(searchTerm);
+              }
+              break;
+          }
+          
+          if (matchFound) {
+            card.style.display = 'block';
+            setTimeout(() => {
+              card.style.opacity = '1';
+              card.style.transform = 'translateY(0)';
+            }, visibleCount * 30);
+            visibleCount++;
+          } else {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(-20px)';
+            setTimeout(() => {
+              card.style.display = 'none';
+            }, 200);
+          }
+        });
+        
+        // Show search results info
+        searchResultsInfo.style.display = 'block';
+        searchQueryDisplay.textContent = searchInput.value;
+        
+        // Update filter display text
+        switch(filterType) {
+          case 'author':
+            searchFilterDisplay.textContent = 'Author';
+            break;
+          case 'content':
+            searchFilterDisplay.textContent = 'Content';
+            break;
+          default:
+            searchFilterDisplay.textContent = 'Title';
+        }
+        
+        // Update results count
+        const resultText = visibleCount === 0 
+          ? '<i class="bi bi-info-circle"></i> No posts found matching your search criteria.'
+          : `Found ${visibleCount} post${visibleCount !== 1 ? 's' : ''}`;
+        searchResultsCount.innerHTML = resultText;
+      }
+      
+      // Clear search button
+      clearSearchBtn.addEventListener('click', function() {
+        searchInput.value = '';
+        performSearch('', currentFilter);
+      });
+      
+      // Toggle filter dropdown
+      filterButton.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const isVisible = filterDropdown.style.display === 'block';
+        filterDropdown.style.display = isVisible ? 'none' : 'block';
+        
+        // Position the dropdown near the filter button
+        const rect = filterButton.getBoundingClientRect();
+        filterDropdown.style.top = (rect.bottom + 10) + 'px';
+        filterDropdown.style.right = '20px';
+      });
+      
+      // Handle filter option selection
+      filterOptions.forEach(option => {
+        option.addEventListener('click', function() {
+          const selectedFilter = this.getAttribute('data-filter');
+          currentFilter = selectedFilter;
+          
+          // Update hidden input
+          searchFilterInput.value = selectedFilter;
+          
+          // Update active state
+          filterOptions.forEach(opt => opt.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Hide dropdown
+          filterDropdown.style.display = 'none';
+          
+          // Re-run search with new filter if there's a search term
+          const searchTerm = searchInput.value.toLowerCase().trim();
+          if (searchTerm !== '') {
+            performSearch(searchTerm, currentFilter);
+          }
+        });
+      });
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!filterDropdown.contains(e.target) && e.target !== filterButton) {
+          filterDropdown.style.display = 'none';
+        }
+      });
+    });
+  </script>
   
   <!-- PlayStation Particles Script -->
   <script>

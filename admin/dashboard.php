@@ -494,12 +494,6 @@ if ($db) {
           <a href="manage-moderators.php" class="btn btn-outline-secondary">
             <i class="bi bi-shield-check"></i> Manage Moderators
           </a>
-          <button class="btn btn-outline-secondary" onclick="alert('Feature coming soon!')">
-            <i class="bi bi-flag"></i> View Reports
-          </button>
-          <button class="btn btn-outline-secondary" onclick="alert('Feature coming soon!')">
-            <i class="bi bi-gear"></i> System Settings
-          </button>
         </div>
       </section>
 

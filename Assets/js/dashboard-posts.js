@@ -1255,7 +1255,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const username = avatar.dataset.username;
             const profilePicture = avatar.dataset.profilePicture;
             const exp = parseInt(avatar.dataset.exp) || 0;
-            const level = Math.floor(exp / 1000) + 1;
+            
+            // Calculate level using the EXP system formula
+            // Level 1 to 2: 1 EXP needed
+            // Level 2+: 10 EXP per level
+            let level = 1;
+            if (exp >= 1) {
+                level = 2 + Math.floor((exp - 1) / 10);
+            }
             
             // Update modal content
             hoverProfilePic.src = profilePicture;

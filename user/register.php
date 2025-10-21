@@ -55,6 +55,33 @@
     .back-button-register span {
       order: 1;
     }
+
+    /* Responsive for back button */
+    @media (max-width: 768px) {
+      .back-button-register {
+        top: 1.5rem;
+        right: 1.5rem;
+        padding: 0.6rem 1.2rem;
+        font-size: 0.85rem;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .back-button-register {
+        top: 1rem;
+        right: 1rem;
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+      }
+      
+      .back-button-register span {
+        display: none;
+      }
+      
+      .back-button-register i {
+        margin: 0;
+      }
+    }
     
     /* Username Modal Styles */
     .username-modal-backdrop {

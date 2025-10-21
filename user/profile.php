@@ -66,10 +66,21 @@ $bio = $userData['bio'] ?? '';
 $dateStarted = $userData['created_at'] ?? '';
 $profilePicture = $userData['profile_picture'] ?? '../assets/img/cat1.jpg';
 
-// Calculate level based on exp_points (every 100 points = 1 level)
+// Calculate level using EXP System
+require_once '../includes/ExpSystem.php';
 $expPoints = (int)($userData['exp_points'] ?? 0);
-$level = floor($expPoints / 100) + 1;
-$levelProgress = $expPoints % 100;
+$level = ExpSystem::calculateLevel($expPoints);
+
+// Calculate progress to next level
+$expToNext = ExpSystem::expToNextLevel($expPoints);
+if ($level === 1) {
+    $levelProgress = ($expPoints / 1) * 100; // Level 1->2 needs 1 EXP
+} else {
+    $currentLevelBase = 1 + ($level - 2) * 10;
+    $expInCurrentLevel = $expPoints - $currentLevelBase;
+    $levelProgress = ($expInCurrentLevel / 10) * 100; // Each level needs 10 EXP
+}
+$levelProgress = min(100, max(0, $levelProgress));
 
 // Get stats (stars and reviews count)
 $statsStmt = $db->prepare("

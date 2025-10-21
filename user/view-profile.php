@@ -69,9 +69,10 @@ if ($userResult->num_rows === 0) {
 $userData = $userResult->fetch_assoc();
 $userStmt->close();
 
-// Calculate level
-$expPoints = $userData['exp_points'] ?? 0;
-$level = floor($expPoints / 1000) + 1;
+// Calculate level using EXP System
+require_once '../includes/ExpSystem.php';
+$expPoints = (int)($userData['exp_points'] ?? 0);
+$level = ExpSystem::calculateLevel($expPoints);
 
 // Get user stats
 $statsStmt = $db->prepare("

@@ -74,6 +74,55 @@
     </div>
   </aside>
 
+  <!-- Cursor trail effect -->
+  <style>
+    .cursor-trail {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 160, 255, 0.8), transparent);
+      pointer-events: none;
+      z-index: 9999;
+      animation: fadeTrail 0.8s ease-out forwards;
+    }
+    
+    @keyframes fadeTrail {
+      to {
+        transform: scale(3);
+        opacity: 0;
+      }
+    }
+  </style>
+
+  <script>
+    // Cursor trail effect
+    document.addEventListener('mousemove', (e) => {
+      if (Math.random() > 0.8) { // Only create trail 20% of the time for performance
+        const trail = document.createElement('div');
+        trail.className = 'cursor-trail';
+        trail.style.left = e.clientX - 5 + 'px';
+        trail.style.top = e.clientY - 5 + 'px';
+        document.body.appendChild(trail);
+        
+        setTimeout(() => trail.remove(), 800);
+      }
+    });
+
+    // Add parallax effect to glyphs
+    document.addEventListener('mousemove', (e) => {
+      const glyphs = document.querySelectorAll('.glyph');
+      const mouseX = e.clientX / window.innerWidth;
+      const mouseY = e.clientY / window.innerHeight;
+      
+      glyphs.forEach((glyph, index) => {
+        const speed = (index + 1) * 0.5;
+        const x = (mouseX - 0.5) * speed * 20;
+        const y = (mouseY - 0.5) * speed * 20;
+        glyph.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+      });
+    });
+  </script>
 
   </body>
   </html>

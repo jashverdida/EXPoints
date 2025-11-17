@@ -15,10 +15,8 @@ if (isset($_SESSION['user_role'])) {
     if ($_SESSION['user_role'] === 'admin') {
         header('Location: ../admin/dashboard.php');
         exit();
-    } elseif ($_SESSION['user_role'] === 'mod') {
-        header('Location: ../mod/dashboard.php');
-        exit();
     }
+    // Moderator role has been merged into admin role
 }
 
 // Simple database connection function
@@ -123,13 +121,14 @@ if ($db) {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
         // Get all posts with comment counts and author profile pictures
-        // Build search query based on filter
+        // Build search query based on filter - exclude posts from banned users
         $query = "SELECT p.*, 
                   (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comment_count,
                   ui.profile_picture as author_profile_picture
                   FROM posts p 
                   LEFT JOIN user_info ui ON p.username = ui.username
-                  WHERE (p.hidden IS NULL OR p.hidden = 0)";
+                  WHERE (p.hidden IS NULL OR p.hidden = 0)
+                  AND (ui.is_banned IS NULL OR ui.is_banned = 0)";
         
         // Add search conditions if search query exists
         if (!empty($searchQuery)) {
@@ -223,7 +222,10 @@ if ($db) {
 
       <div class="right">
         <button class="icon" id="filterButton" title="Filter" type="button"><i class="bi bi-funnel"></i></button>
-        <button class="icon" title="Notifications"><i class="bi bi-bell"></i></button>
+        <button class="icon" id="notificationButton" title="Notifications" type="button" style="position: relative;">
+          <i class="bi bi-bell"></i>
+          <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
+        </button>
         <a href="profile.php" class="avatar-nav">
   <img src="<?php echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" class="avatar-img">
 </a>
@@ -245,6 +247,21 @@ if ($db) {
         <button class="filter-option" data-filter="content">
           <i class="bi bi-align-left"></i> Content
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Dropdown -->
+  <div class="notification-dropdown" id="notificationDropdown" style="display: none;">
+    <div class="notification-dropdown-header">
+      <h6><i class="bi bi-bell-fill"></i> Notifications</h6>
+      <button class="btn-mark-all-read" id="markAllReadBtn" style="display: none;">
+        <i class="bi bi-check-all"></i> Mark all as read
+      </button>
+    </div>
+    <div class="notification-list" id="notificationList">
+      <div class="notification-loading">
+        <i class="bi bi-hourglass-split"></i> Loading notifications...
       </div>
     </div>
   </div>
@@ -1706,6 +1723,181 @@ if ($db) {
         opacity: 0;
       }
     }
+    
+    /* Notification Styles */
+    .notification-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #ff3b3b;
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.15rem 0.4rem;
+      border-radius: 1rem;
+      min-width: 18px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(255, 59, 59, 0.5);
+      animation: pulse-badge 2s infinite;
+    }
+    
+    @keyframes pulse-badge {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+    }
+    
+    .notification-dropdown {
+      position: fixed;
+      display: none;
+      background: linear-gradient(135deg, rgba(18, 34, 90, 0.98) 0%, rgba(11, 21, 55, 0.98) 100%);
+      border: 2px solid rgba(56, 160, 255, 0.4);
+      border-radius: 1rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(20px);
+      width: 380px;
+      max-height: 500px;
+      z-index: 10000;
+      animation: slideInDown 0.3s ease-out;
+    }
+    
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .notification-dropdown-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(56, 160, 255, 0.2);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .notification-dropdown-header h6 {
+      margin: 0;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .btn-mark-all-read {
+      background: transparent;
+      border: 1px solid rgba(56, 160, 255, 0.3);
+      color: #38a0ff;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-mark-all-read:hover {
+      background: rgba(56, 160, 255, 0.1);
+      border-color: #38a0ff;
+    }
+    
+    .notification-list {
+      max-height: 420px;
+      overflow-y: auto;
+    }
+    
+    .notification-item {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid rgba(56, 160, 255, 0.1);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      gap: 0.75rem;
+      align-items: start;
+    }
+    
+    .notification-item:hover {
+      background: rgba(56, 160, 255, 0.1);
+    }
+    
+    .notification-item.unread {
+      background: rgba(56, 160, 255, 0.05);
+      border-left: 3px solid #38a0ff;
+    }
+    
+    .notification-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    
+    .notification-icon.like {
+      background: linear-gradient(135deg, #ffd700, #ff8c00);
+      color: #fff;
+    }
+    
+    .notification-icon.comment {
+      background: linear-gradient(135deg, #38a0ff, #1b378d);
+      color: #fff;
+    }
+    
+    .notification-icon.level_up {
+      background: linear-gradient(135deg, #00ff88, #00cc6a);
+      color: #fff;
+    }
+    
+    .notification-content {
+      flex: 1;
+    }
+    
+    .notification-message {
+      color: #fff;
+      font-size: 0.9rem;
+      margin-bottom: 0.25rem;
+      line-height: 1.4;
+    }
+    
+    .notification-time {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.75rem;
+    }
+    
+    .notification-empty {
+      padding: 2rem 1.25rem;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .notification-empty i {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+      display: block;
+      opacity: 0.3;
+    }
+    
+    .notification-loading {
+      padding: 2rem 1.25rem;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .notification-loading i {
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
   </style>
 
   <!-- Set current user ID for JavaScript -->
@@ -1923,6 +2115,205 @@ if ($db) {
     
     // Initialize particles when page loads
     document.addEventListener('DOMContentLoaded', createParticles);
+  </script>
+
+  <!-- Notifications Script -->
+  <script>
+    // Notification System
+    const notificationButton = document.getElementById('notificationButton');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+    const notificationBadge = document.getElementById('notificationBadge');
+    const notificationList = document.getElementById('notificationList');
+    const markAllReadBtn = document.getElementById('markAllReadBtn');
+    
+    let notificationsOpen = false;
+    
+    // Toggle notification dropdown
+    notificationButton.addEventListener('click', function(e) {
+      e.stopPropagation();
+      notificationsOpen = !notificationsOpen;
+      
+      if (notificationsOpen) {
+        loadNotifications();
+        notificationDropdown.style.display = 'block';
+        
+        // Position dropdown
+        const rect = notificationButton.getBoundingClientRect();
+        notificationDropdown.style.top = (rect.bottom + 10) + 'px';
+        notificationDropdown.style.right = '20px';
+      } else {
+        notificationDropdown.style.display = 'none';
+      }
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!notificationDropdown.contains(e.target) && e.target !== notificationButton) {
+        notificationDropdown.style.display = 'none';
+        notificationsOpen = false;
+      }
+    });
+    
+    // Load notifications
+    function loadNotifications() {
+      notificationList.innerHTML = '<div class="notification-loading"><i class="bi bi-hourglass-split"></i> Loading notifications...</div>';
+      
+      fetch('../api/notifications.php?action=get_notifications')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            displayNotifications(data.notifications);
+            updateNotificationBadge(data.count);
+          } else {
+            notificationList.innerHTML = '<div class="notification-empty"><i class="bi bi-exclamation-circle"></i>Error loading notifications</div>';
+          }
+        })
+        .catch(error => {
+          console.error('Error loading notifications:', error);
+          notificationList.innerHTML = '<div class="notification-empty"><i class="bi bi-exclamation-circle"></i>Error loading notifications</div>';
+        });
+    }
+    
+    // Display notifications
+    function displayNotifications(notifications) {
+      if (notifications.length === 0) {
+        notificationList.innerHTML = '<div class="notification-empty"><i class="bi bi-bell-slash"></i><div>No new notifications</div></div>';
+        markAllReadBtn.style.display = 'none';
+        return;
+      }
+      
+      markAllReadBtn.style.display = 'block';
+      
+      notificationList.innerHTML = notifications.map(notif => {
+        const icon = getNotificationIcon(notif.type);
+        const timeAgo = getTimeAgo(notif.created_at);
+        
+        return `
+          <div class="notification-item unread" data-id="${notif.id}" data-post-id="${notif.post_id || ''}">
+            <div class="notification-icon ${notif.type}">
+              ${icon}
+            </div>
+            <div class="notification-content">
+              <div class="notification-message">${escapeHtml(notif.message)}</div>
+              <div class="notification-time">${timeAgo}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // Add click handlers to notifications
+      document.querySelectorAll('.notification-item').forEach(item => {
+        item.addEventListener('click', function() {
+          const notifId = this.getAttribute('data-id');
+          const postId = this.getAttribute('data-post-id');
+          
+          // Mark as read
+          markNotificationAsRead(notifId);
+          
+          // Navigate to post if applicable
+          if (postId && postId !== 'null') {
+            window.location.href = 'dashboard.php#post-' + postId;
+          }
+        });
+      });
+    }
+    
+    // Get notification icon
+    function getNotificationIcon(type) {
+      switch(type) {
+        case 'like':
+          return '<i class="bi bi-star-fill"></i>';
+        case 'comment':
+          return '<i class="bi bi-chat-fill"></i>';
+        case 'level_up':
+          return '<i class="bi bi-trophy-fill"></i>';
+        default:
+          return '<i class="bi bi-bell-fill"></i>';
+      }
+    }
+    
+    // Get time ago string
+    function getTimeAgo(timestamp) {
+      const now = new Date();
+      const time = new Date(timestamp);
+      const diff = Math.floor((now - time) / 1000); // seconds
+      
+      if (diff < 60) return 'Just now';
+      if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+      if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+      if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+      return time.toLocaleDateString();
+    }
+    
+    // Escape HTML
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    // Mark notification as read
+    function markNotificationAsRead(notificationId) {
+      fetch('../api/notifications.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'action=mark_read&notification_id=' + notificationId
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          updateNotificationCount();
+        }
+      });
+    }
+    
+    // Mark all as read
+    markAllReadBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      
+      fetch('../api/notifications.php', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'action=mark_all_read'
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          loadNotifications();
+        }
+      });
+    });
+    
+    // Update notification badge
+    function updateNotificationBadge(count) {
+      if (count > 0) {
+        notificationBadge.textContent = count > 99 ? '99+' : count;
+        notificationBadge.style.display = 'block';
+      } else {
+        notificationBadge.style.display = 'none';
+      }
+    }
+    
+    // Update notification count
+    function updateNotificationCount() {
+      fetch('../api/notifications.php?action=get_count')
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            updateNotificationBadge(data.count);
+          }
+        });
+    }
+    
+    // Check for new notifications every 30 seconds
+    setInterval(updateNotificationCount, 30000);
+    
+    // Initial count load
+    updateNotificationCount();
   </script>
 
 </body>

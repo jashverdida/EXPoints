@@ -67,9 +67,33 @@ try {
     $post = $result->fetch_assoc();
     $stmt->close();
     
-    // Rename fields to match expected format
-    $post['like_count'] = $post['likes'];
-    $post['comment_count'] = $post['comments'];
+    // Get actual like count from post_likes table
+    $like_stmt = $db->prepare("SELECT COUNT(*) as count FROM post_likes WHERE post_id = ?");
+    $like_stmt->bind_param("i", $post_id);
+    $like_stmt->execute();
+    $like_result = $like_stmt->get_result();
+    $like_count = 0;
+    if ($like_result->num_rows > 0) {
+        $like_row = $like_result->fetch_assoc();
+        $like_count = $like_row['count'];
+    }
+    $like_stmt->close();
+    
+    // Get actual comment count from comments table
+    $comment_stmt = $db->prepare("SELECT COUNT(*) as count FROM comments WHERE post_id = ?");
+    $comment_stmt->bind_param("i", $post_id);
+    $comment_stmt->execute();
+    $comment_result = $comment_stmt->get_result();
+    $comment_count = 0;
+    if ($comment_result->num_rows > 0) {
+        $comment_row = $comment_result->fetch_assoc();
+        $comment_count = $comment_row['count'];
+    }
+    $comment_stmt->close();
+    
+    // Set the actual counts
+    $post['like_count'] = $like_count;
+    $post['comment_count'] = $comment_count;
     unset($post['likes']);
     unset($post['comments']);
     

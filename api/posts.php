@@ -152,13 +152,14 @@ switch ($action) {
             exit();
         }
         
-        // Get post author's user_id for EXP update
-        $authorStmt = $db->prepare("SELECT user_id FROM posts WHERE id = ?");
+        // Get post author's user_id and post title for notifications
+        $authorStmt = $db->prepare("SELECT user_id, title FROM posts WHERE id = ?");
         $authorStmt->bind_param("i", $postId);
         $authorStmt->execute();
         $authorResult = $authorStmt->get_result();
-        $postAuthor = $authorResult->fetch_assoc();
-        $postAuthorId = $postAuthor['user_id'] ?? null;
+        $postData = $authorResult->fetch_assoc();
+        $postAuthorId = $postData['user_id'] ?? null;
+        $postTitle = $postData['title'] ?? 'Untitled Post';
         $authorStmt->close();
         
         // Check if user already liked this post
@@ -181,12 +182,24 @@ switch ($action) {
             $stmt->bind_param("ii", $postId, $userId);
             $stmt->execute();
             $liked = true;
+            
+            // Create notification for post author
+            if ($postAuthorId && $postAuthorId != $userId) {
+                require_once '../includes/NotificationSystem.php';
+                NotificationSystem::notifyLike($db, $postAuthorId, $userId, $postId, $postTitle);
+            }
         }
         
         // Update post author's EXP (5 EXP per like)
         if ($postAuthorId) {
             require_once '../includes/ExpSystem.php';
             $authorStats = ExpSystem::updateUserExp($db, $postAuthorId);
+            
+            // Check if user leveled up and send notification
+            if ($authorStats['leveled_up']) {
+                require_once '../includes/NotificationSystem.php';
+                NotificationSystem::notifyLevelUp($db, $postAuthorId, $authorStats['level']);
+            }
         }
         
         // Get updated like count
@@ -228,6 +241,7 @@ switch ($action) {
                 ui.exp_points
             FROM posts p
             LEFT JOIN user_info ui ON p.user_id = ui.user_id
+            WHERE (ui.is_banned IS NULL OR ui.is_banned = 0)
             ORDER BY p.created_at DESC
         ");
         $stmt->bind_param("ii", $userId, $userId);
@@ -293,7 +307,7 @@ switch ($action) {
         break;
     
     case 'get_bookmarked_posts':
-        // Get all bookmarked posts for current user
+        // Get all bookmarked posts for current user - exclude banned users
         $stmt = $db->prepare("
             SELECT 
                 p.id,
@@ -310,7 +324,9 @@ switch ($action) {
                 pb.created_at as bookmarked_at
             FROM posts p
             INNER JOIN post_bookmarks pb ON p.id = pb.post_id
+            LEFT JOIN user_info ui ON p.user_id = ui.user_id
             WHERE pb.user_id = ?
+            AND (ui.is_banned IS NULL OR ui.is_banned = 0)
             ORDER BY pb.created_at DESC
         ");
         $stmt->bind_param("ii", $userId, $userId);
@@ -386,11 +402,28 @@ switch ($action) {
             exit();
         }
         
+        // Get post author and title for notification
+        $postStmt = $db->prepare("SELECT user_id, title FROM posts WHERE id = ?");
+        $postStmt->bind_param("i", $postId);
+        $postStmt->execute();
+        $postResult = $postStmt->get_result();
+        $postData = $postResult->fetch_assoc();
+        $postAuthorId = $postData['user_id'] ?? null;
+        $postTitle = $postData['title'] ?? 'Untitled Post';
+        $postStmt->close();
+        
         $stmt = $db->prepare("INSERT INTO post_comments (post_id, user_id, username, comment, created_at) VALUES (?, ?, ?, ?, NOW())");
         $stmt->bind_param("iiss", $postId, $userId, $username, $comment);
         
         if ($stmt->execute()) {
             $commentId = $stmt->insert_id;
+            
+            // Send notification to post author
+            if ($postAuthorId && $postAuthorId != $userId) {
+                require_once '../includes/NotificationSystem.php';
+                NotificationSystem::notifyComment($db, $postAuthorId, $userId, $postId, $postTitle);
+            }
+            
             echo json_encode(['success' => true, 'comment_id' => $commentId, 'message' => 'Comment added successfully']);
         } else {
             echo json_encode(['success' => false, 'error' => 'Failed to add comment']);
@@ -451,6 +484,12 @@ switch ($action) {
         if ($commentAuthorId) {
             require_once '../includes/ExpSystem.php';
             $authorStats = ExpSystem::updateUserExp($db, $commentAuthorId);
+            
+            // Check if user leveled up and send notification
+            if ($authorStats['leveled_up']) {
+                require_once '../includes/NotificationSystem.php';
+                NotificationSystem::notifyLevelUp($db, $commentAuthorId, $authorStats['level']);
+            }
         }
         
         // Get updated like count
@@ -633,6 +672,7 @@ switch ($action) {
                 ui.exp_points
             FROM posts p
             LEFT JOIN user_info ui ON p.user_id = ui.user_id
+            WHERE (ui.is_banned IS NULL OR ui.is_banned = 0)
             ORDER BY like_count DESC, p.created_at DESC
         ");
         $stmt->bind_param("ii", $userId, $userId);
@@ -669,7 +709,7 @@ switch ($action) {
         break;
     
     case 'get_newest_posts':
-        // Get posts ordered by creation date (newest first)
+        // Get posts ordered by creation date (newest first) - exclude banned users
         $stmt = $db->prepare("
             SELECT 
                 p.id,
@@ -687,6 +727,7 @@ switch ($action) {
                 ui.exp_points
             FROM posts p
             LEFT JOIN user_info ui ON p.user_id = ui.user_id
+            WHERE (ui.is_banned IS NULL OR ui.is_banned = 0)
             ORDER BY p.created_at DESC
         ");
         $stmt->bind_param("ii", $userId, $userId);

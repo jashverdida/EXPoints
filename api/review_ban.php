@@ -13,9 +13,9 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
     exit;
 }
 
-// Check if user has mod or admin role
-if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['mod', 'admin'])) {
-    echo json_encode(['success' => false, 'message' => 'Unauthorized - Admin or Moderator access required']);
+// Check if user has admin role (moderators merged into admin)
+if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+    echo json_encode(['success' => false, 'message' => 'Unauthorized - Admin access required']);
     exit;
 }
 

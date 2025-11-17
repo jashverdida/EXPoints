@@ -79,8 +79,8 @@ if ($db) {
             $total_comments = $row['count'];
         }
         
-        // Get recent posts for moderation
-        $result = $db->query("SELECT id, game, title, content, username, likes, comments, created_at FROM posts ORDER BY created_at DESC LIMIT 10");
+        // Get recent posts for moderation - exclude banned users' posts
+        $result = $db->query("SELECT p.id, p.game, p.title, p.content, p.username, p.likes, p.comments, p.created_at FROM posts p LEFT JOIN user_info ui ON p.username = ui.username WHERE (ui.is_banned IS NULL OR ui.is_banned = 0) ORDER BY p.created_at DESC LIMIT 10");
         if ($result) {
             while ($post = $result->fetch_assoc()) {
                 $recent_posts[] = $post;

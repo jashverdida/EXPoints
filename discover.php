@@ -27,7 +27,7 @@ $posts = [];
 
 if ($db) {
     try {
-        // Get all posts with author info
+        // Get all posts with author info - exclude posts from banned users
         $query = "SELECT p.*, 
                   (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as like_count,
                   (SELECT COUNT(*) FROM post_comments WHERE post_id = p.id) as comment_count,
@@ -36,6 +36,7 @@ if ($db) {
                   FROM posts p 
                   LEFT JOIN user_info ui ON p.user_id = ui.user_id
                   WHERE (p.hidden IS NULL OR p.hidden = 0)
+                  AND (ui.is_banned IS NULL OR ui.is_banned = 0)
                   ORDER BY p.created_at DESC";
         
         $result = $db->query($query);

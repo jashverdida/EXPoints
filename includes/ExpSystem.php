@@ -144,14 +144,28 @@ class ExpSystem {
      * Update user's EXP and level in database
      * @param mysqli $db Database connection
      * @param int $userId User ID
-     * @return array ['exp' => int, 'level' => int, 'likes' => int]
+     * @return array ['exp' => int, 'level' => int, 'likes' => int, 'leveled_up' => bool, 'old_level' => int]
      */
     public static function updateUserExp($db, $userId) {
+        // Get current EXP to check for level up
+        $oldExpQuery = "SELECT exp_points FROM user_info WHERE user_id = ?";
+        $stmt = $db->prepare($oldExpQuery);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $oldExp = $result->fetch_assoc()['exp_points'] ?? 0;
+        $stmt->close();
+        
+        $oldLevel = self::calculateLevel($oldExp);
+        
         // Calculate EXP from likes
         $totalExp = self::calculateUserExp($db, $userId);
         
-        // Calculate level
-        $level = self::calculateLevel($totalExp);
+        // Calculate new level
+        $newLevel = self::calculateLevel($totalExp);
+        
+        // Check if leveled up
+        $leveledUp = $newLevel > $oldLevel;
         
         // Update user_info table
         $updateQuery = "UPDATE user_info SET exp_points = ? WHERE user_id = ?";
@@ -162,8 +176,10 @@ class ExpSystem {
         
         return [
             'exp' => $totalExp,
-            'level' => $level,
-            'likes' => $totalExp / 5 // Total likes
+            'level' => $newLevel,
+            'likes' => $totalExp / 5, // Total likes
+            'leveled_up' => $leveledUp,
+            'old_level' => $oldLevel
         ];
     }
     

@@ -76,8 +76,8 @@ try {
     }
     $stmt->close();
     
-    // Create moderator account (plain text password to match your existing system)
-    $role = 'mod';
+    // Create admin account (moderators merged into admin role)
+    $role = 'admin';
     $stmt = $db->prepare("INSERT INTO users (email, password, role, created_at) VALUES (?, ?, ?, NOW())");
     $stmt->bind_param("sss", $email, $password, $role);
     

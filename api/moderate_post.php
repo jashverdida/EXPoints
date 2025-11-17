@@ -13,9 +13,9 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
     exit();
 }
 
-if (!isset($_SESSION['user_role']) || ($_SESSION['user_role'] !== 'mod' && $_SESSION['user_role'] !== 'admin')) {
+if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     http_response_code(403);
-    echo json_encode(['success' => false, 'error' => 'Forbidden - Moderator access required']);
+    echo json_encode(['success' => false, 'error' => 'Forbidden - Admin access required']);
     exit();
 }
 

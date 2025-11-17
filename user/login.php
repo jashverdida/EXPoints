@@ -56,9 +56,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Get user role (default to 'user' if not set)
                     $role = $user['role'] ?? 'user';
                     
-                    // Check if moderator account is disabled
+                    // Check if account is disabled (admin only now, no more moderators)
                     $is_disabled = $user['is_disabled'] ?? 0;
-                    if ($role === 'mod' && $is_disabled == 1) {
+                    if ($is_disabled == 1) {
                         // Set disabled info in session for disabled.php to display
                         $_SESSION['disabled_reason'] = $user['disabled_reason'] ?? 'Your account has been disabled by an administrator.';
                         $_SESSION['disabled_at'] = $user['disabled_at'];

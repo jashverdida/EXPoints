@@ -44,7 +44,7 @@ $username = $_SESSION['username'] ?? 'Administrator';
 // Get database connection
 $db = getDBConnection();
 
-// Fetch all moderators
+// Fetch all administrators
 $moderators = [];
 $total_mods = 0;
 $active_mods = 0;
@@ -54,7 +54,7 @@ if ($db) {
     $query = "SELECT u.*, ui.username, ui.profile_picture 
               FROM users u
               LEFT JOIN user_info ui ON u.id = ui.user_id
-              WHERE u.role = 'mod'
+              WHERE u.role = 'admin'
               ORDER BY u.is_disabled ASC, u.created_at DESC";
     $result = $db->query($query);
     
@@ -78,7 +78,7 @@ if ($db) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manage Moderators - Admin Dashboard</title>
+  <title>Manage Admins - Admin Dashboard</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   
@@ -466,7 +466,7 @@ if ($db) {
       </div>
       <div class="d-flex gap-2">
         <button class="btn-add-mod" data-bs-toggle="modal" data-bs-target="#addModModal">
-          <i class="bi bi-person-plus-fill"></i> Add New Moderator
+          <i class="bi bi-person-plus-fill"></i> Add New Admin
         </button>
         <a href="dashboard.php" class="back-btn">
           <i class="bi bi-arrow-left"></i> Back
@@ -477,14 +477,14 @@ if ($db) {
     <!-- Page Header -->
     <div class="page-header">
       <h1>
-        <i class="bi bi-shield-check"></i> Manage Moderators
+        <i class="bi bi-shield-check"></i> Manage Admins
       </h1>
-      <p>Create new moderator accounts and manage existing moderators</p>
+      <p>Create new administrator accounts and manage existing admins</p>
       
       <div class="stats-bar">
         <div class="stat-item">
           <span class="stat-num"><?php echo $total_mods; ?></span>
-          <span class="stat-label">Total Moderators</span>
+          <span class="stat-label">Total Admins</span>
         </div>
         <div class="stat-item">
           <span class="stat-num"><?php echo $active_mods; ?></span>
@@ -497,12 +497,12 @@ if ($db) {
       </div>
     </div>
 
-    <!-- Moderator Cards -->
+    <!-- Admin Cards -->
     <?php if (empty($moderators)): ?>
       <div class="empty-state">
         <i class="bi bi-person-badge"></i>
-        <h3>No Moderators Yet</h3>
-        <p>Click "Add New Moderator" to create your first moderator account.</p>
+        <h3>No Admins Yet</h3>
+        <p>Click "Add New Admin" to create your first administrator account.</p>
       </div>
     <?php else: ?>
       <?php foreach ($moderators as $mod): ?>
@@ -526,7 +526,7 @@ if ($db) {
             </div>
             <div>
               <span class="mod-badge <?php echo $mod['is_disabled'] == 1 ? 'disabled-badge' : ''; ?>">
-                <i class="bi bi-shield-check"></i> <?php echo $mod['is_disabled'] == 1 ? 'DISABLED' : 'MODERATOR'; ?>
+                <i class="bi bi-shield-check"></i> <?php echo $mod['is_disabled'] == 1 ? 'DISABLED' : 'ADMIN'; ?>
               </span>
             </div>
           </div>
@@ -549,11 +549,11 @@ if ($db) {
           <div class="mod-actions">
             <?php if ($mod['is_disabled'] == 1): ?>
               <button class="btn-enable" onclick="toggleModStatus(<?php echo $mod['id']; ?>, 'enable', '<?php echo htmlspecialchars($mod['email']); ?>')">
-                <i class="bi bi-check-circle-fill"></i> Enable Moderator
+                <i class="bi bi-check-circle-fill"></i> Enable Admin
               </button>
             <?php else: ?>
               <button class="btn-disable" onclick="toggleModStatus(<?php echo $mod['id']; ?>, 'disable', '<?php echo htmlspecialchars($mod['email']); ?>')">
-                <i class="bi bi-slash-circle-fill"></i> Disable Moderator
+                <i class="bi bi-slash-circle-fill"></i> Disable Admin
               </button>
             <?php endif; ?>
             <button class="btn-delete" onclick="deleteMod(<?php echo $mod['id']; ?>, '<?php echo htmlspecialchars($mod['email']); ?>')">
@@ -565,13 +565,13 @@ if ($db) {
     <?php endif; ?>
   </div>
 
-  <!-- Add Moderator Modal -->
+  <!-- Add Admin Modal -->
   <div class="modal fade" id="addModModal" tabindex="-1" aria-labelledby="addModModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" style="background: linear-gradient(135deg, rgba(10, 10, 30, 0.98), rgba(22, 33, 62, 0.98)); backdrop-filter: blur(20px); border: 2px solid rgba(139, 92, 246, 0.5);">
         <div class="modal-header" style="border-bottom: 2px solid rgba(139, 92, 246, 0.3);">
           <h5 class="modal-title" id="addModModalLabel" style="color: #c4b5fd; font-weight: 700;">
-            <i class="bi bi-person-plus-fill"></i> Add New Moderator
+            <i class="bi bi-person-plus-fill"></i> Add New Admin
           </h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
@@ -599,7 +599,7 @@ if ($db) {
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="button" class="btn btn-primary" onclick="createModerator()" 
                   style="background: linear-gradient(135deg, #10b981, #059669); border: none; padding: 0.75rem 1.5rem; font-weight: 600;">
-            <i class="bi bi-plus-circle-fill"></i> Create Moderator
+            <i class="bi bi-plus-circle-fill"></i> Create Admin
           </button>
         </div>
       </div>
@@ -658,7 +658,7 @@ if ($db) {
       })
       .catch(error => {
         console.error('Error:', error);
-        errorDiv.textContent = 'An error occurred while creating the moderator';
+        errorDiv.textContent = 'An error occurred while creating the admin';
         errorDiv.style.display = 'block';
       });
     }
@@ -668,13 +668,13 @@ if ($db) {
       let reason = '';
       
       if (action === 'disable') {
-        reason = prompt(`Enter reason for disabling moderator ${email}:`);
+        reason = prompt(`Enter reason for disabling admin ${email}:`);
         if (!reason || reason.trim() === '') {
-          alert('Reason is required to disable a moderator');
+          alert('Reason is required to disable an admin');
           return;
         }
       } else {
-        if (!confirm(`Are you sure you want to ${actionText} moderator ${email}?`)) {
+        if (!confirm(`Are you sure you want to ${actionText} admin ${email}?`)) {
           return;
         }
       }
@@ -706,7 +706,7 @@ if ($db) {
     }
     
     function deleteMod(userId, email) {
-      if (!confirm(`⚠️ WARNING ⚠️\n\nAre you sure you want to PERMANENTLY DELETE moderator ${email}?\n\nThis action cannot be undone!`)) {
+      if (!confirm(`⚠️ WARNING ⚠️\n\nAre you sure you want to PERMANENTLY DELETE admin ${email}?\n\nThis action cannot be undone!`)) {
         return;
       }
       

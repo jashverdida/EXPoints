@@ -10,14 +10,10 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
     exit();
 }
 
-// Check if user has admin role
+// Check if user has admin role (moderators merged into admin)
 if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
-    // Redirect based on actual role
-    if ($_SESSION['user_role'] === 'mod') {
-        header('Location: ../mod/dashboard.php');
-    } else {
-        header('Location: ../user/dashboard.php');
-    }
+    // Redirect non-admin users to regular dashboard
+    header('Location: ../user/dashboard.php');
     exit();
 }
 
@@ -56,6 +52,7 @@ $total_posts = 0;
 $total_comments = 0;
 $total_admins = 0;
 $total_mods = 0;
+$recent_posts = [];
 
 if ($db) {
     try {
@@ -66,19 +63,15 @@ if ($db) {
             $total_users = $row['count'];
         }
         
-        // Get admin count
+        // Get admin count (moderators merged into admin)
         $result = $db->query("SELECT COUNT(*) as count FROM users WHERE role = 'admin'");
         if ($result) {
             $row = $result->fetch_assoc();
             $total_admins = $row['count'];
         }
         
-        // Get mod count
-        $result = $db->query("SELECT COUNT(*) as count FROM users WHERE role = 'mod'");
-        if ($result) {
-            $row = $result->fetch_assoc();
-            $total_mods = $row['count'];
-        }
+        // No more separate moderator role
+        $total_mods = 0;
         
         // Get post count
         $result = $db->query("SELECT COUNT(*) as count FROM posts");
@@ -92,6 +85,23 @@ if ($db) {
         if ($result) {
             $row = $result->fetch_assoc();
             $total_comments = $row['count'];
+        }
+        
+        // Get recent posts for moderation - exclude banned users' posts
+        // Get actual counts from post_likes and comments tables
+        $query = "SELECT p.id, p.game, p.title, p.content, p.username, p.user_id, p.created_at,
+                  (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) as like_count,
+                  (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comment_count
+                  FROM posts p 
+                  LEFT JOIN user_info ui ON p.user_id = ui.user_id 
+                  WHERE (ui.is_banned IS NULL OR ui.is_banned = 0) 
+                  ORDER BY p.created_at DESC 
+                  LIMIT 50";
+        $result = $db->query($query);
+        if ($result) {
+            while ($post = $result->fetch_assoc()) {
+                $recent_posts[] = $post;
+            }
         }
     } catch (Exception $e) {
         error_log("Admin dashboard error: " . $e->getMessage());
@@ -273,31 +283,14 @@ if ($db) {
       border-radius: 1.25rem;
       padding: 2rem;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all 0.3s ease;
       position: relative;
       overflow: hidden;
     }
     
-    .admin-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(239, 68, 68, 0.2), transparent);
-      transition: left 0.5s;
-    }
-    
-    .admin-card:hover::before {
-      left: 100%;
-    }
-    
     .admin-card:hover {
-      transform: translateY(-10px) scale(1.02);
-      border-color: #ef4444;
-      box-shadow: 0 20px 60px rgba(239, 68, 68, 0.5), 
-                  0 0 40px rgba(239, 68, 68, 0.3);
+      box-shadow: 0 12px 40px rgba(59, 130, 246, 0.6), 
+                  0 0 30px rgba(59, 130, 246, 0.3);
     }
     
     .section-title {
@@ -400,6 +393,221 @@ if ($db) {
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(245, 87, 108, 0.3);
     }
+    
+    /* Posts Grid */
+    .posts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+      max-height: 600px;
+      overflow-y: auto;
+      padding-right: 0.5rem;
+    }
+    
+    /* Custom Scrollbar */
+    .posts-grid::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .posts-grid::-webkit-scrollbar-track {
+      background: rgba(30, 58, 138, 0.2);
+      border-radius: 10px;
+    }
+    
+    .posts-grid::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      border-radius: 10px;
+    }
+    
+    .posts-grid::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(135deg, #2563eb, #1e40af);
+    }
+    
+    /* Search Bar */
+    .search-container {
+      margin-bottom: 1rem;
+    }
+    
+    .search-box {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+    
+    .search-input {
+      flex: 1;
+      background: rgba(30, 58, 138, 0.3);
+      border: 2px solid rgba(59, 130, 246, 0.4);
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      color: white;
+      font-size: 0.95rem;
+      transition: all 0.3s ease;
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+      background: rgba(30, 58, 138, 0.4);
+    }
+    
+    .search-input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .search-select {
+      background: rgba(30, 58, 138, 0.3);
+      border: 2px solid rgba(59, 130, 246, 0.4);
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      color: white;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .search-select:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+    }
+    
+    .search-select option {
+      background: #1e3a8a;
+      color: white;
+    }
+    
+    .post-card {
+      background: linear-gradient(135deg, rgba(30, 58, 138, 0.25), rgba(37, 99, 235, 0.2));
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(59, 130, 246, 0.3);
+      border-radius: 1rem;
+      padding: 1.25rem;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .post-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(59, 130, 246, 0.5), 
+                  0 0 30px rgba(59, 130, 246, 0.3);
+      border-color: rgba(59, 130, 246, 0.6);
+    }
+    
+    .post-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    
+    .post-id {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    
+    .post-date {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .post-title {
+      color: white;
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin: 0;
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    
+    .post-meta {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      font-size: 0.875rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .post-meta span {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    
+    .post-author {
+      color: #60a5fa;
+      font-weight: 600;
+    }
+    
+    .post-game {
+      color: #a78bfa;
+    }
+    
+    .post-content-preview {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      background: rgba(0, 0, 0, 0.2);
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      border-left: 3px solid rgba(59, 130, 246, 0.5);
+    }
+    
+    .post-card-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: auto;
+      padding-top: 0.5rem;
+    }
+    
+    .btn-view, .btn-flag {
+      flex: 1;
+      padding: 0.625rem 1rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    
+    .btn-view {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+    }
+    
+    .btn-view:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);
+    }
+    
+    .btn-flag {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: white;
+    }
+    
+    .btn-flag:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+    }
   </style>
 </head>
 <body>
@@ -434,11 +642,11 @@ if ($db) {
     </div>
 
     <div class="admin-grid">
-      <section class="admin-card" style="grid-column: span 2;">
+      <section class="admin-card">
         <h2 class="section-title">
           <i class="bi bi-bar-chart-fill"></i> System Overview
         </h2>
-        <div class="metrics" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="metrics">
           <div class="metric">
             <span class="m-num"><?php echo number_format($total_users); ?></span>
             <span class="m-label">Total Users</span>
@@ -455,26 +663,7 @@ if ($db) {
             <span class="m-num"><?php echo number_format($total_admins); ?></span>
             <span class="m-label">Administrators</span>
           </div>
-          <div class="metric">
-            <span class="m-num"><?php echo number_format($total_mods); ?></span>
-            <span class="m-label">Moderators</span>
-          </div>
-          <div class="metric">
-            <span class="m-num">0</span>
-            <span class="m-label">Reports</span>
-          </div>
         </div>
-      </section>
-
-      <section class="admin-card">
-        <h2 class="section-title">
-          <i class="bi bi-clock-history"></i> Recent Activity
-        </h2>
-        <ul class="activity">
-          <li><i class="bi bi-person-check"></i> System initialized successfully</li>
-          <li><i class="bi bi-database"></i> Database connected</li>
-          <li><i class="bi bi-shield-check"></i> Admin logged in</li>
-        </ul>
       </section>
 
       <section class="admin-card">
@@ -492,39 +681,156 @@ if ($db) {
             <i class="bi bi-people"></i> Manage Users
           </a>
           <a href="manage-moderators.php" class="btn btn-outline-secondary">
-            <i class="bi bi-shield-check"></i> Manage Moderators
+            <i class="bi bi-shield-check"></i> Manage Admins
           </a>
         </div>
       </section>
 
+      <!-- Posts for Moderation - Full Width -->
       <section class="admin-card" style="grid-column: span 2;">
-        <h2 class="section-title">
-          <i class="bi bi-info-circle"></i> Quick Info
-        </h2>
-        <div class="row">
-          <div class="col-md-6">
-            <h5>System Status</h5>
-            <ul>
-              <li><i class="bi bi-check-circle-fill text-success"></i> Database: Connected</li>
-              <li><i class="bi bi-check-circle-fill text-success"></i> Authentication: Active</li>
-              <li><i class="bi bi-check-circle-fill text-success"></i> Sessions: Working</li>
-            </ul>
-          </div>
-          <div class="col-md-6">
-            <h5>Access Control</h5>
-            <ul>
-              <li><strong>Admins:</strong> Full system access</li>
-              <li><strong>Moderators:</strong> Content moderation</li>
-              <li><strong>Users:</strong> Post & comment</li>
-            </ul>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2 class="section-title" style="margin-bottom: 0;">
+            <i class="bi bi-list-check"></i> Posts for Moderation
+          </h2>
+          <span style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">
+            <span id="displayedCount"><?php echo count($recent_posts); ?></span> / <?php echo count($recent_posts); ?> posts
+          </span>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="search-container">
+          <div class="search-box">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search posts by title or author...">
+            <select id="searchType" class="search-select">
+              <option value="title">Search by Title</option>
+              <option value="author">Search by Author</option>
+            </select>
           </div>
         </div>
+        
+        <?php if (empty($recent_posts)): ?>
+          <div style="text-align: center; padding: 4rem 2rem; color: rgba(255, 255, 255, 0.5);">
+            <i class="bi bi-inbox" style="font-size: 4rem; margin-bottom: 1rem; display: block;"></i>
+            <p style="font-size: 1.2rem;">No posts yet</p>
+          </div>
+        <?php else: ?>
+          <div class="posts-grid" id="postsGrid">
+            <?php foreach ($recent_posts as $post): ?>
+              <div class="post-card" id="post-card-<?php echo $post['id']; ?>">
+                <div class="post-card-header">
+                  <div class="post-id">#<?php echo htmlspecialchars($post['id']); ?></div>
+                  <div class="post-date">
+                    <i class="bi bi-calendar"></i>
+                    <?php echo date('M d, Y', strtotime($post['created_at'])); ?>
+                  </div>
+                </div>
+                
+                <h3 class="post-title"><?php echo htmlspecialchars($post['title']); ?></h3>
+                
+                <div class="post-meta">
+                  <span class="post-author">
+                    <i class="bi bi-person-circle"></i>
+                    @<?php echo htmlspecialchars($post['username']); ?>
+                  </span>
+                  <span class="post-game">
+                    <i class="bi bi-controller"></i>
+                    <?php echo htmlspecialchars($post['game']); ?>
+                  </span>
+                </div>
+                
+                <div class="post-content-preview">
+                  <?php echo htmlspecialchars(substr($post['content'], 0, 120)) . (strlen($post['content']) > 120 ? '...' : ''); ?>
+                </div>
+                
+                <div class="post-card-actions">
+                  <button class="btn-view" onclick="viewPost(<?php echo $post['id']; ?>)">
+                    <i class="bi bi-eye"></i> View
+                  </button>
+                  <button class="btn-flag" onclick="flagForBan(<?php echo $post['id']; ?>, '<?php echo htmlspecialchars($post['username']); ?>')">
+                    <i class="bi bi-flag-fill"></i> Flag User
+                  </button>
+                </div>
+              </div>
+            <?php endforeach; ?>
+          </div>
+        <?php endif; ?>
       </section>
     </div>
   </main>
 
+  <!-- Custom Fullscreen Post Detail Overlay -->
+  <div id="postModal" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.95); z-index: 9999; overflow: hidden;">
+    <div style="width: 100%; height: 100%; display: flex; flex-direction: column; padding: 2rem;">
+      <!-- Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h5 style="color: #60a5fa; font-weight: 700; font-size: 1.5rem; margin: 0;">
+          <i class="bi bi-eye-fill"></i> Post Review
+        </h5>
+        <button onclick="closePostModal()" style="background: rgba(239, 68, 68, 0.8); border: none; color: white; width: 40px; height: 40px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s;" onmouseover="this.style.background='#ef4444'" onmouseout="this.style.background='rgba(239, 68, 68, 0.8)'">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+      
+      <!-- Content -->
+      <div id="postModalBody" style="flex: 1; overflow-y: auto; background: linear-gradient(135deg, rgba(10, 10, 30, 0.95), rgba(22, 33, 62, 0.95)); backdrop-filter: blur(20px); border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 1rem; padding: 2rem;">
+        <div class="text-center py-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div style="margin-top: 1.5rem; text-align: right;">
+        <button onclick="closePostModal()" style="background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%); color: white; border: none; padding: 0.75rem 2rem; border-radius: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.5);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(59, 130, 246, 0.6)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(59, 130, 246, 0.5)'">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flag for Ban Modal -->
+  <div class="modal fade" id="flagBanModal" tabindex="-1" aria-labelledby="flagBanModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background: linear-gradient(135deg, rgba(30, 58, 138, 0.95), rgba(37, 99, 235, 0.95)); backdrop-filter: blur(20px); border: 2px solid rgba(239, 68, 68, 0.5);">
+        <div class="modal-header" style="border-bottom: 2px solid rgba(239, 68, 68, 0.3);">
+          <h5 class="modal-title" id="flagBanModalLabel" style="color: #ef4444; font-weight: 700;">
+            <i class="bi bi-flag-fill"></i> Flag User for Ban
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p style="color: #f6f9ff; margin-bottom: 1rem;">
+            You are about to flag user <strong id="flagUsername" style="color: #ef4444;"></strong> for ban review.
+          </p>
+          <div class="alert" style="background: rgba(251, 191, 36, 0.2); border: 1px solid rgba(251, 191, 36, 0.5); color: #fbbf24; border-radius: 0.5rem; padding: 1rem;">
+            <i class="bi bi-exclamation-triangle"></i> This will create a ban review that you can approve or reject.
+          </div>
+          <div class="mb-3">
+            <label for="banReason" class="form-label" style="color: #ef4444; font-weight: 600;">Reason (Required) *</label>
+            <textarea class="form-control" id="banReason" rows="4" placeholder="Explain why this user should be banned..." required style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(239, 68, 68, 0.3); color: white;"></textarea>
+            <small style="color: rgba(255, 255, 255, 0.7);">Please provide detailed reasons for the ban.</small>
+          </div>
+        </div>
+        <div class="modal-footer" style="border-top: 2px solid rgba(239, 68, 68, 0.3);">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" onclick="confirmFlagBan()" style="background: linear-gradient(135deg, #ef4444, #dc2626); border: none; font-weight: 600;">
+            <i class="bi bi-flag-fill"></i> Flag for Ban
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // Store current post/user for modals
+    let currentPostId = null;
+    let currentUsername = null;
+    
+    // Store all posts for search
+    const allPosts = <?php echo json_encode($recent_posts); ?>;
+
     // Create floating emoji particles
     function createParticles() {
       const particlesBg = document.getElementById('particlesBg');
@@ -541,6 +847,172 @@ if ($db) {
         particle.style.animationDuration = (15 + Math.random() * 10) + 's';
         particlesBg.appendChild(particle);
       }
+    }
+    
+    // Search functionality
+    function searchPosts() {
+      const searchInput = document.getElementById('searchInput');
+      const searchType = document.getElementById('searchType');
+      const query = searchInput.value.toLowerCase().trim();
+      const type = searchType.value;
+      const postCards = document.querySelectorAll('.post-card');
+      let visibleCount = 0;
+      
+      postCards.forEach(card => {
+        const title = card.querySelector('.post-title').textContent.toLowerCase();
+        const author = card.querySelector('.post-author').textContent.toLowerCase();
+        
+        let shouldShow = false;
+        if (query === '') {
+          shouldShow = true;
+        } else if (type === 'title' && title.includes(query)) {
+          shouldShow = true;
+        } else if (type === 'author' && author.includes(query)) {
+          shouldShow = true;
+        }
+        
+        if (shouldShow) {
+          card.style.display = 'flex';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+      
+      document.getElementById('displayedCount').textContent = visibleCount;
+    }
+    
+    // Add event listeners for search
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('searchInput');
+      const searchType = document.getElementById('searchType');
+      
+      if (searchInput) {
+        searchInput.addEventListener('input', searchPosts);
+      }
+      if (searchType) {
+        searchType.addEventListener('change', searchPosts);
+      }
+    });
+
+    // View post details with custom fullscreen overlay
+    function viewPost(postId) {
+      document.getElementById('postModal').style.display = 'block';
+      document.body.style.overflow = 'hidden';
+      
+      fetch(`../api/get_post.php?id=${postId}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            displayPostDetails(data.post);
+          } else {
+            document.getElementById('postModalBody').innerHTML = `
+              <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle"></i> Failed to load post details
+              </div>
+            `;
+          }
+        })
+        .catch(error => {
+          document.getElementById('postModalBody').innerHTML = `
+            <div class="alert alert-danger">
+              <i class="bi bi-exclamation-triangle"></i> Error loading post
+            </div>
+          `;
+        });
+    }
+    
+    function closePostModal() {
+      document.getElementById('postModal').style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+
+    function displayPostDetails(post) {
+      const modalBody = document.getElementById('postModalBody');
+      const profilePicture = post.profile_picture || '../assets/img/default-avatar.png';
+      
+      modalBody.innerHTML = `
+        <div style="display: grid; grid-template-rows: auto 1fr; height: 100%; gap: 2rem;">
+          <!-- Post Header -->
+          <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 2rem; padding: 2rem; background: rgba(30, 58, 138, 0.4); border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 1rem;">
+            <img src="${escapeHtml(profilePicture)}" alt="Profile" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid rgba(59, 130, 246, 0.6); box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);">
+            
+            <div>
+              <h2 style="color: white; margin-bottom: 1rem; font-size: 2.5rem; font-weight: 700;">${escapeHtml(post.title)}</h2>
+              <div style="color: rgba(255, 255, 255, 0.8); font-size: 1.2rem; display: flex; flex-wrap: wrap; gap: 2rem;">
+                <span><i class="bi bi-person" style="margin-right: 0.5rem;"></i>@${escapeHtml(post.username)}</span>
+                <span><i class="bi bi-controller" style="margin-right: 0.5rem;"></i>${escapeHtml(post.game)}</span>
+                <span><i class="bi bi-calendar" style="margin-right: 0.5rem;"></i>${new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              </div>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 1rem; justify-content: center;">
+              <div style="padding: 1rem 1.5rem; background: rgba(239, 68, 68, 0.2); border: 2px solid rgba(239, 68, 68, 0.5); border-radius: 0.75rem; text-align: center;">
+                <i class="bi bi-heart-fill" style="font-size: 1.8rem; color: #ef4444; display: block; margin-bottom: 0.5rem;"></i>
+                <span style="color: white; font-weight: 700; font-size: 1.5rem; display: block;">${post.like_count || 0}</span>
+                <span style="color: rgba(255, 255, 255, 0.7); font-size: 0.9rem;">likes</span>
+              </div>
+              <div style="padding: 1rem 1.5rem; background: rgba(59, 130, 246, 0.2); border: 2px solid rgba(59, 130, 246, 0.5); border-radius: 0.75rem; text-align: center;">
+                <i class="bi bi-chat-fill" style="font-size: 1.8rem; color: #60a5fa; display: block; margin-bottom: 0.5rem;"></i>
+                <span style="color: white; font-weight: 700; font-size: 1.5rem; display: block;">${post.comment_count || 0}</span>
+                <span style="color: rgba(255, 255, 255, 0.7); font-size: 0.9rem;">comments</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Post Content -->
+          <div style="padding: 2.5rem; background: rgba(0, 0, 0, 0.5); border: 2px solid rgba(59, 130, 246, 0.3); border-radius: 1rem; overflow-y: auto;">
+            <div style="color: white; line-height: 2.2; white-space: pre-wrap; word-wrap: break-word; font-size: 1.25rem; letter-spacing: 0.3px;">
+              ${escapeHtml(post.content)}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function flagForBan(postId, username) {
+      currentPostId = postId;
+      currentUsername = username;
+      document.getElementById('flagUsername').textContent = '@' + username;
+      document.getElementById('banReason').value = '';
+      const modal = new bootstrap.Modal(document.getElementById('flagBanModal'));
+      modal.show();
+    }
+
+    function confirmFlagBan() {
+      const reason = document.getElementById('banReason').value.trim();
+      if (!reason) {
+        alert('Please provide a reason for the ban');
+        return;
+      }
+
+      fetch('../api/moderate_post.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          post_id: currentPostId,
+          action: 'flag_ban',
+          reason: reason
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('✓ User flagged for ban review');
+          bootstrap.Modal.getInstance(document.getElementById('flagBanModal')).hide();
+        } else {
+          alert('Error: ' + (data.error || 'Failed to flag user'));
+        }
+      })
+      .catch(error => {
+        alert('Error flagging user');
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
     }
 
     // Initialize particles on page load

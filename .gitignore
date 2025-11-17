@@ -9,6 +9,9 @@ config/firebase-service-account.json
 .env.local
 .env.production
 
+# Database backups - local only
+database/backups/*.sql
+
 # Node modules
 node_modules/
 functions/node_modules/

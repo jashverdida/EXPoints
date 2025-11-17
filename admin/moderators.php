@@ -11,6 +11,244 @@ session_start();
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="../Assets/css/index.css">
   <link rel="stylesheet" href="../Assets/css/admin.css">
+  
+  <style>
+    /* Mobile Responsive Styles for Moderators Page */
+    @media (max-width: 768px) {
+      body {
+        overflow-x: hidden;
+        padding: 0.5rem;
+      }
+      
+      .container-xl {
+        padding: 0.5rem;
+      }
+      
+      /* Topbar */
+      .topbar {
+        padding: 1rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      
+      .lp-brand-img {
+        height: 32px !important;
+      }
+      
+      .search {
+        order: 3;
+        width: 100% !important;
+        flex: 1 1 100%;
+      }
+      
+      .search input {
+        font-size: 1rem !important;
+        padding: 1rem !important;
+        min-height: 48px;
+      }
+      
+      .search button {
+        min-width: 48px;
+        min-height: 48px;
+      }
+      
+      .right {
+        gap: 0.5rem;
+      }
+      
+      .right .icon {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+      }
+      
+      /* Main Content */
+      main {
+        padding: 1rem 0.5rem !important;
+      }
+      
+      /* Admin Card */
+      .admin-card {
+        padding: 1.25rem !important;
+        margin-bottom: 1.5rem;
+      }
+      
+      .section-title {
+        font-size: 1.35rem !important;
+        margin-bottom: 1.25rem !important;
+      }
+      
+      /* Add Moderator Form */
+      .add-mod {
+        gap: 0.75rem !important;
+        margin-bottom: 1.5rem;
+      }
+      
+      .add-mod .col-12 {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 1 1 100%;
+      }
+      
+      .add-mod .input-pill {
+        font-size: 1rem !important;
+        padding: 1rem !important;
+        min-height: 48px;
+      }
+      
+      .add-mod .btn-brand {
+        width: 100%;
+        padding: 1rem !important;
+        font-size: 1rem !important;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+      
+      .add-mod .btn-brand i {
+        font-size: 1.1rem;
+      }
+      
+      /* Table Responsive */
+      .table-responsive {
+        margin-top: 1.5rem !important;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      
+      .admin-table {
+        min-width: 100%;
+        font-size: 0.9rem;
+      }
+      
+      .admin-table thead th {
+        font-size: 0.85rem !important;
+        padding: 0.85rem 0.75rem !important;
+        white-space: nowrap;
+      }
+      
+      .admin-table tbody td {
+        padding: 1rem 0.75rem !important;
+        font-size: 0.9rem !important;
+      }
+      
+      .admin-table tbody td:first-child {
+        font-weight: 600;
+      }
+      
+      /* Action Buttons in Table */
+      .admin-table .btn {
+        padding: 0.65rem 1rem !important;
+        font-size: 0.85rem !important;
+        min-height: 44px;
+        white-space: nowrap;
+      }
+      
+      .admin-table .btn i {
+        font-size: 0.95rem;
+      }
+      
+      /* Alternative: Card-based layout for very small screens */
+      @supports (display: grid) {
+        .admin-table {
+          display: block;
+        }
+        
+        .admin-table thead {
+          display: none;
+        }
+        
+        .admin-table tbody {
+          display: grid;
+          gap: 1rem;
+        }
+        
+        .admin-table tr {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 0.5rem;
+          padding: 1rem;
+          background: rgba(59, 130, 246, 0.1);
+          border: 1px solid rgba(59, 130, 246, 0.3);
+          border-radius: 0.75rem;
+        }
+        
+        .admin-table td {
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          padding: 0.5rem !important;
+          border: none !important;
+        }
+        
+        .admin-table td::before {
+          content: attr(data-label);
+          font-weight: 600;
+          font-size: 0.75rem;
+          color: rgba(255, 255, 255, 0.6);
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+        
+        .admin-table td:nth-child(1)::before {
+          content: "Username";
+        }
+        
+        .admin-table td:nth-child(2)::before {
+          content: "Email";
+        }
+        
+        .admin-table td:nth-child(3)::before {
+          content: "Since";
+        }
+        
+        .admin-table td:nth-child(4)::before {
+          content: "Actions";
+        }
+        
+        .admin-table td:last-child {
+          text-align: left !important;
+        }
+        
+        .admin-table td:last-child .btn {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+    }
+    
+    /* Small Mobile Adjustments */
+    @media (max-width: 480px) {
+      .topbar {
+        padding: 0.85rem;
+      }
+      
+      .lp-brand-img {
+        height: 28px !important;
+      }
+      
+      .section-title {
+        font-size: 1.2rem !important;
+      }
+      
+      .admin-card {
+        padding: 1rem !important;
+      }
+      
+      .add-mod .input-pill {
+        padding: 0.85rem !important;
+      }
+      
+      .admin-table tr {
+        padding: 0.85rem;
+      }
+    }
+  </style>
 </head>
 <body>
 

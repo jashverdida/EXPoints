@@ -31,6 +31,17 @@ body{
   color:var(--ink);
 }
 
+/* Allow scrolling on mobile */
+@media (max-width: 768px) {
+  html,
+  body {
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}
+
 /* ============== Custom Alert ============== */
 .custom-alert {
   position: fixed;
@@ -428,6 +439,152 @@ body{
   
   .login-form-container {
     max-width: 100%;
+  }
+}
+
+/* ============== MOBILE RESPONSIVE FIXES ============== */
+
+/* Mobile Fix for Login/Register Split Screen */
+@media (max-width: 768px) {
+  .split-screen-container {
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+  
+  /* Left side - condense on mobile */
+  .left-side {
+    flex: 0 0 auto;
+    min-height: auto;
+    padding: 2rem 1.5rem;
+    overflow-y: visible;
+  }
+  
+  .logo-container {
+    margin-bottom: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .top-logo {
+    max-width: 140px;
+  }
+  
+  .back-button {
+    top: 1rem;
+    left: 1rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  .welcome-content {
+    padding: 1rem 0;
+  }
+  
+  .welcome-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .welcome-subtitle {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 0;
+  }
+  
+  .panda-mascot {
+    max-width: 180px;
+  }
+  
+  /* Right side - form gets more space */
+  .right-side {
+    flex: 1 1 auto;
+    padding: 2.5rem 1.5rem;
+    overflow-y: visible;
+  }
+  
+  .login-form-container {
+    max-width: 100%;
+  }
+  
+  .login-title {
+    font-size: 1.75rem;
+  }
+  
+  .login-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .input-glass {
+    height: 48px;
+    font-size: 0.95rem;
+  }
+  
+  .btn-brand, .btn-google {
+    height: 48px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .left-side {
+    padding: 1.5rem 1rem 1rem;
+  }
+  
+  .logo-container {
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  
+  .top-logo {
+    max-width: 120px;
+  }
+  
+  .back-button {
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  
+  .welcome-title {
+    font-size: 1.3rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .welcome-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  
+  .panda-mascot {
+    max-width: 150px;
+  }
+  
+  .right-side {
+    padding: 2rem 1.25rem;
+  }
+  
+  .login-title {
+    font-size: 1.5rem;
+  }
+  
+  .login-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .input-glass {
+    height: 46px;
+    font-size: 0.9rem;
+  }
+  
+  .btn-brand, .btn-google {
+    height: 46px;
+    font-size: 0.9rem;
+  }
+  
+  .forgot-link, .register-link {
+    font-size: 0.85rem;
   }
 }
 

@@ -1367,3 +1367,415 @@ main.container-xl > * + *{
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(56, 160, 255, 0.4);
 }
+
+/* ================= MOBILE RESPONSIVE FIXES ================= */
+
+/* Mobile Fix for Dashboard */
+@media (max-width: 768px) {
+  /* Container adjustments */
+  .container-xl {
+    width: 100%;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  /* Topbar - stack elements */
+  .topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 1rem;
+    gap: 14px;
+  }
+  
+  .lp-brand-img {
+    height: 60px;
+  }
+  
+  /* Search bar - full width on mobile */
+  .search {
+    order: 3;
+    width: 100%;
+    flex: 1 1 100%;
+    height: 52px;
+    padding: 0.6rem 1.1rem;
+  }
+  
+  .search input {
+    height: 52px;
+    line-height: 52px;
+    font-size: 1rem;
+  }
+  
+  .search .icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.15rem;
+  }
+  
+  /* Right side icons */
+  .right {
+    gap: 0.65rem;
+  }
+  
+  .icon {
+    width: 48px;
+    height: 48px;
+    font-size: 1.05rem;
+  }
+  
+  .avatar-nav {
+    --sz: 48px;
+  }
+  
+  /* Main content spacing */
+  main.container-xl {
+    padding: 1.25rem 0 6rem;
+  }
+  
+  main.container-xl > * + * {
+    margin-top: 24px;
+  }
+  
+  /* Title and headers */
+  .title {
+    font-size: 1.75rem;
+  }
+  
+  /* Cards - adjust padding */
+  .card-post,
+  .card-reply,
+  .card-input,
+  .card-post-form {
+    padding: 1.25rem;
+    border-radius: 1.1rem;
+  }
+  
+  /* Post header - adjust layout */
+  .post-header {
+    gap: 0.75rem;
+  }
+  
+  .author-info {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .author-name {
+    font-size: 0.95rem;
+  }
+  
+  .author-handle {
+    font-size: 0.8rem;
+  }
+  
+  .post-time {
+    font-size: 0.75rem;
+  }
+  
+  /* Post content */
+  .post-title {
+    font-size: 1.15rem;
+    margin-bottom: 0.6rem;
+  }
+  
+  .post-content {
+    font-size: 1rem;
+    line-height: 1.55;
+  }
+  
+  /* Post actions - adjust spacing */
+  .post-actions {
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  
+  .post-action-btn {
+    font-size: 0.9rem;
+    gap: 0.5rem;
+  }
+  
+  /* Filter dropdown positioning */
+  .filter-dropdown {
+    position: fixed;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 90%;
+    max-width: 300px;
+  }
+  
+  /* Notification dropdown */
+  .notification-dropdown {
+    position: fixed;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 90%;
+    max-width: 360px;
+    max-height: 80vh;
+  }
+  
+  /* Search results info */
+  .search-results-info {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Form elements */
+  .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .form-label {
+    font-size: 0.9rem;
+  }
+  
+  .form-select,
+  .form-input,
+  .form-textarea {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
+  
+  .form-textarea {
+    min-height: 100px;
+  }
+  
+  .form-actions {
+    gap: 0.75rem;
+  }
+  
+  .btn-cancel,
+  .btn-post {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.95rem;
+  }
+  
+  /* Modal adjustments */
+  .modal-content {
+    max-width: 90%;
+  }
+  
+  .modal-title {
+    font-size: 1.1rem;
+  }
+  
+  .modal-body p {
+    font-size: 0.95rem;
+  }
+  
+  .btn-modal,
+  .btn-delete {
+    padding: 0.65rem 1.25rem;
+    font-size: 0.95rem;
+  }
+  
+  /* Comments section */
+  .comment-input-container {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  
+  .comment-input {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.95rem;
+  }
+  
+  .comment-submit-btn {
+    padding: 0.65rem 1.25rem;
+    width: 100%;
+  }
+  
+  /* Welcome modal */
+  .welcome-modal-content {
+    width: 95%;
+    padding: 2rem 1.5rem;
+  }
+  
+  .welcome-panda-img {
+    width: 140px;
+    height: 140px;
+  }
+  
+  .welcome-title {
+    font-size: 2rem;
+  }
+  
+  .welcome-message {
+    font-size: 1rem;
+  }
+  
+  .welcome-btn {
+    font-size: 1rem;
+    padding: 0.75rem 2rem;
+  }
+  
+  /* Profile hover modal */
+  .profile-hover-modal {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+  
+  .profile-hover-content {
+    min-width: 240px;
+    padding: 1rem;
+  }
+  
+  .profile-hover-avatar {
+    width: 70px;
+    height: 70px;
+  }
+  
+  /* Sidebar - make always visible on mobile */
+  .side {
+    width: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    top: auto;
+    z-index: 1000;
+  }
+  
+  .side-inner {
+    transform: translateX(0) !important;
+    position: static;
+  }
+  
+  .side-box {
+    width: 100%;
+    max-width: 100%;
+    flex-direction: row;
+    padding: 0.85rem 0.5rem;
+    gap: 0.5rem;
+    border-radius: 0;
+    border: none;
+    border-top: 1px solid #1f2e5a;
+    justify-content: space-around;
+    background: #0d1733;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+  }
+  
+  .side-btn {
+    width: 52px;
+    height: 52px;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  
+  .side-bottom {
+    margin-top: 0;
+    margin-left: auto;
+  }
+  
+  .side-hotspot {
+    display: none;
+  }
+
+@media (max-width: 480px) {
+  /* Further compress for small phones */
+  .container-xl {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  
+  .topbar {
+    padding: 0.75rem;
+    gap: 10px;
+  }
+  
+  .lp-brand-img {
+    height: 50px;
+  }
+  
+  .search {
+    height: 48px;
+    padding: 0.5rem 0.9rem;
+  }
+  
+  .search input {
+    height: 48px;
+    line-height: 48px;
+    font-size: 0.95rem;
+  }
+  
+  .search .icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1.05rem;
+  }
+  
+  .icon {
+    width: 44px;
+    height: 44px;
+    font-size: 1rem;
+  }
+  
+  .avatar-nav {
+    --sz: 44px;
+  }
+  
+  .title {
+    font-size: 1.5rem;
+  }
+  
+  .card-post,
+  .card-reply,
+  .card-input,
+  .card-post-form {
+    padding: 1rem;
+  }
+  
+  .post-title {
+    font-size: 1.05rem;
+  }
+  
+  .post-content {
+    font-size: 0.95rem;
+  }
+  
+  .author-name {
+    font-size: 0.9rem;
+  }
+  
+  .author-handle,
+  .post-time {
+    font-size: 0.75rem;
+  }
+  
+  .post-action-btn {
+    font-size: 0.85rem;
+  }
+  
+  .side-btn {
+    width: 48px;
+    height: 48px;
+    font-size: 1rem;
+  }
+  
+  .side-box {
+    padding: 0.75rem 0.35rem;
+    gap: 0.35rem;
+  }
+  
+  .welcome-panda-img {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .welcome-title {
+    font-size: 1.75rem;
+  }
+  
+  .welcome-message {
+    font-size: 0.95rem;
+  }
+  
+  .welcome-btn {
+    font-size: 0.95rem;
+    padding: 0.7rem 1.75rem;
+  }
+}
+

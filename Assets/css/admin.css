@@ -41,5 +41,139 @@
   .links{grid-template-columns:1fr}
 }
 
+/* ================= MOBILE RESPONSIVE FIXES FOR ADMIN ================= */
+
+/* Mobile Fix for Admin Dashboard */
+@media (max-width: 768px) {
+  /* Grid adjustments */
+  .admin-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  /* Metrics grid - 2 columns on mobile */
+  .metrics {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .metric {
+    padding: 0.85rem 0.9rem;
+  }
+  
+  .m-num {
+    font-size: 1.4rem;
+  }
+  
+  .m-label {
+    font-size: 0.85rem;
+  }
+  
+  /* Activity list */
+  .activity {
+    padding-left: 1rem;
+  }
+  
+  .activity li {
+    font-size: 0.9rem;
+    margin: 0.4rem 0;
+  }
+  
+  /* Quick links - single column */
+  .links {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .quick {
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+  }
+  
+  /* Admin cards */
+  .admin-card {
+    padding: 1.25rem;
+    border-radius: 1rem;
+  }
+  
+  /* Admin menu dropdown */
+  .admin-menu {
+    min-width: 180px;
+    right: 8px;
+    bottom: 54px;
+  }
+  
+  .admin-menu button {
+    padding: 0.55rem 0.7rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Table responsiveness */
+  .admin-table {
+    font-size: 0.875rem;
+  }
+  
+  .admin-table thead {
+    display: none;
+  }
+  
+  .admin-table tbody tr {
+    display: block;
+    margin-bottom: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.03);
+  }
+  
+  .admin-table td {
+    display: block;
+    text-align: left !important;
+    padding: 0.5rem 0.25rem !important;
+    border: none;
+  }
+  
+  .admin-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--brand);
+    display: inline-block;
+    margin-right: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Metrics - stack to single column on very small screens */
+  .metrics {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  
+  .metric {
+    padding: 0.75rem 0.8rem;
+  }
+  
+  .m-num {
+    font-size: 1.3rem;
+  }
+  
+  .m-label {
+    font-size: 0.8rem;
+  }
+  
+  .admin-card {
+    padding: 1rem;
+  }
+  
+  .activity li {
+    font-size: 0.85rem;
+  }
+  
+  .quick {
+    padding: 0.75rem 0.9rem;
+    font-size: 0.9rem;
+  }
+}
+
 
 

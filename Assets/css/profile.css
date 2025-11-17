@@ -331,3 +331,408 @@ body{
   object-fit: cover;
 }
 
+/* ================= MOBILE RESPONSIVE FIXES ================= */
+
+/* Mobile Fix for Profile Page */
+@media (max-width: 768px) {
+  /* Container adjustments */
+  .container {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  /* Logo */
+  .brand-logo {
+    height: 110px !important;
+  }
+  
+  /* Avatar positioning - fix overlap on mobile */
+  .avatar-wrap {
+    position: relative;
+    left: 0;
+    top: 0;
+    margin: 0 auto 1.25rem;
+    width: 100px;
+    height: 100px;
+  }
+  
+  .avatar-xl {
+    width: 92px;
+    height: 92px;
+  }
+  
+  /* Remove left margin shift on mobile */
+  .content-shift {
+    margin-left: 0;
+    padding-left: 0;
+  }
+  
+  /* Header text */
+  .profile-name {
+    font-size: 1.6rem;
+  }
+  
+  .profile-handle {
+    font-size: 0.9rem;
+  }
+  
+  .profile-bio {
+    font-size: 0.95rem;
+  }
+  
+  /* Level and stats */
+  .lvl-pill {
+    font-size: 0.8rem;
+    padding: 0.15rem 0.55rem;
+  }
+  
+  .level-bar {
+    height: 9px;
+  }
+  
+  .stats-row > span {
+    font-size: 0.9rem;
+    padding: 0.15rem 0.5rem;
+  }
+  
+  /* Mini cards grid */
+  .mini-card {
+    padding: 14px;
+  }
+  
+  .mini-title {
+    font-size: 0.9rem;
+  }
+  
+  .mini-value {
+    font-size: 0.95rem;
+  }
+  
+  .thumb-box {
+    width: 90px;
+    height: 90px;
+  }
+  
+  .genre-badge {
+    height: 110px;
+  }
+  
+  /* Edit controls - stack vertically on mobile */
+  .edit-controls {
+    position: relative;
+    top: auto;
+    right: auto;
+    left: auto;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 1.25rem;
+    justify-content: center;
+  }
+  
+  .edit-controls .btn {
+    font-size: 0.85rem;
+    padding: 0.45rem 0.9rem;
+  }
+  
+  /* Best posts sidebar */
+  .best-title {
+    font-size: 1rem;
+  }
+  
+  .best-post {
+    padding: 10px 12px;
+  }
+  
+  .best-post .small {
+    font-size: 0.85rem;
+  }
+  
+  /* Card adjustments */
+  .card-glass,
+  .card-pill {
+    padding: 1.75rem 1.25rem;
+  }
+  
+  /* Posts selection modal */
+  .modal-card {
+    max-width: 95% !important;
+    padding: 1.5rem 1rem;
+  }
+  
+  .post-selection-item {
+    padding: 0.85rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Further compress for small phones */
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  
+  .brand-logo {
+    height: 85px !important;
+  }
+  
+  .avatar-wrap {
+    width: 88px;
+    height: 88px;
+  }
+  
+  .avatar-xl {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .profile-name {
+    font-size: 1.4rem;
+  }
+  
+  .profile-handle {
+    font-size: 0.85rem;
+  }
+  
+  .profile-bio {
+    font-size: 0.9rem;
+  }
+  
+  .lvl-pill {
+    font-size: 0.75rem;
+  }
+  
+  .stats-row > span {
+    font-size: 0.85rem;
+  }
+  
+  .card-glass,
+  .card-pill {
+    padding: 1.5rem 1rem;
+  }
+  
+  .mini-card {
+    padding: 12px;
+  }
+  
+  .thumb-box {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .genre-badge {
+    height: 100px;
+  }
+  
+  .edit-controls .btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+  .avatar-wrap {
+    position: relative;
+    left: 0;
+    top: 0;
+    margin: 0 auto 1rem;
+    width: 90px;
+    height: 90px;
+  }
+  
+  .avatar-xl {
+    width: 82px;
+    height: 82px;
+  }
+  
+  /* Remove left margin shift on mobile */
+  .content-shift {
+    margin-left: 0;
+    padding-left: 0;
+  }
+  
+  /* Header text */
+  .profile-name {
+    font-size: 1.5rem;
+  }
+  
+  .profile-handle {
+    font-size: 0.85rem;
+  }
+  
+  .profile-bio {
+    font-size: 0.9rem;
+  }
+  
+  /* Level and stats */
+  .lvl-pill {
+    font-size: 0.75rem;
+    padding: 0.12rem 0.5rem;
+  }
+  
+  .level-bar {
+    height: 8px;
+  }
+  
+  .stats-row > span {
+    font-size: 0.85rem;
+    padding: 0.12rem 0.45rem;
+  }
+  
+  /* Mini cards grid */
+  .mini-card {
+    padding: 12px;
+  }
+  
+  .mini-title {
+    font-size: 0.85rem;
+  }
+  
+  .mini-value {
+    font-size: 0.9rem;
+  }
+  
+  .thumb-box {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .genre-badge {
+    height: 100px;
+  }
+  
+  /* Edit controls - stack vertically on mobile */
+  .edit-controls {
+    position: relative;
+    top: auto;
+    right: auto;
+    left: auto;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 1rem;
+    justify-content: center;
+  }
+  
+  .edit-controls .btn {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
+  
+  /* Best posts sidebar */
+  .best-title {
+    font-size: 0.95rem;
+  }
+  
+  .best-post {
+    padding: 8px 10px;
+  }
+  
+  .best-post .small {
+    font-size: 0.8rem;
+  }
+  
+  /* Card adjustments */
+  .card-glass,
+  .card-pill {
+    padding: 1.5rem 1rem;
+  }
+  
+  /* Posts selection modal */
+  .modal-card {
+    max-width: 95% !important;
+    padding: 1.5rem 1rem;
+  }
+  
+  .post-selection-item {
+    padding: 0.85rem !important;
+  }
+  
+  /* Post editor modal */
+  #postEditor .modal-card {
+    width: min(95vw, 92vw) !important;
+    padding: 18px 14px;
+    min-height: auto;
+  }
+  
+  #postEditor textarea {
+    min-height: 180px;
+    font-size: 0.9rem;
+  }
+  
+  #postEditor #pe_comments {
+    min-height: 200px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Further compress for small phones */
+  .container {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  
+  .brand-logo {
+    height: 70px !important;
+  }
+  
+  .avatar-wrap {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .avatar-xl {
+    width: 72px;
+    height: 72px;
+  }
+  
+  .profile-name {
+    font-size: 1.3rem;
+  }
+  
+  .profile-handle {
+    font-size: 0.8rem;
+  }
+  
+  .profile-bio {
+    font-size: 0.85rem;
+  }
+  
+  .lvl-pill {
+    font-size: 0.7rem;
+  }
+  
+  .stats-row > span {
+    font-size: 0.8rem;
+  }
+  
+  .card-glass,
+  .card-pill {
+    padding: 1.25rem 0.85rem;
+  }
+  
+  .mini-card {
+    padding: 10px;
+  }
+  
+  .thumb-box {
+    width: 70px;
+    height: 70px;
+  }
+  
+  .genre-badge {
+    height: 90px;
+  }
+  
+  .edit-controls .btn {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.7rem;
+  }
+  
+  #postEditor .modal-card {
+    padding: 14px 10px;
+  }
+  
+  #postEditor textarea {
+    min-height: 150px;
+    font-size: 0.85rem;
+  }
+}

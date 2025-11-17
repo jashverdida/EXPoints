@@ -31,6 +31,17 @@ body{
   color:var(--ink);
 }
 
+/* Allow scrolling on mobile */
+@media (max-width: 768px) {
+  html,
+  body {
+    height: auto;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+}
+
 /* ============== Split Screen Layout (FLIPPED) ============== */
 .split-screen-container {
   display: flex;
@@ -268,6 +279,7 @@ body{
   right: 0;
 }
 
+
 /* ============== Responsive Design ============== */
 @media (max-width: 992px) {
   .split-screen-container {
@@ -355,5 +367,138 @@ body{
   .btn-brand,
   .btn-google {
     height: 46px;
+  }
+}
+
+/* ============== MOBILE RESPONSIVE FIXES ============== */
+
+/* Mobile Fix for Register Split Screen */
+@media (max-width: 768px) {
+  .split-screen-container {
+    flex-direction: column-reverse;
+    height: auto;
+    min-height: 100vh;
+  }
+  
+  /* Right side (blue) - condense on mobile */
+  .right-side {
+    flex: 0 0 auto;
+    min-height: auto;
+    padding: 2rem 1.5rem;
+    overflow-y: visible;
+  }
+  
+  .welcome-content {
+    padding: 1rem 0;
+  }
+  
+  .welcome-title {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .welcome-subtitle {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    padding: 0;
+  }
+  
+  .panda-mascot {
+    max-width: 180px;
+  }
+  
+  /* Left side (form) - gets more space */
+  .left-side {
+    flex: 1 1 auto;
+    padding: 2.5rem 1.5rem;
+    overflow-y: visible;
+  }
+  
+  .logo-container {
+    top: 1rem;
+    left: 1rem;
+  }
+  
+  .top-logo {
+    max-width: 130px;
+  }
+  
+  .register-form-container {
+    margin-top: 3rem;
+    max-width: 100%;
+  }
+  
+  .register-title {
+    font-size: 1.75rem;
+  }
+  
+  .register-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .input-pill {
+    height: 48px;
+    font-size: 0.95rem;
+  }
+  
+  .btn-brand, .btn-google {
+    height: 48px;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .right-side {
+    padding: 1.5rem 1rem;
+  }
+  
+  .welcome-title {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .welcome-subtitle {
+    font-size: 0.85rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .panda-mascot {
+    max-width: 150px;
+  }
+  
+  .left-side {
+    padding: 2rem 1.25rem;
+  }
+  
+  .logo-container {
+    top: 0.75rem;
+    left: 0.75rem;
+  }
+  
+  .top-logo {
+    max-width: 110px;
+  }
+  
+  .register-form-container {
+    margin-top: 2.5rem;
+  }
+  
+  .register-title {
+    font-size: 1.5rem;
+  }
+  
+  .register-subtitle {
+    font-size: 0.85rem;
+  }
+  
+  .input-pill {
+    height: 46px;
+    font-size: 0.9rem;
+  }
+  
+  .btn-brand, .btn-google {
+    height: 46px;
+    font-size: 0.9rem;
   }
 }

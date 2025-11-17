@@ -646,3 +646,149 @@ body::before {
 @media (max-width: 992px){
   .section-grid, .cards, .devs, .discover-row{ grid-template-columns: 1fr; }
 }
+
+/* ================= MOBILE RESPONSIVE FIXES ================= */
+
+/* Mobile Fix for Landing Page Navigation & Hero */
+@media (max-width: 768px) {
+  /* Header and Nav */
+  .lp-header {
+    margin-top: 10px;
+    padding-inline: 12px;
+  }
+  
+  .lp-nav {
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+    gap: 16px;
+    padding: 12px 0;
+  }
+  
+  .lp-brand-img {
+    height: 120px;
+  }
+  
+  .lp-menu {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .lp-link {
+    font-size: 1.1rem;
+    padding: 0.5rem 1rem;
+    width: 100%;
+    text-align: center;
+  }
+  
+  /* Hero Section */
+  .lp-hero {
+    padding: 24px 0 32px;
+  }
+  
+  .lp-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    min-height: auto;
+  }
+  
+  .lp-panda {
+    justify-content: center;
+    order: 2;
+  }
+  
+  .lp-panda-img {
+    max-width: 280px;
+  }
+  
+  .lp-copy {
+    order: 1;
+    text-align: center;
+  }
+  
+  .lp-title {
+    font-size: 1.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .lp-sub {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+    padding: 0 1rem;
+  }
+  
+  .lp-ctas {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+    padding: 0 1rem;
+  }
+  
+  .lp-btn {
+    min-width: 100%;
+    height: 52px;
+    font-size: 0.95rem;
+  }
+  
+  /* Glyphs - reduce size on mobile */
+  .glyph {
+    width: 32px;
+    height: 32px;
+  }
+  
+  /* Sections */
+  .lp-section {
+    padding: 32px 0 40px;
+  }
+  
+  .section-inner {
+    padding: 1.5rem 1rem;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+  }
+  
+  /* Posters always hidden on mobile */
+  .posters {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .lp-brand-img {
+    height: 90px;
+  }
+  
+  .lp-link {
+    font-size: 1rem;
+  }
+  
+  .lp-title {
+    font-size: 1.5rem;
+  }
+  
+  .lp-sub {
+    font-size: 0.9rem;
+  }
+  
+  .lp-btn {
+    height: 48px;
+    font-size: 0.9rem;
+  }
+  
+  .lp-panda-img {
+    max-width: 220px;
+  }
+  
+  .glyph {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .section-title {
+    font-size: 1.3rem;
+  }
+}

@@ -433,6 +433,243 @@ if ($db) {
       transform: translateY(-2px);
       color: #93c5fd;
     }
+    
+    /* ================= MOBILE RESPONSIVE FIXES ================= */
+    
+    /* Mobile Fix for Manage Users Page */
+    @media (max-width: 768px) {
+      /* Topbar adjustments */
+      .topbar {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+        align-items: flex-start;
+      }
+      
+      .topbar h1 {
+        font-size: 1.1rem;
+      }
+      
+      .admin-badge {
+        display: block;
+        margin-left: 0;
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        padding: 0.3rem 0.75rem;
+      }
+      
+      .back-btn {
+        padding: 0.5rem 0.85rem;
+        font-size: 0.9rem;
+      }
+      
+      /* Page header */
+      .page-header {
+        padding: 1.5rem;
+      }
+      
+      .page-header h1 {
+        font-size: 1.6rem;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+      }
+      
+      .page-header p {
+        font-size: 0.95rem;
+      }
+      
+      /* Stats bar - stack vertically */
+      .stats-bar {
+        flex-direction: column;
+        gap: 1rem;
+        padding-top: 1rem;
+        margin-top: 1rem;
+      }
+      
+      .stat-item {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: rgba(59, 130, 246, 0.1);
+        border-radius: 0.5rem;
+      }
+      
+      .stat-num {
+        font-size: 1.75rem;
+      }
+      
+      .stat-label {
+        font-size: 0.8rem;
+      }
+      
+      /* User cards */
+      .user-card {
+        padding: 1.25rem;
+        margin-bottom: 1.25rem;
+      }
+      
+      .user-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      
+      .user-info {
+        width: 100%;
+      }
+      
+      .user-avatar {
+        width: 55px;
+        height: 55px;
+        font-size: 1.3rem;
+      }
+      
+      .user-details h3 {
+        font-size: 1.15rem;
+      }
+      
+      .user-details .meta {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+      }
+      
+      .banned-badge {
+        padding: 0.3rem 0.85rem;
+        font-size: 0.825rem;
+      }
+      
+      /* Ban info box */
+      .ban-info-box {
+        padding: 0.85rem;
+      }
+      
+      .ban-label {
+        font-size: 0.825rem;
+      }
+      
+      .ban-text {
+        font-size: 0.9rem;
+      }
+      
+      /* User actions - stack buttons */
+      .user-actions {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      
+      .btn-unban,
+      .btn-view-profile {
+        width: 100%;
+        padding: 0.7rem 1.25rem;
+        font-size: 0.95rem;
+      }
+      
+      /* Empty state */
+      .empty-state {
+        padding: 3rem 1.5rem;
+      }
+      
+      .empty-state i {
+        font-size: 3.5rem;
+      }
+      
+      .empty-state h3 {
+        font-size: 1.3rem;
+      }
+      
+      .empty-state p {
+        font-size: 0.95rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      /* Further compress for small phones */
+      .topbar {
+        padding: 0.85rem;
+      }
+      
+      .topbar h1 {
+        font-size: 1rem;
+      }
+      
+      .admin-badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.65rem;
+      }
+      
+      .back-btn {
+        padding: 0.45rem 0.75rem;
+        font-size: 0.85rem;
+      }
+      
+      .page-header {
+        padding: 1.25rem;
+      }
+      
+      .page-header h1 {
+        font-size: 1.4rem;
+      }
+      
+      .page-header p {
+        font-size: 0.9rem;
+      }
+      
+      .stat-num {
+        font-size: 1.5rem;
+      }
+      
+      .stat-label {
+        font-size: 0.75rem;
+      }
+      
+      .user-card {
+        padding: 1rem;
+      }
+      
+      .user-avatar {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+      }
+      
+      .user-details h3 {
+        font-size: 1.05rem;
+      }
+      
+      .user-details .meta {
+        font-size: 0.825rem;
+      }
+      
+      .banned-badge {
+        padding: 0.25rem 0.75rem;
+        font-size: 0.8rem;
+      }
+      
+      .ban-info-box {
+        padding: 0.75rem;
+      }
+      
+      .btn-unban,
+      .btn-view-profile {
+        padding: 0.65rem 1rem;
+        font-size: 0.9rem;
+      }
+      
+      .empty-state {
+        padding: 2.5rem 1.25rem;
+      }
+      
+      .empty-state i {
+        font-size: 3rem;
+      }
+      
+      .empty-state h3 {
+        font-size: 1.2rem;
+      }
+    }
   </style>
 </head>
 <body>

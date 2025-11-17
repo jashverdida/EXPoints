@@ -450,6 +450,258 @@ if ($db) {
       transform: translateY(-2px);
       color: #93c5fd;
     }
+    
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      body {
+        overflow-x: hidden;
+        padding: 0.5rem;
+      }
+      
+      .container-xl {
+        padding: 0.5rem;
+      }
+      
+      /* Topbar */
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .topbar h1 {
+        font-size: 1.5rem !important;
+        text-align: center;
+        margin-bottom: 0.5rem;
+      }
+      
+      .admin-badge {
+        align-self: center;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+      }
+      
+      /* Stats Bar */
+      .stats-bar {
+        flex-direction: column !important;
+        gap: 1rem !important;
+        margin-bottom: 1.5rem;
+      }
+      
+      .stat-item {
+        width: 100% !important;
+        padding: 1rem !important;
+        min-height: auto !important;
+      }
+      
+      .stat-item h4 {
+        font-size: 1.75rem !important;
+      }
+      
+      .stat-item small {
+        font-size: 0.9rem !important;
+      }
+      
+      /* Action Buttons */
+      .action-buttons {
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .action-buttons .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem !important;
+        font-size: 1rem !important;
+      }
+      
+      /* User Cards Grid */
+      .moderators-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+      }
+      
+      .moderator-card {
+        padding: 1.25rem !important;
+      }
+      
+      .moderator-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      
+      .moderator-avatar {
+        width: 60px !important;
+        height: 60px !important;
+        align-self: center;
+      }
+      
+      .moderator-info {
+        text-align: center;
+        width: 100%;
+      }
+      
+      .moderator-info h5 {
+        font-size: 1.1rem !important;
+      }
+      
+      .moderator-info small {
+        font-size: 0.85rem !important;
+      }
+      
+      .mod-badge {
+        font-size: 0.7rem !important;
+        padding: 0.25rem 0.6rem !important;
+      }
+      
+      /* Moderator Stats */
+      .moderator-stats {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+        margin: 1rem 0;
+      }
+      
+      .stat {
+        width: 100% !important;
+        padding: 0.75rem !important;
+        text-align: center;
+      }
+      
+      .stat-value {
+        font-size: 1.25rem !important;
+      }
+      
+      .stat-label {
+        font-size: 0.8rem !important;
+      }
+      
+      /* Action Buttons in Cards */
+      .moderator-actions {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+        margin-top: 1rem;
+      }
+      
+      .moderator-actions .btn {
+        width: 100% !important;
+        justify-content: center;
+        padding: 0.85rem 1rem !important;
+        font-size: 0.95rem !important;
+        min-height: 48px;
+      }
+      
+      /* Search Box */
+      .search-box {
+        margin-bottom: 1.5rem;
+      }
+      
+      .search-box input {
+        font-size: 1rem !important;
+        padding: 1rem !important;
+      }
+      
+      /* Empty State */
+      .empty-state {
+        padding: 3rem 1.5rem !important;
+      }
+      
+      .empty-state i {
+        font-size: 3rem !important;
+      }
+      
+      .empty-state h3 {
+        font-size: 1.25rem !important;
+      }
+      
+      .empty-state p {
+        font-size: 0.9rem !important;
+      }
+      
+      /* Back Button */
+      .back-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem !important;
+        font-size: 1rem !important;
+        margin-top: 1rem;
+      }
+      
+      /* Form Modals */
+      .modal-dialog {
+        margin: 0.5rem;
+      }
+      
+      .modal-content {
+        border-radius: 1rem;
+      }
+      
+      .modal-body {
+        padding: 1.25rem !important;
+      }
+      
+      .modal-body .form-control,
+      .modal-body .form-select {
+        font-size: 1rem !important;
+        padding: 0.85rem !important;
+        min-height: 48px;
+      }
+      
+      .modal-footer {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      
+      .modal-footer .btn {
+        width: 100%;
+        padding: 1rem !important;
+        font-size: 1rem !important;
+      }
+    }
+    
+    /* Small Mobile Adjustments */
+    @media (max-width: 480px) {
+      .topbar {
+        padding: 0.85rem;
+      }
+      
+      .topbar h1 {
+        font-size: 1.35rem !important;
+      }
+      
+      .moderator-card {
+        padding: 1rem !important;
+      }
+      
+      .moderator-avatar {
+        width: 50px !important;
+        height: 50px !important;
+      }
+      
+      .moderator-info h5 {
+        font-size: 1rem !important;
+      }
+      
+      .stat-value {
+        font-size: 1.1rem !important;
+      }
+      
+      .stat-label {
+        font-size: 0.75rem !important;
+      }
+      
+      .empty-state {
+        padding: 2.5rem 1rem !important;
+      }
+      
+      .empty-state i {
+        font-size: 2.5rem !important;
+      }
+    }
   </style>
 </head>
 <body>

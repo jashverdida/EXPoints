@@ -483,6 +483,290 @@ if ($db) {
       transform: translateY(-2px);
       color: #93c5fd;
     }
+    
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+      body {
+        overflow-x: hidden;
+        padding: 0.5rem;
+      }
+      
+      .container-xl {
+        padding: 0.5rem;
+      }
+      
+      /* Topbar */
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+      }
+      
+      .topbar h1 {
+        font-size: 1.5rem !important;
+        text-align: center;
+        margin-bottom: 0.5rem;
+      }
+      
+      .admin-badge {
+        align-self: center;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+      }
+      
+      /* Stats Bar */
+      .stats-bar {
+        flex-direction: column !important;
+        gap: 1rem !important;
+        margin-bottom: 1.5rem;
+      }
+      
+      .stat-item {
+        width: 100% !important;
+        padding: 1rem !important;
+        min-height: auto !important;
+      }
+      
+      .stat-item h4 {
+        font-size: 1.75rem !important;
+      }
+      
+      .stat-item small {
+        font-size: 0.9rem !important;
+      }
+      
+      /* Filter Tabs */
+      .filter-tabs {
+        gap: 0.5rem !important;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+      }
+      
+      .filter-tab {
+        flex: 1 1 calc(50% - 0.25rem);
+        min-width: 120px;
+        padding: 0.75rem 0.85rem !important;
+        font-size: 0.85rem !important;
+        justify-content: center;
+      }
+      
+      /* Appeals Grid */
+      .appeals-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+      }
+      
+      .appeal-card {
+        padding: 1.25rem !important;
+      }
+      
+      /* Appeal Header */
+      .appeal-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      
+      .appeal-user {
+        flex-direction: column;
+        align-items: center !important;
+        text-align: center;
+        width: 100%;
+        gap: 0.75rem;
+      }
+      
+      .appeal-avatar {
+        width: 60px !important;
+        height: 60px !important;
+      }
+      
+      .appeal-user-info h5 {
+        font-size: 1.1rem !important;
+      }
+      
+      .appeal-user-info small {
+        font-size: 0.85rem !important;
+      }
+      
+      /* Status Badge */
+      .status-badge {
+        align-self: center;
+        font-size: 0.75rem !important;
+        padding: 0.35rem 0.75rem !important;
+      }
+      
+      /* Appeal Details */
+      .appeal-details {
+        gap: 0.75rem !important;
+      }
+      
+      .detail-item {
+        padding: 0.75rem !important;
+      }
+      
+      .detail-item i {
+        font-size: 1rem !important;
+      }
+      
+      .detail-item div small {
+        font-size: 0.75rem !important;
+      }
+      
+      .detail-item div span {
+        font-size: 0.9rem !important;
+      }
+      
+      /* Appeal Reason */
+      .appeal-reason {
+        padding: 1rem !important;
+        margin: 1rem 0;
+      }
+      
+      .appeal-reason h6 {
+        font-size: 0.95rem !important;
+      }
+      
+      .appeal-reason p {
+        font-size: 0.9rem !important;
+      }
+      
+      /* Appeal Actions */
+      .appeal-actions {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+        margin-top: 1rem;
+      }
+      
+      .appeal-actions .btn {
+        width: 100% !important;
+        justify-content: center;
+        padding: 1rem !important;
+        font-size: 0.95rem !important;
+        min-height: 48px;
+      }
+      
+      /* View Button */
+      .btn-view {
+        width: 100% !important;
+        padding: 0.85rem 1rem !important;
+        font-size: 0.9rem !important;
+      }
+      
+      /* Empty State */
+      .empty-state {
+        padding: 3rem 1.5rem !important;
+      }
+      
+      .empty-state i {
+        font-size: 3rem !important;
+      }
+      
+      .empty-state h3 {
+        font-size: 1.25rem !important;
+      }
+      
+      .empty-state p {
+        font-size: 0.9rem !important;
+      }
+      
+      /* Back Button */
+      .back-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 1rem !important;
+        font-size: 1rem !important;
+        margin-top: 1rem;
+      }
+      
+      /* Modal */
+      .modal-dialog {
+        margin: 0.5rem;
+      }
+      
+      .modal-content {
+        border-radius: 1rem;
+      }
+      
+      .modal-header {
+        padding: 1rem !important;
+      }
+      
+      .modal-header h5 {
+        font-size: 1.1rem !important;
+      }
+      
+      .modal-body {
+        padding: 1.25rem !important;
+      }
+      
+      .modal-body .form-control,
+      .modal-body .form-select {
+        font-size: 1rem !important;
+        padding: 0.85rem !important;
+        min-height: 48px;
+      }
+      
+      .modal-footer {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 1rem !important;
+      }
+      
+      .modal-footer .btn {
+        width: 100%;
+        padding: 1rem !important;
+        font-size: 1rem !important;
+      }
+    }
+    
+    /* Small Mobile Adjustments */
+    @media (max-width: 480px) {
+      .topbar {
+        padding: 0.85rem;
+      }
+      
+      .topbar h1 {
+        font-size: 1.35rem !important;
+      }
+      
+      .filter-tab {
+        flex: 1 1 100%;
+        font-size: 0.8rem !important;
+      }
+      
+      .appeal-card {
+        padding: 1rem !important;
+      }
+      
+      .appeal-avatar {
+        width: 50px !important;
+        height: 50px !important;
+      }
+      
+      .appeal-user-info h5 {
+        font-size: 1rem !important;
+      }
+      
+      .detail-item {
+        padding: 0.65rem !important;
+      }
+      
+      .appeal-reason {
+        padding: 0.85rem !important;
+      }
+      
+      .empty-state {
+        padding: 2.5rem 1rem !important;
+      }
+      
+      .empty-state i {
+        font-size: 2.5rem !important;
+      }
+    }
   </style>
 </head>
 <body>

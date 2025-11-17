@@ -431,6 +431,185 @@ $db->close();
                 align-items: flex-start;
             }
         }
+        
+        /* ================= MOBILE RESPONSIVE FIXES ================= */
+        
+        /* Mobile Fix for Games Page */
+        @media (max-width: 768px) {
+            /* Hero section */
+            .games-hero {
+                padding: 2rem 1rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .games-hero h1 {
+                font-size: 1.8rem;
+                letter-spacing: 1px;
+            }
+            
+            .games-hero .hero-icon {
+                font-size: 2.5rem;
+            }
+            
+            .games-hero p {
+                font-size: 1rem;
+            }
+            
+            /* Stats bar */
+            .stats-bar {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            .stat-value {
+                font-size: 1.75rem;
+            }
+            
+            .stat-label {
+                font-size: 0.85rem;
+            }
+            
+            /* Search bar */
+            .search-games {
+                margin-bottom: 1.5rem;
+            }
+            
+            .search-games input {
+                padding: 1rem 1.25rem 1rem 3rem;
+                font-size: 1rem;
+            }
+            
+            .search-games::before {
+                font-size: 1.3rem;
+                left: 1rem;
+            }
+            
+            /* Game cards */
+            .game-card {
+                padding: 1.5rem;
+                margin-bottom: 1rem;
+            }
+            
+            .game-card-title {
+                font-size: 1.1rem;
+            }
+            
+            .game-card-stats {
+                flex-direction: column;
+                gap: 0.75rem;
+                align-items: flex-start;
+                font-size: 0.85rem;
+            }
+            
+            .popular-badge {
+                font-size: 0.75rem;
+                padding: 0.35rem 0.75rem;
+            }
+            
+            /* Empty state */
+            .empty-state i {
+                font-size: 4rem;
+            }
+            
+            .empty-state h3 {
+                font-size: 1.5rem;
+            }
+            
+            .empty-state p {
+                font-size: 1rem;
+            }
+            
+            /* Floating icons - reduce on mobile */
+            .game-icon-float {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            /* Hero section - smaller */
+            .games-hero {
+                padding: 1.5rem 0.75rem;
+                margin-bottom: 1rem;
+            }
+            
+            .games-hero h1 {
+                font-size: 1.5rem;
+            }
+            
+            .games-hero .hero-icon {
+                font-size: 2rem;
+            }
+            
+            .games-hero p {
+                font-size: 0.9rem;
+            }
+            
+            /* Stats bar - compact */
+            .stats-bar {
+                padding: 0.75rem;
+                gap: 0.75rem;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+            
+            .stat-label {
+                font-size: 0.8rem;
+            }
+            
+            /* Search bar */
+            .search-games input {
+                padding: 0.85rem 1rem 0.85rem 2.75rem;
+                font-size: 0.95rem;
+            }
+            
+            .search-games::before {
+                font-size: 1.2rem;
+                left: 0.85rem;
+            }
+            
+            /* Game cards - compact */
+            .game-card {
+                padding: 1.25rem;
+            }
+            
+            .game-card-title {
+                font-size: 1rem;
+            }
+            
+            .game-card-title i {
+                font-size: 1.1rem;
+            }
+            
+            .game-card-stats {
+                font-size: 0.8rem;
+            }
+            
+            .popular-badge {
+                font-size: 0.7rem;
+                padding: 0.3rem 0.65rem;
+            }
+            
+            /* Empty state */
+            .empty-state i {
+                font-size: 3.5rem;
+            }
+            
+            .empty-state h3 {
+                font-size: 1.3rem;
+            }
+            
+            .empty-state p {
+                font-size: 0.9rem;
+            }
+            
+            /* Hide floating icons on very small screens */
+            .game-icon-float {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>

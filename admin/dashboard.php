@@ -608,6 +608,366 @@ if ($db) {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
     }
+    
+    /* ================= MOBILE RESPONSIVE FIXES ================= */
+    
+    /* Mobile Fix for Admin Dashboard */
+    @media (max-width: 768px) {
+      /* Fix body scrolling on mobile */
+      body {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+        height: auto !important;
+        min-height: 100vh;
+      }
+      
+      /* Topbar adjustments - more compact */
+      .topbar {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.85rem;
+        align-items: flex-start;
+      }
+      
+      .topbar h1 {
+        font-size: 1.3rem !important;
+        margin-bottom: 0 !important;
+      }
+      
+      .topbar p {
+        font-size: 0.75rem !important;
+        margin-bottom: 0 !important;
+      }
+      
+      .topbar .lp-brand-img {
+        max-height: 50px;
+      }
+      
+      .topbar .right {
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      .topbar .icon {
+        font-size: 1.1rem;
+      }
+      
+      /* Admin badge adjustments */
+      .admin-badge {
+        display: block;
+        margin-left: 0;
+        margin-top: 0.35rem;
+        text-align: center;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+      }
+      
+      /* Admin grid - single column */
+      .admin-grid {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+      
+      /* Admin cards - much more compact */
+      .admin-card {
+        padding: 0.85rem;
+      }
+      
+      /* Section titles - smaller */
+      .section-title {
+        font-size: 1.1rem;
+        margin-bottom: 0.75rem;
+      }
+      
+      .section-title i {
+        font-size: 0.95rem;
+      }
+      
+      /* Metrics grid - 2x2 compact layout */
+      .metrics {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+      }
+      
+      .metric {
+        padding: 0.6rem 0.5rem;
+      }
+      
+      .m-num {
+        font-size: 1.35rem !important;
+      }
+      
+      .m-label {
+        font-size: 0.7rem !important;
+      }
+      
+      /* Activity list */
+      .activity-list {
+        font-size: 0.9rem;
+      }
+      
+      .activity-item {
+        padding: 0.75rem;
+        gap: 0.75rem;
+      }
+      
+      .activity-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
+      }
+      
+      .activity-text {
+        font-size: 0.9rem;
+      }
+      
+      .activity-time {
+        font-size: 0.75rem;
+      }
+      
+      /* Admin Tools - compact buttons */
+      .btn-admin,
+      .btn-outline-secondary {
+        padding: 0.6rem 0.75rem !important;
+        font-size: 0.85rem !important;
+      }
+      
+      .btn-admin i,
+      .btn-outline-secondary i {
+        font-size: 0.9rem;
+      }
+      
+      .d-grid {
+        gap: 0.5rem !important;
+      }
+      
+      /* Quick links - single column */
+      .quick-links {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      
+      .quick-link {
+        padding: 0.85rem 1rem;
+        font-size: 0.95rem;
+      }
+      
+      /* Posts grid - single column, no max-height to allow natural scrolling */
+      .posts-grid {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+        max-height: none !important;
+        overflow-y: visible !important;
+        padding-right: 0;
+      }
+      
+      /* Search box - more compact */
+      .search-box {
+        flex-direction: column;
+        gap: 0.4rem;
+        margin-bottom: 0.75rem;
+      }
+      
+      .search-input,
+      .search-select {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        font-size: 0.85rem;
+      }
+      
+      .search-container {
+        margin-bottom: 0.5rem !important;
+      }
+      
+      /* Post cards - smaller and more compact */
+      .post-card {
+        padding: 0.85rem;
+        gap: 0.5rem;
+      }
+      
+      .post-card-header {
+        margin-bottom: 0.35rem;
+      }
+      
+      .post-id {
+        font-size: 0.75rem;
+        padding: 0.2rem 0.6rem;
+      }
+      
+      .post-date {
+        font-size: 0.75rem;
+      }
+      
+      .post-title {
+        font-size: 0.95rem;
+        line-height: 1.3;
+        -webkit-line-clamp: 1;
+        margin-bottom: 0.35rem;
+      }
+      
+      .post-meta {
+        font-size: 0.75rem;
+        gap: 0.5rem;
+      }
+      
+      .post-content-preview {
+        font-size: 0.8rem;
+        padding: 0.5rem;
+        max-height: 60px;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+      }
+      
+      .post-card-actions {
+        flex-direction: row;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+      }
+      
+      .btn-view,
+      .btn-flag {
+        flex: 1;
+        padding: 0.6rem 0.5rem;
+        font-size: 0.8rem;
+      }
+      
+      .btn-view i,
+      .btn-flag i {
+        font-size: 0.85rem;
+      }
+      
+      /* Stats cards */
+      .stat-card {
+        padding: 1.25rem;
+      }
+      
+      .stat-value {
+        font-size: 1.75rem;
+      }
+      
+      .stat-label {
+        font-size: 0.875rem;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      /* Further compress for small phones */
+      .topbar {
+        padding: 0.7rem;
+      }
+      
+      .topbar .lp-brand-img {
+        max-height: 45px;
+      }
+      
+      .admin-badge {
+        font-size: 0.7rem;
+        padding: 0.35rem 0.6rem;
+      }
+      
+      .admin-card {
+        padding: 0.7rem;
+      }
+      
+      .section-title {
+        font-size: 1rem;
+        margin-bottom: 0.6rem;
+      }
+      
+      /* Metrics - even more compact on small screens */
+      .metrics {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.4rem;
+      }
+      
+      .metric {
+        padding: 0.5rem 0.4rem;
+      }
+      
+      .m-num {
+        font-size: 1.2rem !important;
+      }
+      
+      .m-label {
+        font-size: 0.65rem !important;
+      }
+      
+      /* Admin tools even more compact */
+      .btn-admin,
+      .btn-outline-secondary {
+        padding: 0.5rem 0.6rem !important;
+        font-size: 0.8rem !important;
+      }
+      
+      .d-grid {
+        gap: 0.4rem !important;
+      }
+      
+      .activity-item {
+        padding: 0.65rem;
+        font-size: 0.85rem;
+      }
+      
+      .activity-icon {
+        width: 35px;
+        height: 35px;
+        font-size: 0.95rem;
+      }
+      
+      .quick-link {
+        padding: 0.75rem 0.9rem;
+        font-size: 0.9rem;
+      }
+      
+      /* Make post cards even smaller on tiny screens */
+      .post-card {
+        padding: 0.7rem;
+        gap: 0.4rem;
+      }
+      
+      .post-id {
+        font-size: 0.7rem;
+        padding: 0.15rem 0.5rem;
+      }
+      
+      .post-date {
+        font-size: 0.7rem;
+      }
+      
+      .post-title {
+        font-size: 0.9rem;
+        line-height: 1.2;
+      }
+      
+      .post-meta {
+        font-size: 0.7rem;
+        gap: 0.4rem;
+      }
+      
+      .post-content-preview {
+        font-size: 0.75rem;
+        padding: 0.4rem;
+        max-height: 50px;
+        -webkit-line-clamp: 2;
+      }
+      
+      .btn-view,
+      .btn-flag {
+        padding: 0.5rem 0.4rem;
+        font-size: 0.75rem;
+      }
+      
+      .post-meta {
+        font-size: 0.8rem;
+      }
+      
+      .post-content-preview {
+        font-size: 0.85rem;
+        padding: 0.6rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -898,7 +1258,10 @@ if ($db) {
     // View post details with custom fullscreen overlay
     function viewPost(postId) {
       document.getElementById('postModal').style.display = 'block';
-      document.body.style.overflow = 'hidden';
+      // Only prevent body scroll on desktop, allow on mobile
+      if (window.innerWidth > 768) {
+        document.body.style.overflow = 'hidden';
+      }
       
       fetch(`../api/get_post.php?id=${postId}`)
         .then(response => response.json())
@@ -924,7 +1287,12 @@ if ($db) {
     
     function closePostModal() {
       document.getElementById('postModal').style.display = 'none';
-      document.body.style.overflow = 'auto';
+      // Restore overflow based on screen size
+      if (window.innerWidth > 768) {
+        document.body.style.overflow = 'auto';
+      } else {
+        document.body.style.overflow = '';
+      }
     }
 
     function displayPostDetails(post) {

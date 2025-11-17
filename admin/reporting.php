@@ -11,6 +11,199 @@ session_start();
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
   <link rel="stylesheet" href="../Assets/css/index.css">
   <link rel="stylesheet" href="../Assets/css/admin.css">
+  
+  <style>
+    /* Mobile Responsive Styles for Reporting Page */
+    @media (max-width: 768px) {
+      body {
+        overflow-x: hidden;
+        padding: 0.5rem;
+      }
+      
+      .container-xl {
+        padding: 0.5rem;
+      }
+      
+      /* Topbar */
+      .topbar {
+        padding: 1rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      
+      .lp-brand-img {
+        height: 32px !important;
+      }
+      
+      .search {
+        order: 3;
+        width: 100% !important;
+        flex: 1 1 100%;
+      }
+      
+      .search input {
+        font-size: 1rem !important;
+        padding: 1rem !important;
+        min-height: 48px;
+      }
+      
+      .search button {
+        min-width: 48px;
+        min-height: 48px;
+      }
+      
+      .right {
+        gap: 0.5rem;
+      }
+      
+      .right .icon {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+      }
+      
+      /* Main Content */
+      main {
+        padding: 1rem 0.5rem !important;
+      }
+      
+      /* Admin Card */
+      .admin-card {
+        padding: 1.25rem !important;
+        margin-bottom: 1.5rem;
+      }
+      
+      .section-title {
+        font-size: 1.35rem !important;
+        margin-bottom: 1.25rem !important;
+      }
+      
+      /* Report Cards */
+      .card-post.report {
+        padding: 1.25rem !important;
+        margin-bottom: 1rem;
+      }
+      
+      .card-post .row {
+        flex-direction: column !important;
+        gap: 1rem !important;
+      }
+      
+      .card-post .col-auto,
+      .card-post .col {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 1 1 100%;
+        text-align: center;
+      }
+      
+      .avatar-lg {
+        margin: 0 auto !important;
+        width: 60px !important;
+        height: 60px !important;
+      }
+      
+      .card-post .title {
+        font-size: 1.1rem !important;
+        text-align: center;
+      }
+      
+      .card-post .handle {
+        font-size: 0.9rem !important;
+        text-align: center;
+      }
+      
+      .card-post p {
+        font-size: 0.95rem !important;
+        text-align: center;
+        margin-bottom: 1rem !important;
+      }
+      
+      /* Actions */
+      .card-post .actions {
+        flex-direction: column !important;
+        gap: 0.75rem !important;
+        align-items: stretch !important;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .card-post .actions .a {
+        justify-content: center;
+        padding: 0.75rem;
+        font-size: 1rem !important;
+      }
+      
+      .card-post .actions .icon.more {
+        min-width: 100%;
+        min-height: 48px;
+        justify-content: center;
+        font-size: 1.1rem;
+      }
+      
+      /* Admin Menu */
+      .admin-menu {
+        position: static !important;
+        width: 100% !important;
+        margin-top: 0.75rem;
+        transform: none !important;
+      }
+      
+      .admin-menu.show {
+        display: flex !important;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      
+      .admin-menu button {
+        width: 100% !important;
+        padding: 1rem !important;
+        font-size: 0.95rem !important;
+        min-height: 48px;
+        justify-content: center;
+        text-align: center;
+      }
+      
+      .admin-menu button i {
+        font-size: 1.1rem;
+      }
+    }
+    
+    /* Small Mobile Adjustments */
+    @media (max-width: 480px) {
+      .topbar {
+        padding: 0.85rem;
+      }
+      
+      .lp-brand-img {
+        height: 28px !important;
+      }
+      
+      .section-title {
+        font-size: 1.2rem !important;
+      }
+      
+      .card-post.report {
+        padding: 1rem !important;
+      }
+      
+      .avatar-lg {
+        width: 50px !important;
+        height: 50px !important;
+      }
+      
+      .card-post .title {
+        font-size: 1rem !important;
+      }
+      
+      .card-post .handle {
+        font-size: 0.85rem !important;
+      }
+    }
+  </style>
 </head>
 <body>
 

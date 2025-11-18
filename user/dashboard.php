@@ -355,29 +355,30 @@ if ($db) {
         <?php foreach ($posts as $post): ?>
           <div class="card-post" data-post-id="<?php echo $post['id']; ?>">
             <div class="post-header">
-              <img src="<?php echo htmlspecialchars($post['author_profile_picture'] ?? '../assets/img/cat1.jpg'); ?>" alt="Profile" class="post-avatar">
-              <div class="post-info">
-                <span class="handle">@<?php echo htmlspecialchars($post['username']); ?></span>
-                <span class="timestamp"><?php echo date('M j, Y', strtotime($post['created_at'])); ?></span>
+              <div class="row gap-3 align-items-start">
+                <div class="col-auto">
+                  <div class="avatar-us">
+                    <img src="<?php echo htmlspecialchars($post['author_profile_picture'] ?? '../assets/img/cat1.jpg'); ?>" alt="Profile">
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="game-badge"><?php echo htmlspecialchars($post['game']); ?></div>
+                  <h2 class="title mb-1"><?php echo htmlspecialchars($post['title']); ?></h2>
+                  <div class="handle mb-3">@<?php echo htmlspecialchars($post['username']); ?></div>
+                  <p class="mb-3"><?php echo htmlspecialchars($post['content']); ?></p>
+                </div>
+              </div>
+              <div class="post-menu">
+                <button class="icon more" aria-label="More"><i class="bi bi-three-dots-vertical"></i></button>
+                <div class="post-dropdown">
+                  <button class="dropdown-item edit-post"><i class="bi bi-pencil"></i> Edit</button>
+                  <button class="dropdown-item delete-post"><i class="bi bi-trash"></i> Delete</button>
+                </div>
               </div>
             </div>
-            <div class="post-body">
-              <span class="game-tag"><?php echo htmlspecialchars($post['game']); ?></span>
-              <h3 class="title"><?php echo htmlspecialchars($post['title']); ?></h3>
-              <p class="content"><?php echo htmlspecialchars($post['content']); ?></p>
-            </div>
-            <div class="post-actions">
-              <button class="action-btn like-btn">
-                <i class="bi bi-heart"></i>
-                <span class="like-count"><?php echo $post['like_count'] ?? 0; ?></span>
-              </button>
-              <button class="action-btn comment-btn">
-                <i class="bi bi-chat"></i>
-                <span class="comment-count"><?php echo $post['comment_count'] ?? 0; ?></span>
-              </button>
-              <button class="action-btn bookmark-btn">
-                <i class="bi bi-bookmark"></i>
-              </button>
+            <div class="actions">
+              <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b><?php echo $post['like_count'] ?? 0; ?></b></span>
+              <span class="a comment-btn" data-comments="<?php echo $post['comment_count'] ?? 0; ?>"><i class="bi bi-chat-left-text"></i><b><?php echo $post['comment_count'] ?? 0; ?></b></span>
             </div>
           </div>
         <?php endforeach; ?>
@@ -1101,117 +1102,23 @@ if ($db) {
       transition: opacity 0.3s ease, transform 0.3s ease;
     }
     
-    /* Post card styling */
-    .post-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-    
-    .post-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
+    /* Profile picture styling for posts */
+    .avatar-us img {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      right: 2px;
+      bottom: 2px;
+      width: calc(100% - 4px);
+      height: calc(100% - 4px);
       object-fit: cover;
-      border: 2px solid rgba(56, 160, 255, 0.3);
-      flex-shrink: 0;
+      border-radius: 50%;
+      z-index: 3;
     }
     
-    .post-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    
-    .handle {
-      font-weight: 600;
-      color: #fff;
-      font-size: 0.95rem;
-    }
-    
-    .timestamp {
-      font-size: 0.85rem;
-      color: rgba(255, 255, 255, 0.6);
-    }
-    
-    .post-body {
-      margin-bottom: 12px;
-    }
-    
-    .game-tag {
-      display: inline-block;
-      background: linear-gradient(135deg, #38a0ff, #1b378d);
-      color: white;
-      padding: 4px 12px;
-      border-radius: 12px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-    
-    .title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #fff;
-      margin: 8px 0;
-    }
-    
-    .content {
-      color: rgba(255, 255, 255, 0.85);
-      line-height: 1.5;
-      margin: 0;
-    }
-    
-    .post-actions {
-      display: flex;
-      gap: 16px;
-      padding-top: 12px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .action-btn {
-      background: transparent;
-      border: none;
-      color: rgba(255, 255, 255, 0.7);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      padding: 6px 12px;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-      font-size: 0.9rem;
-    }
-    
-    .action-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-    }
-    
-    .action-btn i {
-      font-size: 1.1rem;
-    }
-    
-    .like-count, .comment-count {
-      font-weight: 500;
-    }
-    
-    .no-posts-message {
-      text-align: center;
-      padding: 60px 20px;
-      color: rgba(255, 255, 255, 0.6);
-    }
-    
-    .no-posts-message i {
-      font-size: 4rem;
-      margin-bottom: 20px;
-      opacity: 0.5;
-    }
-    
-    .no-posts-message p {
-      font-size: 1.1rem;
-      margin: 0;
+    /* Override the default ::after background */
+    .card-post .avatar-us::after {
+      display: none;
     }
     
     /* Custom game input transition */

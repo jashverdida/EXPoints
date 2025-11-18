@@ -9,25 +9,8 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Database connection
-function getDBConnection() {
-    $host = '127.0.0.1';
-    $dbname = 'expoints_db';
-    $username = 'root';
-    $password = '';
-    
-    try {
-        $mysqli = new mysqli($host, $username, $password, $dbname);
-        if ($mysqli->connect_error) {
-            throw new Exception("Connection failed: " . $mysqli->connect_error);
-        }
-        $mysqli->set_charset('utf8mb4');
-        return $mysqli;
-    } catch (Exception $e) {
-        error_log("Database connection error: " . $e->getMessage());
-        return null;
-    }
-}
+// Database connection - Supabase compatible
+require_once __DIR__ . '/../includes/db_helper.php';
 
 $db = getDBConnection();
 if (!$db) {
@@ -224,46 +207,56 @@ switch ($action) {
         // Get all posts with like status for current user and author profile pictures
         require_once '../includes/ExpSystem.php';
         
-        $stmt = $db->prepare("
-            SELECT 
-                p.id,
-                p.game,
-                p.title,
-                p.content,
-                p.username,
-                p.user_id,
-                p.created_at,
-                (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as like_count,
-                (SELECT COUNT(*) FROM post_comments WHERE post_id = p.id) as comment_count,
-                (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id AND user_id = ?) as user_liked,
-                (SELECT COUNT(*) FROM post_bookmarks WHERE post_id = p.id AND user_id = ?) as user_bookmarked,
-                ui.profile_picture as author_profile_picture,
-                ui.exp_points
-            FROM posts p
-            LEFT JOIN user_info ui ON p.user_id = ui.user_id
-            WHERE (ui.is_banned IS NULL OR ui.is_banned = 0)
-            ORDER BY p.created_at DESC
-        ");
-        $stmt->bind_param("ii", $userId, $userId);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        // Simplified query for Supabase - avoid subqueries and JOINs
+        $postsQuery = "SELECT id, game, title, content, username, user_id, created_at FROM posts ORDER BY created_at DESC";
+        error_log("About to execute query: $postsQuery");
+        $postsResult = $db->query($postsQuery);
+        
+        if (!$postsResult) {
+            error_log("Query failed! postsResult is false");
+            echo json_encode(['success' => false, 'error' => 'Failed to fetch posts - query returned false']);
+            break;
+        }
+        error_log("Query succeeded! Rows: " . $postsResult->num_rows);
         
         $posts = [];
-        while ($row = $result->fetch_assoc()) {
-            $row['user_liked'] = (bool)$row['user_liked'];
-            $row['user_bookmarked'] = (bool)$row['user_bookmarked'];
-            $row['is_owner'] = ($row['user_id'] === $userId);
-            $row['exp_points'] = (int)($row['exp_points'] ?? 0);
-            $row['level'] = ExpSystem::calculateLevel($row['exp_points']);
-            // Set default profile picture if none exists
-            if (empty($row['author_profile_picture'])) {
-                $row['author_profile_picture'] = '../assets/img/cat1.jpg';
+        while ($post = $postsResult->fetch_assoc()) {
+            // Get counts and user interactions
+            $likeResult = $db->query("SELECT id FROM post_likes WHERE post_id = {$post['id']}");
+            $post['like_count'] = $likeResult ? $likeResult->num_rows : 0;
+            
+            $commentResult = $db->query("SELECT id FROM post_comments WHERE post_id = {$post['id']}");
+            $post['comment_count'] = $commentResult ? $commentResult->num_rows : 0;
+            
+            $userLikedResult = $db->query("SELECT id FROM post_likes WHERE post_id = {$post['id']} AND user_id = {$userId}");
+            $post['user_liked'] = $userLikedResult && $userLikedResult->num_rows > 0;
+            
+            $userBookmarkedResult = $db->query("SELECT id FROM post_bookmarks WHERE post_id = {$post['id']} AND user_id = {$userId}");
+            $post['user_bookmarked'] = $userBookmarkedResult && $userBookmarkedResult->num_rows > 0;
+            
+            // Get author info
+            if ($post['user_id']) {
+                $userInfoResult = $db->query("SELECT profile_picture, exp_points, is_banned FROM user_info WHERE user_id = {$post['user_id']}");
+                if ($userInfoResult && $userInfoResult->num_rows > 0) {
+                    $userInfo = $userInfoResult->fetch_assoc();
+                    if ($userInfo['is_banned']) continue;
+                    $post['author_profile_picture'] = $userInfo['profile_picture'] ?: '../assets/img/cat1.jpg';
+                    $post['exp_points'] = (int)($userInfo['exp_points'] ?? 0);
+                } else {
+                    $post['author_profile_picture'] = '../assets/img/cat1.jpg';
+                    $post['exp_points'] = 0;
+                }
+            } else {
+                $post['author_profile_picture'] = '../assets/img/cat1.jpg';
+                $post['exp_points'] = 0;
             }
-            $posts[] = $row;
+            
+            $post['is_owner'] = ($post['user_id'] == $userId);
+            $post['level'] = ExpSystem::calculateLevel($post['exp_points']);
+            $posts[] = $post;
         }
         
         echo json_encode(['success' => true, 'posts' => $posts]);
-        $stmt->close();
         break;
     
     case 'bookmark':

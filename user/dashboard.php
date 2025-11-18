@@ -19,27 +19,9 @@ if (isset($_SESSION['user_role'])) {
     // Moderator role has been merged into admin role
 }
 
-// Simple database connection function
-function getDBConnection() {
-    $host = '127.0.0.1';
-    $dbname = 'expoints_db';
-    $username = 'root';
-    $password = '';
-    
-    try {
-        $mysqli = new mysqli($host, $username, $password, $dbname);
-        
-        if ($mysqli->connect_error) {
-            throw new Exception("Connection failed: " . $mysqli->connect_error);
-        }
-        
-        $mysqli->set_charset('utf8mb4');
-        return $mysqli;
-    } catch (Exception $e) {
-        error_log("Database connection error: " . $e->getMessage());
-        return null;
-    }
-}
+// Supabase-compatible database connection
+require_once __DIR__ . '/../includes/db_helper.php';
+
 
 // Get user info
 $username = $_SESSION['username'] ?? 'User';
@@ -120,68 +102,75 @@ if ($db) {
             INDEX idx_user_id (user_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-        // Get all posts with comment counts and author profile pictures
-        // Build search query based on filter - exclude posts from banned users
-        $query = "SELECT p.*, 
-                  (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comment_count,
-                  ui.profile_picture as author_profile_picture
-                  FROM posts p 
-                  LEFT JOIN user_info ui ON p.username = ui.username
-                  WHERE (p.hidden IS NULL OR p.hidden = 0)
-                  AND (ui.is_banned IS NULL OR ui.is_banned = 0)";
-        
-        // Add search conditions if search query exists
-        if (!empty($searchQuery)) {
-            switch ($searchFilter) {
-                case 'author':
-                    $query .= " AND p.username LIKE ?";
-                    break;
-                case 'content':
-                    $query .= " AND p.content LIKE ?";
-                    break;
-                case 'title':
-                default:
-                    $query .= " AND p.title LIKE ?";
-                    break;
-            }
-        }
-        
-        $query .= " ORDER BY p.created_at DESC";
-        
-        // Prepare and execute query
-        if (!empty($searchQuery)) {
-            $stmt = $db->prepare($query);
-            $searchParam = '%' . $searchQuery . '%';
-            $stmt->bind_param("s", $searchParam);
-            $stmt->execute();
-            $result = $stmt->get_result();
-        } else {
-            $result = $db->query($query);
-        }
+        // Simplified query for Supabase - avoid LEFT JOIN and complex WHERE with OR
+        $query = "SELECT * FROM posts WHERE hidden = 0 ORDER BY created_at DESC";
+        $result = $db->query($query);
         
         if ($result) {
             while ($post = $result->fetch_assoc()) {
-                // Get comments for this post
-                $comments_query = "SELECT id, text, username, created_at, likes 
-                                 FROM comments 
-                                 WHERE post_id = ? 
-                                 ORDER BY created_at DESC";
-                $comment_stmt = $db->prepare($comments_query);
-                $comment_stmt->bind_param("i", $post['id']);
-                $comment_stmt->execute();
-                $comments_result = $comment_stmt->get_result();
+                // Get user info separately  
+                $userInfoStmt = $db->prepare("SELECT profile_picture, exp_points, is_banned FROM user_info WHERE username = ?");
+                $userInfoStmt->bind_param("s", $post['username']);
+                $userInfoStmt->execute();
+                $userInfoResult = $userInfoStmt->get_result();
                 
-                $post['comments_list'] = [];
-                while ($comment = $comments_result->fetch_assoc()) {
-                    $post['comments_list'][] = $comment;
+                if ($userInfoResult && $userInfoResult->num_rows > 0) {
+                    $userInfo = $userInfoResult->fetch_assoc();
+                    
+                    // Skip banned users
+                    if ($userInfo['is_banned']) {
+                        $userInfoStmt->close();
+                        continue;
+                    }
+                    
+                    $post['author_profile_picture'] = $userInfo['profile_picture'] ?: '../assets/img/cat1.jpg';
+                    $post['exp_points'] = $userInfo['exp_points'] ?: 0;
+                } else {
+                    $post['author_profile_picture'] = '../assets/img/cat1.jpg';
+                    $post['exp_points'] = 0;
+                }
+                $userInfoStmt->close();
+                
+                // Get comment count - count rows instead of using COUNT(*)
+                $commentsStmt = $db->prepare("SELECT id FROM post_comments WHERE post_id = ?");
+                $commentsStmt->bind_param("i", $post['id']);
+                $commentsStmt->execute();
+                $commentsResult = $commentsStmt->get_result();
+                $post['comment_count'] = $commentsResult ? $commentsResult->num_rows : 0;
+                $commentsStmt->close();
+                
+                // Get like count - count rows instead of using COUNT(*)
+                $likesStmt = $db->prepare("SELECT id FROM post_likes WHERE post_id = ?");
+                $likesStmt->bind_param("i", $post['id']);
+                $likesStmt->execute();
+                $likesResult = $likesStmt->get_result();
+                $post['like_count'] = $likesResult ? $likesResult->num_rows : 0;
+                $likesStmt->close();
+                
+                // Apply search filter if needed
+                if (!empty($searchQuery)) {
+                    $matches = false;
+                    switch ($searchFilter) {
+                        case 'author':
+                            $matches = stripos($post['username'], $searchQuery) !== false;
+                            break;
+                        case 'content':
+                            $matches = stripos($post['content'], $searchQuery) !== false;
+                            break;
+                        case 'title':
+                        default:
+                            $matches = stripos($post['title'], $searchQuery) !== false;
+                            break;
+                    }
+                    if (!$matches) {
+                        continue;
+                    }
                 }
                 
+                // Initialize empty comments list (not fetching for performance)
+                $post['comments_list'] = [];
+                
                 $posts[] = $post;
-                $comment_stmt->close();
-            }
-            
-            if (!empty($searchQuery)) {
-                $stmt->close();
             }
         }
     } catch (Exception $e) {
@@ -362,6 +351,42 @@ if ($db) {
     <!-- Dynamic Posts Container -->
     <div id="postsContainer">
       <!-- Posts will be loaded here dynamically -->
+      <?php if (count($posts) > 0): ?>
+        <?php foreach ($posts as $post): ?>
+          <div class="card-post" data-post-id="<?php echo $post['id']; ?>">
+            <div class="post-header">
+              <img src="<?php echo htmlspecialchars($post['author_profile_picture'] ?? '../assets/img/cat1.jpg'); ?>" alt="Profile" class="post-avatar">
+              <div class="post-info">
+                <span class="handle">@<?php echo htmlspecialchars($post['username']); ?></span>
+                <span class="timestamp"><?php echo date('M j, Y', strtotime($post['created_at'])); ?></span>
+              </div>
+            </div>
+            <div class="post-body">
+              <span class="game-tag"><?php echo htmlspecialchars($post['game']); ?></span>
+              <h3 class="title"><?php echo htmlspecialchars($post['title']); ?></h3>
+              <p class="content"><?php echo htmlspecialchars($post['content']); ?></p>
+            </div>
+            <div class="post-actions">
+              <button class="action-btn like-btn">
+                <i class="bi bi-heart"></i>
+                <span class="like-count"><?php echo $post['like_count'] ?? 0; ?></span>
+              </button>
+              <button class="action-btn comment-btn">
+                <i class="bi bi-chat"></i>
+                <span class="comment-count"><?php echo $post['comment_count'] ?? 0; ?></span>
+              </button>
+              <button class="action-btn bookmark-btn">
+                <i class="bi bi-bookmark"></i>
+              </button>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <div class="no-posts-message">
+          <i class="bi bi-inbox"></i>
+          <p>No posts to display yet. Be the first to share your review!</p>
+        </div>
+      <?php endif; ?>
     </div>
     <!-- End of posts container -->
   </main>
@@ -1074,6 +1099,119 @@ if ($db) {
     /* Search animations and transitions */
     .card-post {
       transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    
+    /* Post card styling */
+    .post-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .post-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(56, 160, 255, 0.3);
+      flex-shrink: 0;
+    }
+    
+    .post-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    
+    .handle {
+      font-weight: 600;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+    
+    .timestamp {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .post-body {
+      margin-bottom: 12px;
+    }
+    
+    .game-tag {
+      display: inline-block;
+      background: linear-gradient(135deg, #38a0ff, #1b378d);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      margin: 8px 0;
+    }
+    
+    .content {
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.5;
+      margin: 0;
+    }
+    
+    .post-actions {
+      display: flex;
+      gap: 16px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .action-btn {
+      background: transparent;
+      border: none;
+      color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      font-size: 0.9rem;
+    }
+    
+    .action-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    
+    .action-btn i {
+      font-size: 1.1rem;
+    }
+    
+    .like-count, .comment-count {
+      font-weight: 500;
+    }
+    
+    .no-posts-message {
+      text-align: center;
+      padding: 60px 20px;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .no-posts-message i {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    
+    .no-posts-message p {
+      font-size: 1.1rem;
+      margin: 0;
     }
     
     /* Custom game input transition */

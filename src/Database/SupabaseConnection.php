@@ -62,25 +62,41 @@ class SupabaseConnection {
     private function handleSelect($sql) {
         // Extract table name and conditions
         if (!preg_match('/FROM\s+`?(\w+)`?/i', $sql, $tableMatch)) {
+            error_log("Failed to parse table name from SQL: $sql");
             throw new \Exception("Could not parse table name from: $sql");
         }
         
         $table = $tableMatch[1];
         $url = "{$this->url}/rest/v1/{$table}";
         
+        // Check if this is a COUNT query
+        $isCount = preg_match('/SELECT\s+COUNT\s*\(/i', $sql);
+        
         // Extract SELECT fields
         $select = '*';
         if (preg_match('/SELECT\s+(.*?)\s+FROM/i', $sql, $selectMatch)) {
             $fields = trim($selectMatch[1]);
-            if ($fields !== '*' && !stripos($fields, 'COUNT')) {
-                $select = str_replace(' ', '', $fields);
+            if ($isCount) {
+                // For COUNT queries, we'll use Supabase's count feature
+                $select = '*';
+            } elseif ($fields !== '*') {
+                // Clean up field list (remove spaces, aliases)
+                $select = preg_replace('/\s+as\s+\w+/i', '', $fields);
+                $select = str_replace(' ', '', $select);
             }
         }
         
-        $url .= "?select={$select}";
+        // URL encode the select parameter
+        $url .= "?select=" . urlencode($select);
+        
+        // Add count header if this is a COUNT query
+        $headers = [];
+        if ($isCount) {
+            $headers['Prefer'] = 'count=exact';
+        }
         
         // Extract WHERE conditions
-        if (preg_match('/WHERE\s+(.*?)(?:\s+ORDER|\s+LIMIT|$)/is', $sql, $whereMatch)) {
+        if (preg_match('/WHERE\s+(.*?)(?:\s+ORDER|\s+LIMIT|\s+GROUP|$)/is', $sql, $whereMatch)) {
             $where = $this->parseWhere($whereMatch[1]);
             if ($where) {
                 $url .= '&' . $where;
@@ -103,7 +119,18 @@ class SupabaseConnection {
             }
         }
         
-        $response = $this->request('GET', $url);
+        $response = $this->request('GET', $url, null, $headers);
+        
+        // If COUNT query, format the response
+        if ($isCount) {
+            if (isset($response['count'])) {
+                $response = [['count' => $response['count']]];
+            } else if (isset($response['data'])) {
+                $response = [['count' => count($response['data'])]];
+            }
+        } else if (isset($response['data'])) {
+            $response = $response['data'];
+        }
         
         // Create a result object that mimics mysqli_result
         $this->lastResult = new SupabaseResult($response);
@@ -269,7 +296,7 @@ class SupabaseConnection {
     /**
      * Make HTTP request to Supabase
      */
-    private function request($method, $url, $data = null) {
+    private function request($method, $url, $data = null, $customHeaders = []) {
         $ch = curl_init($url);
         
         $headers = [
@@ -279,9 +306,15 @@ class SupabaseConnection {
             "Prefer: return=representation"
         ];
         
+        // Merge custom headers
+        foreach ($customHeaders as $key => $value) {
+            $headers[] = "{$key}: {$value}";
+        }
+        
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_HEADER, true); // Include headers in output
         
         if ($data && in_array($method, ['POST', 'PATCH', 'PUT'])) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
@@ -289,19 +322,31 @@ class SupabaseConnection {
         
         $response = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         
         if (curl_errno($ch)) {
             throw new \Exception("cURL Error: " . curl_error($ch));
         }
         
+        // Extract headers and body
+        $headerStr = substr($response, 0, $headerSize);
+        $body = substr($response, $headerSize);
+        
         curl_close($ch);
         
         if ($httpCode >= 400) {
-            error_log("Supabase API Error [$httpCode]: $response");
-            throw new \Exception("API Error: $response");
+            error_log("Supabase API Error [$httpCode]: $body");
+            throw new \Exception("API Error: $body");
         }
         
-        return json_decode($response, true) ?: [];
+        $result = json_decode($body, true) ?: [];
+        
+        // Extract count from headers if present (for COUNT queries)
+        if (preg_match('/content-range:\s*\*\/(\d+)/i', $headerStr, $match)) {
+            $result = ['data' => $result, 'count' => (int)$match[1]];
+        }
+        
+        return $result;
     }
     
     /**
@@ -312,6 +357,26 @@ class SupabaseConnection {
             return $this->lastResult[0]['id'] ?? 0;
         }
         return 0;
+    }
+    
+    /**
+     * Prepare statement (compatibility wrapper)
+     * Returns a SupabaseStatement that mimics mysqli_stmt
+     */
+    public function prepare($sql) {
+        return new SupabaseStatement($this, $sql);
+    }
+    
+    /**
+     * Execute a prepared statement
+     */
+    public function executePrepared($sql, $params) {
+        // Replace ? placeholders with actual values
+        foreach ($params as $param) {
+            $value = is_string($param) ? "'" . addslashes($param) . "'" : $param;
+            $sql = preg_replace('/\?/', $value, $sql, 1);
+        }
+        return $this->query($sql);
     }
     
     /**
@@ -328,9 +393,11 @@ class SupabaseConnection {
 class SupabaseResult {
     private $data;
     private $position = 0;
+    public $num_rows; // Make it accessible as property
     
     public function __construct($data) {
         $this->data = is_array($data) ? $data : [];
+        $this->num_rows = count($this->data); // Set property
     }
     
     public function fetch_assoc() {
@@ -348,7 +415,56 @@ class SupabaseResult {
         return $this->data;
     }
     
+    // Keep method for backwards compatibility
     public function num_rows() {
-        return count($this->data);
+        return $this->num_rows;
+    }
+}
+
+/**
+ * Statement wrapper to mimic mysqli_stmt
+ */
+class SupabaseStatement {
+    private $connection;
+    private $sql;
+    private $params = [];
+    private $types = '';
+    private $result = null;
+    
+    public function __construct($connection, $sql) {
+        $this->connection = $connection;
+        $this->sql = $sql;
+    }
+    
+    public function bind_param($types, &...$params) {
+        $this->types = $types;
+        $this->params = $params;
+        return true;
+    }
+    
+    public function execute() {
+        try {
+            $this->result = $this->connection->executePrepared($this->sql, $this->params);
+            return $this->result !== false;
+        } catch (\Exception $e) {
+            error_log("Statement execution error: " . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function get_result() {
+        return $this->result;
+    }
+    
+    public function close() {
+        // No-op for HTTP-based connections
+        return true;
+    }
+    
+    public function fetch() {
+        if ($this->result && method_exists($this->result, 'fetch_assoc')) {
+            return $this->result->fetch_assoc();
+        }
+        return null;
     }
 }

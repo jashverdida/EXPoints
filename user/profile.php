@@ -10,30 +10,34 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
     exit();
 }
 
-// Database connection function
-function getDBConnection() {
-    $host = '127.0.0.1';
-    $dbname = 'expoints_db';
-    $username = 'root';
-    $password = '';
-    
-    try {
-        $mysqli = new mysqli($host, $username, $password, $dbname);
-        if ($mysqli->connect_error) {
-            throw new Exception("Connection failed: " . $mysqli->connect_error);
-        }
-        $mysqli->set_charset('utf8mb4');
-        return $mysqli;
-    } catch (Exception $e) {
-        error_log("Database connection error: " . $e->getMessage());
-        return null;
-    }
-}
+// Supabase database connection
+require_once __DIR__ . '/../includes/db_helper.php';
 
 $db = getDBConnection();
 $userId = $_SESSION['user_id'];
 
-// Get user data from database
+// ✅ FIX: Fetch profile picture FIRST (matching dashboard logic)
+$userProfilePicture = '../assets/img/cat1.jpg'; // Default fallback
+
+if ($db && $userId) {
+    try {
+        $profileStmt = $db->prepare("SELECT profile_picture FROM user_info WHERE user_id = ?");
+        $profileStmt->bind_param("i", $userId);
+        $profileStmt->execute();
+        $profileResult = $profileStmt->get_result();
+        
+        if ($profileData = $profileResult->fetch_assoc()) {
+            if (!empty($profileData['profile_picture'])) {
+                $userProfilePicture = $profileData['profile_picture'];
+            }
+        }
+        $profileStmt->close();
+    } catch (Exception $e) {
+        error_log("Profile picture fetch error: " . $e->getMessage());
+    }
+}
+
+// Get full user data from database
 $userStmt = $db->prepare("
     SELECT 
         u.id,
@@ -58,85 +62,98 @@ $result = $userStmt->get_result();
 $userData = $result->fetch_assoc();
 $userStmt->close();
 
+// Check if user data exists
+if (!$userData) {
+    $userData = [
+        'first_name' => '',
+        'middle_name' => '',
+        'last_name' => '',
+        'suffix' => '',
+        'username' => $_SESSION['username'] ?? 'user',
+        'bio' => '',
+        'created_at' => date('Y-m-d H:i:s'),
+        'profile_picture' => $userProfilePicture,
+        'exp_points' => 0
+    ];
+} else {
+    // ✅ Override with fetched profile picture (ensures consistency)
+    $userData['profile_picture'] = $userProfilePicture;
+}
+
 // Build full name
-$fullName = trim($userData['first_name'] . ' ' . ($userData['middle_name'] ? $userData['middle_name'] . ' ' : '') . $userData['last_name'] . ($userData['suffix'] ? ' ' . $userData['suffix'] : ''));
+$fullName = trim(($userData['first_name'] ?? '') . ' ' . (($userData['middle_name'] ?? '') ? ($userData['middle_name'] ?? '') . ' ' : '') . ($userData['last_name'] ?? '') . (($userData['suffix'] ?? '') ? ' ' . ($userData['suffix'] ?? '') : ''));
 $displayName = $userData['username'] ?? $fullName;
 $handle = '@' . ($userData['username'] ?? 'user');
 $bio = $userData['bio'] ?? '';
 $dateStarted = $userData['created_at'] ?? '';
-$profilePicture = $userData['profile_picture'] ?? '../assets/img/cat1.jpg';
+
+// ✅ Use consistent profile picture variable
+$profilePicture = $userProfilePicture;
+
+// Format date started
+$started_fmt = '';
+if (!empty($dateStarted)) {
+    $dt = new DateTime($dateStarted);
+    $started_fmt = $dt->format('n/j/y');
+}
 
 // Calculate level using EXP System
-require_once '../includes/ExpSystem.php';
 $expPoints = (int)($userData['exp_points'] ?? 0);
-$level = ExpSystem::calculateLevel($expPoints);
-
-// Calculate progress to next level
-$expToNext = ExpSystem::expToNextLevel($expPoints);
-if ($level === 1) {
-    $levelProgress = ($expPoints / 1) * 100; // Level 1->2 needs 1 EXP
-} else {
-    $currentLevelBase = 1 + ($level - 2) * 10;
-    $expInCurrentLevel = $expPoints - $currentLevelBase;
-    $levelProgress = ($expInCurrentLevel / 10) * 100; // Each level needs 10 EXP
+$level = 1;
+if ($expPoints >= 1) {
+    $level = 2 + floor(($expPoints - 1) / 10);
 }
-$levelProgress = min(100, max(0, $levelProgress));
 
-// Get stats (stars and reviews count)
+// Calculate level progress
+$levelProgress = ($expPoints % 10) * 10;
+
+// Get user stats (total likes and posts count)
+$userId = $_SESSION['user_id'];
 $statsStmt = $db->prepare("
     SELECT 
         (SELECT COUNT(*) FROM post_likes pl 
          JOIN posts p ON pl.post_id = p.id 
-         WHERE p.username = ?) as total_stars,
-        (SELECT COUNT(*) FROM posts WHERE username = ?) as total_reviews
+         WHERE p.user_id = ?) as total_stars,
+        (SELECT COUNT(*) FROM posts WHERE user_id = ?) as total_reviews
 ");
-$statsStmt->bind_param("ss", $userData['username'], $userData['username']);
+$statsStmt->bind_param("ii", $userId, $userId);
 $statsStmt->execute();
-$statsResult = $statsStmt->get_result();
-$stats = $statsResult->fetch_assoc();
+$stats = $statsStmt->get_result()->fetch_assoc();
 $statsStmt->close();
 
 // Get best posts (top 3 by likes)
-$postsStmt = $db->prepare("
+$bestPostsStmt = $db->prepare("
     SELECT 
-        p.id,
+        p.id, 
         p.title,
-        p.content,
-        (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as likes,
-        (SELECT COUNT(*) FROM post_comments WHERE post_id = p.id) as comments
+        (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as like_count,
+        (SELECT COUNT(*) FROM post_comments WHERE post_id = p.id) as comment_count
     FROM posts p
-    WHERE p.username = ?
-    ORDER BY likes DESC
+    WHERE p.user_id = ?
+    ORDER BY like_count DESC
     LIMIT 3
 ");
-$postsStmt->bind_param("s", $userData['username']);
-$postsStmt->execute();
-$postsResult = $postsStmt->get_result();
-$bestPosts = [];
-while ($post = $postsResult->fetch_assoc()) {
-    $bestPosts[] = $post;
-}
-$postsStmt->close();
+$bestPostsStmt->bind_param("i", $userId);
+$bestPostsStmt->execute();
+$bestPostsResult = $bestPostsStmt->get_result();
+$bestPosts = $bestPostsResult->fetch_all(MYSQLI_ASSOC);
+$bestPostsStmt->close();
 
 // Get all user posts for selection modal
 $allPostsStmt = $db->prepare("
     SELECT 
         p.id,
         p.title,
-        p.content,
-        (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as likes,
-        (SELECT COUNT(*) FROM post_comments WHERE post_id = p.id) as comments
+        (SELECT COUNT(*) FROM post_likes WHERE post_id = p.id) as like_count,
+        (SELECT COUNT(*) FROM post_comments WHERE post_id = p.id) as comment_count
     FROM posts p
-    WHERE p.username = ?
+    WHERE p.user_id = ?
     ORDER BY p.created_at DESC
 ");
-$allPostsStmt->bind_param("s", $userData['username']);
+$allPostsStmt->bind_param("i", $userId);
 $allPostsStmt->execute();
 $allPostsResult = $allPostsStmt->get_result();
-$allPosts = [];
-while ($post = $allPostsResult->fetch_assoc()) {
-    $allPosts[] = $post;
-}
+$allPosts = $allPostsResult->fetch_all(MYSQLI_ASSOC);
 $allPostsStmt->close();
 
 $db->close();
@@ -155,6 +172,102 @@ $started_fmt = !empty($dateStarted) ? date('n/j/y', strtotime($dateStarted)) : '
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../assets/css/profile.css" />
+  
+  <style>
+    /* ===== PROFILE AVATAR & CARD IMPROVEMENTS ===== */
+    
+    .avatar-wrap {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 1.5rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 5px;
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 0 3px rgba(110, 160, 255, 0.3) inset,
+        0 0 40px rgba(102, 126, 234, 0.3);
+      z-index: 2;
+      transition: all 0.3s ease;
+    }
+    
+    .avatar-wrap:hover {
+      transform: scale(1.05);
+      box-shadow: 
+        0 12px 48px rgba(0, 0, 0, 0.5),
+        0 0 0 3px rgba(110, 160, 255, 0.5) inset,
+        0 0 60px rgba(102, 126, 234, 0.5);
+    }
+    
+    .avatar-xl {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .content-shift {
+      text-align: center;
+    }
+    
+    .card-glass {
+      border: 1px solid rgba(60, 78, 145, 0.5);
+      border-radius: 24px;
+      background: linear-gradient(180deg, rgba(15, 22, 49, 0.95), rgba(17, 26, 58, 0.9));
+      box-shadow: 
+        0 0 0 1px rgba(110, 160, 255, 0.15) inset,
+        0 20px 60px rgba(0, 0, 0, 0.6),
+        0 0 80px rgba(56, 160, 255, 0.1);
+      backdrop-filter: blur(20px);
+    }
+    
+    .profile-name {
+      color: #fff;
+      font-weight: 800;
+      font-size: 2rem;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .profile-handle {
+      color: rgba(255, 255, 255, 0.7);
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    
+    .lvl-pill {
+      display: inline-block;
+      padding: 0.4rem 1rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 999px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .stats-row > span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem 0.8rem;
+      background: rgba(102, 126, 234, 0.15);
+      border-radius: 999px;
+      border: 1px solid rgba(110, 160, 255, 0.2);
+    }
+    
+    @media (max-width: 768px) {
+      .avatar-wrap {
+        width: 130px;
+        height: 130px;
+      }
+      
+      .profile-name {
+        font-size: 1.6rem;
+      }
+    }
+  </style>
 </head>
 <body class="bg-exp">
 
@@ -178,31 +291,38 @@ $started_fmt = !empty($dateStarted) ? date('n/j/y', strtotime($dateStarted)) : '
             <button id="btnSave"         class="btn btn-sm btn-success d-none">Save Changes</button>
           </div>
 
-          <!-- Avatar -->
+          <!-- ✅ FIXED: Avatar with proper sizing, centering, and error handling -->
           <div class="avatar-wrap">
-            <img id="avatar" src="<?= h($profilePicture) ?>" alt="Avatar" class="avatar-xl" data-edit="img" />
+            <img id="avatar" 
+                 src="<?= h($profilePicture) ?>" 
+                 alt="<?= h($displayName) ?>'s Profile" 
+                 class="avatar-xl" 
+                 data-edit="img"
+                 onerror="this.src='../assets/img/cat1.jpg'" />
           </div>
 
           <!-- Header -->
           <div class="content-shift">
-            <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div class="d-flex align-items-center justify-content-center gap-2 flex-wrap mb-2">
               <h2 id="display_name" class="profile-name mb-0" data-edit="text"
                 data-fullname="<?= h($fullName) ?>"><?= h($displayName) ?></h2>
-              <span id="handle" class="profile-handle"><?= h($handle) ?></span>
             </div>
+            
+            <span id="handle" class="profile-handle d-block mb-3"><?= h($handle) ?></span>
 
-            <!-- Stats -->
-            <div class="d-flex align-items-center gap-3 mt-2 stats-row">
-              <span><i class="bi bi-star-fill"></i><span id="stars"><?= (int)$stats['total_stars'] ?></span></span>
-              <span><i class="bi bi-book"></i><span id="reviews"><?= (int)$stats['total_reviews'] ?></span></span>
-            </div>
-
-            <!-- Level -->
-            <div class="d-flex align-items-center gap-3 mt-2 level-wrap">
-              <span class="lvl-pill">LVL <span id="level_num"><?= (int)$level ?></span></span>
-              <div class="progress level-bar flex-grow-1">
-                <div id="level_bar" class="progress-bar" style="width: <?= (int)$levelProgress ?>%"></div>
+            <!-- Level & Stats -->
+            <div class="d-flex align-items-center justify-content-center gap-3 mb-3">
+              <span class="lvl-pill">LVL <?= $level ?></span>
+              <div class="level-bar flex-grow-1" style="max-width: 200px;">
+                <div class="progress-bar" style="width: <?= $levelProgress ?>%"></div>
               </div>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="d-flex justify-content-center gap-3 mb-3 stats-row flex-wrap">
+              <span><i class="bi bi-star-fill"></i><span id="stars"><?= (int)($stats['total_stars'] ?? 0) ?></span></span>
+              <span><i class="bi bi-file-earmark-text-fill"></i><span id="reviews"><?= (int)($stats['total_reviews'] ?? 0) ?></span></span>
+              <span><i class="bi bi-trophy-fill"></i><?= $expPoints ?> EXP</span>
             </div>
 
             <!-- Bio -->

@@ -17,27 +17,8 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     exit();
 }
 
-// Simple database connection function
-function getDBConnection() {
-    $host = '127.0.0.1';
-    $dbname = 'expoints_db';
-    $username = 'root';
-    $password = '';
-    
-    try {
-        $mysqli = new mysqli($host, $username, $password, $dbname);
-        
-        if ($mysqli->connect_error) {
-            throw new Exception("Connection failed: " . $mysqli->connect_error);
-        }
-        
-        $mysqli->set_charset('utf8mb4');
-        return $mysqli;
-    } catch (Exception $e) {
-        error_log("Database connection error: " . $e->getMessage());
-        return null;
-    }
-}
+// Supabase database connection
+require_once __DIR__ . '/../includes/db_helper.php';
 
 // Get user info
 $username = $_SESSION['username'] ?? 'Admin';
@@ -60,14 +41,14 @@ if ($db) {
         $result = $db->query("SELECT COUNT(*) as count FROM users");
         if ($result) {
             $row = $result->fetch_assoc();
-            $total_users = $row['count'];
+            $total_users = $row['count'] ?? 0;
         }
         
         // Get admin count (moderators merged into admin)
         $result = $db->query("SELECT COUNT(*) as count FROM users WHERE role = 'admin'");
         if ($result) {
             $row = $result->fetch_assoc();
-            $total_admins = $row['count'];
+            $total_admins = $row['count'] ?? 0;
         }
         
         // No more separate moderator role
@@ -77,21 +58,21 @@ if ($db) {
         $result = $db->query("SELECT COUNT(*) as count FROM posts");
         if ($result) {
             $row = $result->fetch_assoc();
-            $total_posts = $row['count'];
+            $total_posts = $row['count'] ?? 0;
         }
         
         // Get comment count
-        $result = $db->query("SELECT COUNT(*) as count FROM comments");
+        $result = $db->query("SELECT COUNT(*) as count FROM post_comments");
         if ($result) {
             $row = $result->fetch_assoc();
-            $total_comments = $row['count'];
+            $total_comments = $row['count'] ?? 0;
         }
         
         // Get recent posts for moderation - exclude banned users' posts
         // Get actual counts from post_likes and comments tables
         $query = "SELECT p.id, p.game, p.title, p.content, p.username, p.user_id, p.created_at,
                   (SELECT COUNT(*) FROM post_likes pl WHERE pl.post_id = p.id) as like_count,
-                  (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comment_count
+                  (SELECT COUNT(*) FROM post_comments c WHERE c.post_id = p.id) as comment_count
                   FROM posts p 
                   LEFT JOIN user_info ui ON p.user_id = ui.user_id 
                   WHERE (ui.is_banned IS NULL OR ui.is_banned = 0) 

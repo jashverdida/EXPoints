@@ -7,27 +7,8 @@ if (session_status() === PHP_SESSION_NONE) {
 // Set JSON header
 header('Content-Type: application/json');
 
-// Database connection function
-function getDBConnection() {
-    $host = '127.0.0.1';
-    $dbname = 'expoints_db';
-    $username = 'root';
-    $password = '';
-    
-    try {
-        $mysqli = new mysqli($host, $username, $password, $dbname);
-        
-        if ($mysqli->connect_error) {
-            throw new Exception("Connection failed: " . $mysqli->connect_error);
-        }
-        
-        $mysqli->set_charset('utf8mb4');
-        return $mysqli;
-    } catch (Exception $e) {
-        error_log("Database connection error: " . $e->getMessage());
-        return null;
-    }
-}
+// Supabase database connection
+require_once __DIR__ . '/includes/db_helper.php';
 
 // Get JSON input
 $input = file_get_contents('php://input');
@@ -79,9 +60,6 @@ if (!$db) {
     exit();
 }
 
-// Start transaction
-$db->begin_transaction();
-
 try {
     // Check if email already exists
     $checkEmailStmt = $db->prepare("SELECT id FROM users WHERE email = ?");
@@ -89,13 +67,10 @@ try {
     $checkEmailStmt->execute();
     $checkEmailResult = $checkEmailStmt->get_result();
     
-    if ($checkEmailResult->num_rows > 0) {
-        $checkEmailStmt->close();
-        $db->close();
+    if ($checkEmailResult && $checkEmailResult->num_rows() > 0) {
         echo json_encode(['success' => false, 'error' => 'Email already registered']);
         exit();
     }
-    $checkEmailStmt->close();
     
     // Check if username already exists
     $checkUsernameStmt = $db->prepare("SELECT id FROM user_info WHERE username = ?");
@@ -103,13 +78,10 @@ try {
     $checkUsernameStmt->execute();
     $checkUsernameResult = $checkUsernameStmt->get_result();
     
-    if ($checkUsernameResult->num_rows > 0) {
-        $checkUsernameStmt->close();
-        $db->close();
+    if ($checkUsernameResult && $checkUsernameResult->num_rows() > 0) {
         echo json_encode(['success' => false, 'error' => 'Username already taken']);
         exit();
     }
-    $checkUsernameStmt->close();
     
     // Insert into users table (role defaults to 'user')
     $insertUserStmt = $db->prepare("INSERT INTO users (email, password, role) VALUES (?, ?, 'user')");
@@ -120,7 +92,6 @@ try {
     }
     
     $userId = $insertUserStmt->insert_id;
-    $insertUserStmt->close();
     
     // Insert into user_info table
     $insertInfoStmt = $db->prepare("INSERT INTO user_info (user_id, username, first_name, middle_name, last_name, suffix, exp_points) VALUES (?, ?, ?, ?, ?, ?, 0)");
@@ -130,11 +101,6 @@ try {
         throw new Exception("Failed to create user profile");
     }
     
-    $insertInfoStmt->close();
-    
-    // Commit transaction
-    $db->commit();
-    
     // Set session variables for the new user
     $_SESSION['user_id'] = $userId;
     $_SESSION['user_email'] = $email;
@@ -142,8 +108,6 @@ try {
     $_SESSION['user_role'] = 'user';
     $_SESSION['authenticated'] = true;
     $_SESSION['login_time'] = time();
-    
-    $db->close();
     
     echo json_encode([
         'success' => true,

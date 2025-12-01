@@ -3,6 +3,7 @@ session_start();
 header('Content-Type: application/json');
 
 require_once '../includes/NotificationSystem.php';
+require_once __DIR__ . '/../includes/db_helper.php';
 
 // Check if user is authenticated
 if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
@@ -11,25 +12,6 @@ if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
 }
 
 // Database connection
-function getDBConnection() {
-    $host = '127.0.0.1';
-    $dbname = 'expoints_db';
-    $username = 'root';
-    $password = '';
-    
-    try {
-        $mysqli = new mysqli($host, $username, $password, $dbname);
-        if ($mysqli->connect_error) {
-            throw new Exception("Connection failed: " . $mysqli->connect_error);
-        }
-        $mysqli->set_charset('utf8mb4');
-        return $mysqli;
-    } catch (Exception $e) {
-        error_log("Database connection error: " . $e->getMessage());
-        return null;
-    }
-}
-
 $db = getDBConnection();
 if (!$db) {
     echo json_encode(['success' => false, 'error' => 'Database connection failed']);
@@ -84,4 +66,4 @@ switch ($action) {
         break;
 }
 
-$db->close();
+

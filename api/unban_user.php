@@ -43,13 +43,7 @@ if (empty($username)) {
 }
 
 // Database connection
-$host = '127.0.0.1';
-$dbname = 'expoints_db';
-$username_db = 'root';
-$password = '';
-
-try {
-    $db = new mysqli($host, $username_db, $password, $dbname);
+require_once __DIR__ . '/../includes/db_helper.php';\n    $db = getDBConnection();
     
     if ($db->connect_error) {
         throw new Exception("Connection failed: " . $db->connect_error);
@@ -70,13 +64,13 @@ try {
     
     if (!$user_info) {
         echo json_encode(['success' => false, 'message' => 'User not found']);
-        $db->close();
+        
         exit;
     }
     
     if ($user_info['is_banned'] != 1) {
         echo json_encode(['success' => false, 'message' => 'User is not banned']);
-        $db->close();
+        
         exit;
     }
     
@@ -100,7 +94,7 @@ try {
         $stmt->close();
     }
     
-    $db->close();
+    
     
     echo json_encode([
         'success' => true,
@@ -115,7 +109,7 @@ try {
         'error' => $e->getMessage()
     ]);
     if (isset($db)) {
-        $db->close();
+        
     }
 }
 ?>

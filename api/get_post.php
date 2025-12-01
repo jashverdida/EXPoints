@@ -21,20 +21,20 @@ if ($post_id <= 0) {
     exit;
 }
 
-// Database connection
-$host = '127.0.0.1';
-$dbname = 'expoints_db';
-$username = 'root';
-$password = '';
+// Supabase database connection
+require_once __DIR__ . '/../includes/db_helper.php';
 
 try {
-    $db = new mysqli($host, $username, $password, $dbname);
+    $db = getDBConnection();
     
-    if ($db->connect_error) {
-        throw new Exception("Connection failed: " . $db->connect_error);
+    if (!$db) {
+        throw new Exception("Database connection failed");
     }
     
-    $db->set_charset('utf8mb4');
+    // Set charset for compatibility
+    if (method_exists($db, 'set_charset')) {
+        $db->set_charset('utf8mb4');
+    }
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Database connection failed', 'error' => $e->getMessage()]);
     exit;

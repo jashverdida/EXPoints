@@ -10,24 +10,7 @@ header('Content-Type: application/json');
 require_once '../includes/ExpSystem.php';
 
 // Database connection
-function getDBConnection() {
-    $host = '127.0.0.1';
-    $dbname = 'expoints_db';
-    $username = 'root';
-    $password = '';
-    
-    try {
-        $mysqli = new mysqli($host, $username, $password, $dbname);
-        if ($mysqli->connect_error) {
-            throw new Exception("Connection failed: " . $mysqli->connect_error);
-        }
-        $mysqli->set_charset('utf8mb4');
-        return $mysqli;
-    } catch (Exception $e) {
-        error_log("Database connection error: " . $e->getMessage());
-        return null;
-    }
-}
+
 
 try {
     $db = getDBConnection();
@@ -93,7 +76,7 @@ try {
             throw new Exception("Invalid action");
     }
     
-    $db->close();
+    
     
 } catch (Exception $e) {
     http_response_code(400);

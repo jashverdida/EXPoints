@@ -1,31 +1,37 @@
 # EXPoints Gaming Review Platform - AI Coding Instructions
 
 ## Project Overview
-EXPoints is a PHP-based gaming review platform with Firebase/Firestore backend integration, featuring user authentication, reviews, comments, and a "StarUp" gamification system. The platform allows public browsing but requires authentication for interactions.
+EXPoints is a PHP-based gaming review platform with **Supabase (PostgreSQL)** backend integration, featuring user authentication, posts/reviews, comments, and an EXP gamification system. The platform allows public browsing but requires authentication for interactions.
 
 ## Architecture & Data Flow
 
 ### Authentication Pattern
-- **Frontend**: Firebase Auth (client-side JavaScript in login.php/register.php)
-- **Backend**: PHP sessions synchronized with Firebase via `verify_user.php`
-- **API**: RESTful endpoints in `/api/` directory with Firestore integration
+- **Frontend**: Supabase Auth (client-side JavaScript in login.php/register.php)
+- **Backend**: PHP sessions synchronized with Supabase JWT verification
+- **API**: RESTful endpoints in `/api/` directory with PostgreSQL integration
 
-**Critical**: Always use the hybrid auth pattern - Firebase Auth → PHP session sync → Firestore operations
+**Critical**: Always use the hybrid auth pattern - Supabase Auth → PHP session sync → PostgreSQL operations
 
 ### Core Components
 ```
 Frontend (Pure PHP/Bootstrap): index.php → dashboard.php → games.php
-Backend Services: config/firestore.php (FirestoreService class)
-API Layer: api/ directory (users.php, reviews.php, comments.php)
-Authentication: Firebase Auth + PHP sessions
-Database: Firestore collections (users, reviews, comments, likes)
+Backend Services: config/supabase.php (SupabaseService class)
+                 config/supabase-compat.php (MySQL compatibility layer)
+API Layer: api/ directory (users.php, posts.php, comments.php)
+Authentication: Supabase Auth + PHP sessions
+Database: PostgreSQL tables (users, user_info, posts, post_likes, post_comments, notifications)
 ```
 
-### Firestore Collections Schema
-- `users`: { email, displayName, avatar, stats: {totalReviews, totalComments, totalLikes} }
-- `reviews`: { userId, gameTitle, rating (1-5), content, platform, createdAt, likes }
-- `comments`: { reviewId, userId, content, createdAt }
-- `likes`: { reviewId, userId, createdAt }
+### PostgreSQL Database Schema
+- `users`: { id, email, password, role, is_disabled, created_at }
+- `user_info`: { id, user_id, username, first_name, last_name, bio, profile_picture, exp_points, is_banned }
+- `posts`: { id, user_id, game, title, content, likes, comments, is_hidden, created_at }
+- `post_likes`: { id, post_id, user_id, created_at } UNIQUE(post_id, user_id)
+- `post_comments`: { id, post_id, user_id, username, comment, parent_id, created_at }
+- `post_bookmarks`: { id, post_id, user_id, created_at } UNIQUE(post_id, user_id)
+- `notifications`: { id, user_id, type, title, message, link, is_read, created_at }
+- `moderators`: { id, user_id, assigned_by, created_at }
+- `moderation_reports`: { id, post_id, reporter_id, reason, status, reviewed_by, created_at }
 
 ## Development Patterns
 
@@ -36,9 +42,11 @@ Database: Firestore collections (users, reviews, comments, likes)
 4. Include sidebar navigation pattern from `dashboard.php`
 
 ### Database Operations
-- Use `FirestoreService` class from `config/firestore.php`
+- Use `getDBConnection()` from `includes/db_helper.php`
+- Returns MySQL-compatible Supabase wrapper via `SupabaseMySQLCompat` class
+- Existing MySQL-style queries work automatically (prepare, bind_param, execute, get_result)
 - Always wrap in try-catch with proper error responses
-- Return format: `['success' => bool, 'data' => array, 'error' => string]`
+- Direct Supabase service available via `getSupabaseService()` for new code
 
 ### API Endpoints Pattern
 ```php

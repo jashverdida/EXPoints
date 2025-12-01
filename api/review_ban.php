@@ -43,13 +43,7 @@ if (!in_array($action, ['approved', 'rejected'])) {
 }
 
 // Database connection
-$host = '127.0.0.1';
-$dbname = 'expoints_db';
-$username = 'root';
-$password = '';
-
-try {
-    $db = new mysqli($host, $username, $password, $dbname);
+require_once __DIR__ . '/../includes/db_helper.php';\n    $db = getDBConnection();
     
     if ($db->connect_error) {
         throw new Exception("Connection failed: " . $db->connect_error);
@@ -102,7 +96,7 @@ try {
         }
     }
     
-    $db->close();
+    
     
     $message = $action === 'approved' 
         ? 'Ban approved successfully. User has been banned.' 

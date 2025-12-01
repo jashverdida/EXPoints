@@ -19,7 +19,7 @@ if (isset($_SESSION['user_role'])) {
     // Moderator role has been merged into admin role
 }
 
-// Supabase-compatible database connection
+// Supabase database connection
 require_once __DIR__ . '/../includes/db_helper.php';
 
 
@@ -543,20 +543,53 @@ if ($db) {
         document.getElementById('postTitle').focus();
       });
 
-      // Handle form submission - let it submit naturally to posts.php
-      postForm.addEventListener('submit', function(e) {
-        const gameSelect = document.getElementById('gameSelect').value;
+      // Handle form submission via API
+      postForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const gameSelect = document.getElementById('gameSelect');
+        const customGameInput = document.getElementById('customGame');
         const postTitle = document.getElementById('postTitle').value;
         const postContent = document.getElementById('postContent').value;
-        const username = document.getElementById('username').value;
         
-        if (!gameSelect || !postTitle || !postContent || !username) {
-          e.preventDefault();
+        // Determine final game value
+        let game = gameSelect.value === 'Other' ? customGameInput.value : gameSelect.value;
+        
+        if (!game || !postTitle || !postContent) {
           alert('Please fill in all fields');
           return;
         }
         
-        // Form will submit to posts.php which will redirect back to dashboard
+        try {
+          const response = await fetch('../api/posts.php?action=create', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              game: game,
+              title: postTitle,
+              content: postContent
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            // Reset form and collapse
+            postForm.reset();
+            expandedPostForm.style.display = 'none';
+            simplePostBox.style.display = 'block';
+            
+            // Reload page to show new post
+            window.location.href = 'dashboard.php?success=post_created';
+          } else {
+            alert('Error creating post: ' + (data.error || 'Unknown error'));
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Failed to create post. Please try again.');
+        }
       });
 
       // Handle cancel button

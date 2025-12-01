@@ -1,25 +1,14 @@
 <?php
-require_once __DIR__ . '/vendor/autoload.php';
-use EXPoints\Database\Connection;
+require_once 'includes/db_helper.php';
 
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+echo "Testing database connection...\n";
 
-try {
-    $db = Connection::getInstance()->getConnection();
-    if ($db) {
-        echo "Successfully connected to database!\n";
-        
-        // Test query
-        $result = $db->query("SHOW TABLES");
-        if ($result) {
-            echo "\nTables in database:\n";
-            while ($row = $result->fetch_array()) {
-                echo "- " . $row[0] . "\n";
-            }
-        }
-    }
-} catch (Exception $e) {
-    echo "Error: " . $e->getMessage() . "\n";
+$db = getDBConnection();
+
+if ($db) {
+    echo "✅ Connection successful!\n";
+    echo "Database type: " . get_class($db) . "\n";
+} else {
+    echo "❌ Connection failed!\n";
 }
-?>
+

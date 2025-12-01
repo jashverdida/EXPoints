@@ -4,27 +4,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-// Simple database connection
-function getDBConnection() {
-    $host = '127.0.0.1';
-    $dbname = 'expoints_db';
-    $username = 'root';
-    $password = '';
-    
-    try {
-        $mysqli = new mysqli($host, $username, $password, $dbname);
-        
-        if ($mysqli->connect_error) {
-            throw new Exception("Connection failed: " . $mysqli->connect_error);
-        }
-        
-        $mysqli->set_charset('utf8mb4');
-        return $mysqli;
-    } catch (Exception $e) {
-        error_log("Database connection error: " . $e->getMessage());
-        return null;
-    }
-}
+// Supabase database connection
+require_once __DIR__ . '/../includes/db_helper.php';
 
 // Get error from URL
 $error = isset($_GET['error']) ? urldecode($_GET['error']) : '';
@@ -42,19 +23,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$db) {
             $error = 'Database connection failed. Please try again later.';
         } else {
-            // Query user from database - include role field and disabled status
+            // Query user from Supabase - include role field and disabled status
             $stmt = $db->prepare("SELECT id, email, password, role, is_disabled, disabled_reason, disabled_at, disabled_by FROM users WHERE email = ?");
             $stmt->bind_param("s", $email);
             $stmt->execute();
             $result = $stmt->get_result();
             
-            if ($result->num_rows === 1) {
+            if ($result && $result->num_rows > 0) {
                 $user = $result->fetch_assoc();
                 
                 // Direct password comparison (plain text - matches your database)
                 if ($password === $user['password']) {
-                    // Get user role (default to 'user' if not set)
-                    $role = $user['role'] ?? 'user';
+                    // Get user role - ensure it's set correctly from database
+                    $role = isset($user['role']) && !empty($user['role']) ? $user['role'] : 'user';
                     
                     // Check if account is disabled (admin only now, no more moderators)
                     $is_disabled = $user['is_disabled'] ?? 0;
@@ -63,10 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['disabled_reason'] = $user['disabled_reason'] ?? 'Your account has been disabled by an administrator.';
                         $_SESSION['disabled_at'] = $user['disabled_at'];
                         $_SESSION['disabled_by'] = $user['disabled_by'];
-                        
-                        // Close connection
-                        $stmt->close();
-                        $db->close();
                         
                         // Redirect to disabled page
                         header('Location: disabled.php');
@@ -85,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $banned_at = '';
                     $banned_by = '';
                     
-                    if ($userInfoResult->num_rows === 1) {
+                    if ($userInfoResult && $userInfoResult->num_rows > 0) {
                         $userInfoData = $userInfoResult->fetch_assoc();
                         $username = $userInfoData['username'];
                         $is_banned = $userInfoData['is_banned'] ?? 0;
@@ -93,7 +70,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $banned_at = $userInfoData['banned_at'] ?? '';
                         $banned_by = $userInfoData['banned_by'] ?? '';
                     }
-                    $userInfoStmt->close();
                     
                     // Check if user is banned
                     if ($is_banned == 1) {
@@ -101,10 +77,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['ban_reason'] = $ban_reason;
                         $_SESSION['banned_at'] = $banned_at;
                         $_SESSION['banned_by'] = $banned_by;
-                        
-                        // Close connection
-                        $stmt->close();
-                        $db->close();
                         
                         // Redirect to banned page
                         header('Location: banned.php');
@@ -118,10 +90,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['user_role'] = $role;
                     $_SESSION['authenticated'] = true;
                     $_SESSION['login_time'] = time();
-                    
-                    // Close connection
-                    $stmt->close();
-                    $db->close();
                     
                     // Redirect based on role
                     switch ($role) {
@@ -144,6 +112,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             
             $stmt->close();
+            if (isset($userInfoStmt)) {
+                $userInfoStmt->close();
+            }
             $db->close();
         }
     }

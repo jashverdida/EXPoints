@@ -58,18 +58,31 @@ $db = getDBConnection();
 
 if ($db) {
     try {
-        // Get user's profile picture from database
+        // Fetch CURRENT username from database to ensure it's up-to-date
         if ($userId) {
-            $profileStmt = $db->prepare("SELECT profile_picture FROM user_info WHERE user_id = ?");
-            $profileStmt->bind_param("i", $userId);
-            $profileStmt->execute();
-            $profileResult = $profileStmt->get_result();
-            if ($profileData = $profileResult->fetch_assoc()) {
-                if (!empty($profileData['profile_picture'])) {
-                    $userProfilePicture = $profileData['profile_picture'];
+            $userInfoStmt = $db->prepare("SELECT username, profile_picture FROM user_info WHERE user_id = ?");
+            $userInfoStmt->bind_param("i", $userId);
+            $userInfoStmt->execute();
+            $userInfoResult = $userInfoStmt->get_result();
+            
+            if ($userInfoData = $userInfoResult->fetch_assoc()) {
+                // Update username from database (in case it changed)
+                $username = $userInfoData['username'];
+                $_SESSION['username'] = $username; // Update session too
+                
+                // DEBUG LOG
+                error_log("DASHBOARD DEBUG: user_id=$userId, fetched username from DB: $username");
+                
+                // Update profile picture
+                if (!empty($userInfoData['profile_picture'])) {
+                    $userProfilePicture = $userInfoData['profile_picture'];
                 }
+            } else {
+                error_log("DASHBOARD ERROR: No user_info found for user_id=$userId");
             }
-            $profileStmt->close();
+            $userInfoStmt->close();
+        } else {
+            error_log("DASHBOARD ERROR: No userId in session");
         }
         
         // Create tables if they don't exist
@@ -102,55 +115,75 @@ if ($db) {
             INDEX idx_user_id (user_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-        // Query posts from Supabase - get all non-hidden posts
-        $query = "SELECT * FROM posts WHERE hidden = 0 ORDER BY created_at DESC";
+        // Query posts from Supabase - Load all posts
+        $query = "SELECT * FROM posts WHERE hidden = 0 ORDER BY created_at DESC LIMIT 50";
         $result = $db->query($query);
         
         if ($result) {
             $postsData = [];
+            
             while ($post = $result->fetch_assoc()) {
                 $postsData[] = $post;
             }
             
-            foreach ($postsData as $post) {
-                // Get user info separately  
-                $userInfoStmt = $db->prepare("SELECT profile_picture, exp_points, is_banned FROM user_info WHERE username = ?");
-                $userInfoStmt->bind_param("s", $post['username']);
+            // Build maps for batch lookups
+            $userInfoMap = [];
+            $commentCountMap = [];
+            $likeCountMap = [];
+            
+            // Step 1: Collect all unique usernames
+            $uniqueUsernames = array_unique(array_column($postsData, 'username'));
+            
+            // Step 2: Fetch ALL user info in parallel (no loop)
+            foreach ($uniqueUsernames as $postUsername) {
+                $userInfoStmt = $db->prepare("SELECT username, profile_picture, exp_points, is_banned FROM user_info WHERE username = ?");
+                $userInfoStmt->bind_param("s", $postUsername);
                 $userInfoStmt->execute();
                 $userInfoResult = $userInfoStmt->get_result();
                 
                 if ($userInfoResult && $userInfoResult->num_rows > 0) {
                     $userInfo = $userInfoResult->fetch_assoc();
-                    
-                    // Skip banned users
-                    if ($userInfo['is_banned']) {
-                        $userInfoStmt->close();
-                        continue;
-                    }
-                    
-                    $post['author_profile_picture'] = $userInfo['profile_picture'] ?: '../assets/img/cat1.jpg';
-                    $post['exp_points'] = $userInfo['exp_points'] ?: 0;
-                } else {
-                    $post['author_profile_picture'] = '../assets/img/cat1.jpg';
-                    $post['exp_points'] = 0;
+                    $userInfoMap[$postUsername] = $userInfo;
                 }
                 $userInfoStmt->close();
+            }
+            
+            // Step 3: Get ALL comment counts using COUNT - one query per post (still better than before)
+            // Step 4: Get ALL like counts using COUNT - one query per post
+            foreach ($postsData as $post) {
+                $postId = $post['id'];
                 
-                // Get comment count - count rows instead of using COUNT(*)
-                $commentsStmt = $db->prepare("SELECT id FROM post_comments WHERE post_id = ?");
-                $commentsStmt->bind_param("i", $post['id']);
-                $commentsStmt->execute();
-                $commentsResult = $commentsStmt->get_result();
-                $post['comment_count'] = $commentsResult ? $commentsResult->num_rows : 0;
-                $commentsStmt->close();
+                // Comment count with COUNT(*)
+                $commentStmt = $db->prepare("SELECT COUNT(*) as count FROM post_comments WHERE post_id = ?");
+                $commentStmt->bind_param("i", $postId);
+                $commentStmt->execute();
+                $commentResult = $commentStmt->get_result();
+                $commentRow = $commentResult->fetch_assoc();
+                $commentCountMap[$postId] = (int)($commentRow['count'] ?? 0);
+                $commentStmt->close();
                 
-                // Get like count - count rows instead of using COUNT(*)
-                $likesStmt = $db->prepare("SELECT id FROM post_likes WHERE post_id = ?");
-                $likesStmt->bind_param("i", $post['id']);
-                $likesStmt->execute();
-                $likesResult = $likesStmt->get_result();
-                $post['like_count'] = $likesResult ? $likesResult->num_rows : 0;
-                $likesStmt->close();
+                // Like count with COUNT(*)
+                $likeStmt = $db->prepare("SELECT COUNT(*) as count FROM post_likes WHERE post_id = ?");
+                $likeStmt->bind_param("i", $postId);
+                $likeStmt->execute();
+                $likeResult = $likeStmt->get_result();
+                $likeRow = $likeResult->fetch_assoc();
+                $likeCountMap[$postId] = (int)($likeRow['count'] ?? 0);
+                $likeStmt->close();
+            }
+            
+            // Step 5: Process all posts using cached data (much faster)
+            foreach ($postsData as $post) {
+                $userInfo = $userInfoMap[$post['username']] ?? null;
+                
+                if ($userInfo && $userInfo['is_banned']) {
+                    continue; // Skip banned users
+                }
+                
+                $post['author_profile_picture'] = $userInfo['profile_picture'] ?? '../assets/img/cat1.jpg';
+                $post['exp_points'] = $userInfo['exp_points'] ?? 0;
+                $post['comment_count'] = $commentCountMap[$post['id']] ?? 0;
+                $post['like_count'] = $likeCountMap[$post['id']] ?? 0;
                 
                 // Apply search filter if needed
                 if (!empty($searchQuery)) {
@@ -172,11 +205,7 @@ if ($db) {
                     }
                 }
                 
-                // Initialize empty comments list (not fetching for performance)
                 $post['comments_list'] = [];
-                
-                $posts[] = $post;
-                
                 $posts[] = $post;
             }
         } else {
@@ -193,7 +222,10 @@ if ($db) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>EXPoints • Home</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>EXPoints • Home [<?php echo $username; ?>]</title>
 
   <!-- Fix CSS paths by removing /EXPoints prefix since we're using localhost:8000 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -224,7 +256,7 @@ if ($db) {
           <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
         </button>
         <a href="profile.php" class="avatar-nav">
-  <img src="<?php echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" class="avatar-img">
+  <img src="<?php echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" class="avatar-img" loading="eager">
 </a>
 </div>
     </header>
@@ -306,7 +338,8 @@ if ($db) {
         <div class="col">
           <!-- Simple textbox (initial state) -->
           <div id="simplePostBox" class="simple-post-box">
-            <input type="text" id="simplePostInput" class="simple-post-input" placeholder="What's on your mind, @<?php echo htmlspecialchars($username); ?>?" readonly>
+            <input type="text" id="simplePostInput" class="simple-post-input" placeholder="What's on your mind, @<?php echo htmlspecialchars($username); ?>?" readonly data-username="<?php echo htmlspecialchars($username); ?>" data-userid="<?php echo $userId; ?>">
+            <!-- CACHE BUSTER: <?php echo time(); ?> | Username = <?php echo $username; ?> | User ID = <?php echo $userId; ?> -->
           </div>
           
           <!-- Expanded form (hidden initially) -->
@@ -361,32 +394,76 @@ if ($db) {
       <!-- Posts will be loaded here dynamically -->
       <?php if (count($posts) > 0): ?>
         <?php foreach ($posts as $post): ?>
-          <div class="card-post" data-post-id="<?php echo $post['id']; ?>">
+          <?php 
+            $isOwnPost = ($post['username'] === $username);
+            // Check if user has bookmarked this post
+            $isBookmarked = false;
+            if ($db) {
+              $bookmarkStmt = $db->prepare("SELECT id FROM post_bookmarks WHERE post_id = ? AND user_id = ?");
+              $bookmarkStmt->bind_param("ii", $post['id'], $userId);
+              $bookmarkStmt->execute();
+              $bookmarkResult = $bookmarkStmt->get_result();
+              $isBookmarked = ($bookmarkResult->num_rows > 0);
+              $bookmarkStmt->close();
+            }
+          ?>
+          <div class="card-post" data-post-id="<?php echo $post['id']; ?>" data-is-bookmarked="<?php echo $isBookmarked ? 'true' : 'false'; ?>">
             <div class="post-header">
               <div class="row gap-3 align-items-start">
                 <div class="col-auto">
-                  <div class="avatar-us">
-                    <img src="<?php echo htmlspecialchars($post['author_profile_picture'] ?? '../assets/img/cat1.jpg'); ?>" alt="Profile">
+                  <div class="avatar-us avatar-loading">
+                    <div class="star-loader">⭐</div>
+                    <img src="<?php echo htmlspecialchars($post['author_profile_picture'] ?? '../assets/img/cat1.jpg'); ?>" 
+                         alt="Profile" 
+                         loading="lazy"
+                         class="profile-lazy-img"
+                         onload="this.classList.add('loaded'); this.parentElement.classList.remove('avatar-loading');">
                   </div>
                 </div>
                 <div class="col">
                   <div class="game-badge"><?php echo htmlspecialchars($post['game']); ?></div>
                   <h2 class="title mb-1"><?php echo htmlspecialchars($post['title']); ?></h2>
                   <div class="handle mb-3">@<?php echo htmlspecialchars($post['username']); ?></div>
-                  <p class="mb-3"><?php echo htmlspecialchars($post['content']); ?></p>
+                  <p class="mb-3"><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
                 </div>
               </div>
               <div class="post-menu">
-                <button class="icon more" aria-label="More"><i class="bi bi-three-dots-vertical"></i></button>
-                <div class="post-dropdown">
-                  <button class="dropdown-item edit-post"><i class="bi bi-pencil"></i> Edit</button>
-                  <button class="dropdown-item delete-post"><i class="bi bi-trash"></i> Delete</button>
-                </div>
+                <?php if ($isOwnPost): ?>
+                  <!-- Show edit/delete menu for own posts -->
+                  <button class="icon more" aria-label="More"><i class="bi bi-three-dots-vertical"></i></button>
+                  <div class="post-dropdown">
+                    <button class="dropdown-item edit-post"><i class="bi bi-pencil"></i> Edit</button>
+                    <button class="dropdown-item delete-post"><i class="bi bi-trash"></i> Delete</button>
+                  </div>
+                <?php else: ?>
+                  <!-- Show bookmark icon for other users' posts -->
+                  <button class="icon bookmark-btn <?php echo $isBookmarked ? 'bookmarked' : ''; ?>" aria-label="Bookmark" data-post-id="<?php echo $post['id']; ?>">
+                    <i class="bi bi-bookmark-fill"></i>
+                  </button>
+                <?php endif; ?>
               </div>
             </div>
             <div class="actions">
               <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b><?php echo $post['like_count'] ?? 0; ?></b></span>
               <span class="a comment-btn" data-comments="<?php echo $post['comment_count'] ?? 0; ?>"><i class="bi bi-chat-left-text"></i><b><?php echo $post['comment_count'] ?? 0; ?></b></span>
+            </div>
+            
+            <!-- Comments Section (hidden by default) -->
+            <div class="comments-section" style="display: none;">
+              <div class="comments-header">
+                <h4>Comments</h4>
+                <button class="close-comments"><i class="bi bi-x-lg"></i></button>
+              </div>
+              <div class="add-comment-form">
+                <textarea class="comment-input" placeholder="Write a comment..." rows="2"></textarea>
+                <button class="btn-submit-comment">Post Comment</button>
+              </div>
+              <div class="comments-list">
+                <!-- Comments will be loaded here -->
+                <div class="loading-comments">
+                  <i class="bi bi-arrow-repeat spin"></i> Loading comments...
+                </div>
+              </div>
             </div>
           </div>
         <?php endforeach; ?>
@@ -770,58 +847,363 @@ if ($db) {
         }
 
         // Comment toggle functionality
-        if (commentBtn) {
+        if (commentBtn && commentsSection) {
           commentBtn.addEventListener('click', function() {
             const isVisible = commentsSection.style.display !== 'none';
             if (isVisible) {
               commentsSection.style.display = 'none';
             } else {
               commentsSection.style.display = 'block';
+              // Load comments when opening
+              loadComments(postElement);
             }
+          });
+        }
+
+        // Close comments button
+        const closeCommentsBtn = postElement.querySelector('.close-comments');
+        if (closeCommentsBtn) {
+          closeCommentsBtn.addEventListener('click', function() {
+            commentsSection.style.display = 'none';
           });
         }
 
         // Post comment functionality
-        if (postCommentBtn && commentInput) {
-          postCommentBtn.addEventListener('click', function() {
+        const submitCommentBtn = postElement.querySelector('.btn-submit-comment');
+        if (submitCommentBtn && commentInput) {
+          submitCommentBtn.addEventListener('click', function() {
             const commentText = commentInput.value.trim();
             if (commentText) {
               const postId = postElement.getAttribute('data-post-id');
-              if (postId) {
-                // Save comment to backend
-                saveComment(postId, commentText, function(success) {
-                  if (success) {
-                    addComment(postElement, commentText);
-                    commentInput.value = '';
-                    
-                    // Update comment count
-                    const countElement = commentBtn.querySelector('b');
-                    const currentCount = parseInt(countElement.textContent);
-                    countElement.textContent = currentCount + 1;
-                    commentBtn.setAttribute('data-comments', currentCount + 1);
-                  }
-                });
-              } else {
-                // Fallback for posts without data-post-id
-                addComment(postElement, commentText);
-                commentInput.value = '';
-                
-                // Update comment count
-                const countElement = commentBtn.querySelector('b');
-                const currentCount = parseInt(countElement.textContent);
-                countElement.textContent = currentCount + 1;
-                commentBtn.setAttribute('data-comments', currentCount + 1);
-              }
+              submitComment(postId, commentText, postElement);
             }
           });
 
-          // Allow posting comment with Enter key
+          // Allow posting comment with Enter key (Ctrl+Enter for new line)
           commentInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-              postCommentBtn.click();
+            if (e.key === 'Enter' && !e.ctrlKey) {
+              e.preventDefault();
+              submitCommentBtn.click();
             }
           });
         }
+
+        // Bookmark functionality
+        const bookmarkBtn = postElement.querySelector('.bookmark-btn');
+        if (bookmarkBtn) {
+          bookmarkBtn.addEventListener('click', function() {
+            const postId = postElement.getAttribute('data-post-id');
+            toggleBookmark(postId, postElement, bookmarkBtn);
+          });
+        }
+      }
+
+      // Load comments for a post
+      async function loadComments(postElement) {
+        const postId = postElement.getAttribute('data-post-id');
+        const commentsList = postElement.querySelector('.comments-list');
+        
+        commentsList.innerHTML = '<div class="loading-comments"><i class="bi bi-arrow-repeat spin"></i> Loading comments...</div>';
+        
+        try {
+          const response = await fetch(`../api/posts.php?action=get_comments&post_id=${postId}`);
+          const data = await response.json();
+          
+          if (data.success && data.comments) {
+            displayComments(data.comments, commentsList, postElement);
+          } else {
+            commentsList.innerHTML = '<p style="color: rgba(255,255,255,0.5); text-align: center;">No comments yet. Be the first!</p>';
+          }
+        } catch (error) {
+          console.error('Error loading comments:', error);
+          commentsList.innerHTML = '<p style="color: #ff4444; text-align: center;">Failed to load comments</p>';
+        }
+      }
+
+      // Display comments
+      function displayComments(comments, commentsList, postElement) {
+        if (comments.length === 0) {
+          commentsList.innerHTML = '<p style="color: rgba(255,255,255,0.5); text-align: center;">No comments yet. Be the first!</p>';
+          return;
+        }
+        
+        commentsList.innerHTML = '';
+        comments.forEach(comment => {
+          const commentDiv = document.createElement('div');
+          commentDiv.className = 'comment-item';
+          commentDiv.setAttribute('data-comment-id', comment.id);
+          
+          const isOwnComment = (comment.user_id == currentUserId);
+          
+          commentDiv.innerHTML = `
+            <div class="comment-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <img src="${comment.profile_picture || '../assets/img/cat1.jpg'}" alt="Profile" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+                <span class="comment-author">@${escapeHtml(comment.username)}</span>
+                <span style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">${timeAgo(comment.created_at)}</span>
+              </div>
+              ${isOwnComment ? `
+                <div class="comment-menu">
+                  <button class="icon comment-more" style="padding: 0.25rem 0.5rem;"><i class="bi bi-three-dots-vertical"></i></button>
+                  <div class="comment-dropdown" style="display: none;">
+                    <button class="dropdown-item edit-comment"><i class="bi bi-pencil"></i> Edit</button>
+                    <button class="dropdown-item delete-comment"><i class="bi bi-trash"></i> Delete</button>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+            <p class="comment-text">${escapeHtml(comment.comment_text)}</p>
+            <div class="comment-actions" style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+              <button class="comment-like-btn" data-liked="${comment.user_liked ? 'true' : 'false'}" style="background: none; border: none; color: rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; gap: 0.25rem;">
+                <i class="bi bi-star${comment.user_liked ? '-fill' : ''}" style="color: ${comment.user_liked ? '#38a0ff' : 'inherit'}"></i>
+                <span>${comment.like_count || 0}</span>
+              </button>
+            </div>
+          `;
+          
+          commentsList.appendChild(commentDiv);
+          
+          // Add event listeners for comment actions
+          if (isOwnComment) {
+            setupCommentActions(commentDiv, postElement);
+          }
+          
+          // Add like functionality
+          const likeBtn = commentDiv.querySelector('.comment-like-btn');
+          likeBtn.addEventListener('click', function() {
+            toggleCommentLike(comment.id, likeBtn);
+          });
+        });
+      }
+
+      // Setup comment edit/delete actions
+      function setupCommentActions(commentDiv, postElement) {
+        const moreBtn = commentDiv.querySelector('.comment-more');
+        const dropdown = commentDiv.querySelector('.comment-dropdown');
+        const editBtn = commentDiv.querySelector('.edit-comment');
+        const deleteBtn = commentDiv.querySelector('.delete-comment');
+        
+        if (moreBtn && dropdown) {
+          moreBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+          });
+          
+          document.addEventListener('click', function(e) {
+            if (!e.target.closest('.comment-menu')) {
+              dropdown.style.display = 'none';
+            }
+          });
+        }
+        
+        if (editBtn) {
+          editBtn.addEventListener('click', function() {
+            const commentText = commentDiv.querySelector('.comment-text');
+            const currentText = commentText.textContent;
+            const commentId = commentDiv.getAttribute('data-comment-id');
+            
+            commentText.innerHTML = `
+              <textarea class="comment-edit-input" style="width: 100%; padding: 0.5rem; background: rgba(15,30,90,0.5); border: 1px solid rgba(194,213,255,0.2); border-radius: 0.5rem; color: white;">${currentText}</textarea>
+              <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                <button class="save-comment-edit" style="padding: 0.5rem 1rem; background: #38a0ff; border: none; border-radius: 0.5rem; color: white; cursor: pointer;">Save</button>
+                <button class="cancel-comment-edit" style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); border-radius: 0.5rem; color: white; cursor: pointer;">Cancel</button>
+              </div>
+            `;
+            
+            const saveBtn = commentText.querySelector('.save-comment-edit');
+            const cancelBtn = commentText.querySelector('.cancel-comment-edit');
+            const editInput = commentText.querySelector('.comment-edit-input');
+            
+            saveBtn.addEventListener('click', async function() {
+              const newText = editInput.value.trim();
+              if (newText) {
+                try {
+                  const response = await fetch('../api/posts.php?action=edit_comment', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({comment_id: commentId, comment_text: newText})
+                  });
+                  const data = await response.json();
+                  if (data.success) {
+                    commentText.textContent = newText;
+                  }
+                } catch (error) {
+                  console.error('Error editing comment:', error);
+                }
+              }
+            });
+            
+            cancelBtn.addEventListener('click', function() {
+              commentText.textContent = currentText;
+            });
+            
+            dropdown.style.display = 'none';
+          });
+        }
+        
+        if (deleteBtn) {
+          deleteBtn.addEventListener('click', async function() {
+            if (confirm('Delete this comment?')) {
+              const commentId = commentDiv.getAttribute('data-comment-id');
+              try {
+                const response = await fetch('../api/posts.php?action=delete_comment', {
+                  method: 'POST',
+                  headers: {'Content-Type': 'application/json'},
+                  body: JSON.stringify({comment_id: commentId})
+                });
+                const data = await response.json();
+                if (data.success) {
+                  commentDiv.remove();
+                  // Update comment count
+                  const commentBtn = postElement.querySelector('.comment-btn');
+                  const countElement = commentBtn.querySelector('b');
+                  const currentCount = parseInt(countElement.textContent);
+                  countElement.textContent = Math.max(0, currentCount - 1);
+                }
+              } catch (error) {
+                console.error('Error deleting comment:', error);
+              }
+            }
+            dropdown.style.display = 'none';
+          });
+        }
+      }
+
+      // Submit comment
+      async function submitComment(postId, commentText, postElement) {
+        const commentInput = postElement.querySelector('.comment-input');
+        const commentsList = postElement.querySelector('.comments-list');
+        
+        try {
+          const response = await fetch('../api/posts.php?action=add_comment', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({post_id: postId, comment_text: commentText})
+          });
+          const data = await response.json();
+          
+          if (data.success) {
+            commentInput.value = '';
+            // Reload comments
+            loadComments(postElement);
+            // Update comment count
+            const commentBtn = postElement.querySelector('.comment-btn');
+            const countElement = commentBtn.querySelector('b');
+            const currentCount = parseInt(countElement.textContent);
+            countElement.textContent = currentCount + 1;
+          }
+        } catch (error) {
+          console.error('Error posting comment:', error);
+          alert('Failed to post comment');
+        }
+      }
+
+      // Toggle comment like
+      async function toggleCommentLike(commentId, likeBtn) {
+        try {
+          const response = await fetch('../api/posts.php?action=like_comment', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({comment_id: commentId})
+          });
+          const data = await response.json();
+          
+          if (data.success) {
+            const isLiked = likeBtn.getAttribute('data-liked') === 'true';
+            const icon = likeBtn.querySelector('i');
+            const count = likeBtn.querySelector('span');
+            const currentCount = parseInt(count.textContent);
+            
+            if (isLiked) {
+              likeBtn.setAttribute('data-liked', 'false');
+              icon.className = 'bi bi-star';
+              icon.style.color = 'inherit';
+              count.textContent = Math.max(0, currentCount - 1);
+            } else {
+              likeBtn.setAttribute('data-liked', 'true');
+              icon.className = 'bi bi-star-fill';
+              icon.style.color = '#38a0ff';
+              count.textContent = currentCount + 1;
+            }
+          }
+        } catch (error) {
+          console.error('Error toggling comment like:', error);
+        }
+      }
+
+      // Toggle bookmark
+      async function toggleBookmark(postId, postElement, bookmarkBtn) {
+        const isBookmarked = postElement.getAttribute('data-is-bookmarked') === 'true';
+        
+        try {
+          const response = await fetch('../api/posts.php?action=bookmark', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({post_id: postId})
+          });
+          const data = await response.json();
+          
+          if (data.success) {
+            if (isBookmarked) {
+              bookmarkBtn.classList.remove('bookmarked');
+              postElement.setAttribute('data-is-bookmarked', 'false');
+            } else {
+              bookmarkBtn.classList.add('bookmarked');
+              postElement.setAttribute('data-is-bookmarked', 'true');
+              // Show brief success feedback
+              showToast('Post bookmarked!');
+            }
+          }
+        } catch (error) {
+          console.error('Error toggling bookmark:', error);
+          alert('Failed to update bookmark');
+        }
+      }
+
+      // Helper function to show toast notification
+      function showToast(message) {
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = 'position: fixed; bottom: 2rem; right: 2rem; background: #38a0ff; color: white; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 10000; animation: slideIn 0.3s ease;';
+        document.body.appendChild(toast);
+        setTimeout(() => {
+          toast.style.animation = 'slideOut 0.3s ease';
+          setTimeout(() => toast.remove(), 300);
+        }, 2000);
+      }
+
+      // Helper functions
+      function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+      }
+
+      function timeAgo(dateString) {
+        const now = new Date();
+        const past = new Date(dateString);
+        const seconds = Math.floor((now - past) / 1000);
+        
+        if (seconds < 60) return 'Just now';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return minutes + 'm';
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return hours + 'h';
+        const days = Math.floor(hours / 24);
+        if (days === 1) return 'Yesterday';
+        if (days < 7) return days + 'd';
+        const weeks = Math.floor(days / 7);
+        if (weeks < 4) return weeks + 'w';
+        
+        const options = { month: 'short', day: 'numeric' };
+        if (past.getFullYear() !== now.getFullYear()) {
+          options.year = 'numeric';
+        }
+        return past.toLocaleDateString('en-US', options);
+      }
+
+      // Initialize all existing posts
+      document.querySelectorAll('.card-post').forEach(attachPostEventListeners);
 
         // Edit post functionality
         if (editBtn) {
@@ -1312,6 +1694,111 @@ if ($db) {
     
     .comment-like-btn i {
       transition: color 0.2s ease;
+    }
+    
+    .comment-menu {
+      position: relative;
+    }
+    
+    .comment-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: rgba(25, 35, 75, 0.95);
+      border: 1px solid rgba(194, 213, 255, 0.2);
+      border-radius: 0.5rem;
+      min-width: 120px;
+      z-index: 1000;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      margin-top: 0.25rem;
+    }
+    
+    .comment-dropdown .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: transparent;
+      border: none;
+      color: white;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 0.875rem;
+    }
+    
+    .comment-dropdown .dropdown-item:hover {
+      background: rgba(56, 160, 255, 0.2);
+    }
+    
+    .comments-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    
+    .comments-header h4 {
+      color: #fff;
+      margin: 0;
+      font-size: 1.2rem;
+    }
+    
+    .close-comments {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .close-comments:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
+    }
+    
+    .add-comment-form {
+      margin-bottom: 1.5rem;
+    }
+    
+    .btn-submit-comment {
+      padding: 0.5rem 1.5rem;
+      background: #38a0ff;
+      border: none;
+      border-radius: 0.5rem;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 0.5rem;
+    }
+    
+    .btn-submit-comment:hover {
+      background: #2c8de0;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(56, 160, 255, 0.4);
+    }
+    
+    .loading-comments {
+      text-align: center;
+      padding: 2rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+    
+    .spin {
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
     
     .liked .bi-star {
@@ -2002,6 +2489,62 @@ if ($db) {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
+    
+    /* Profile Picture Lazy Loading with Star Loader */
+    .avatar-us {
+      position: relative;
+      background: linear-gradient(135deg, rgba(56, 160, 255, 0.2), rgba(27, 55, 141, 0.3));
+      border-radius: 50%;
+      overflow: hidden;
+      min-width: 60px;
+      min-height: 60px;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .avatar-us.avatar-loading .star-loader {
+      display: block;
+    }
+    
+    .avatar-us:not(.avatar-loading) .star-loader {
+      display: none;
+    }
+    
+    .star-loader {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      z-index: 10;
+      animation: starSpin 1s ease-in-out infinite, starPulse 1.5s ease-in-out infinite;
+      filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8));
+    }
+    
+    .profile-lazy-img {
+      opacity: 0;
+      transition: opacity 0.5s ease-in;
+      position: relative;
+      z-index: 11;
+    }
+    
+    .profile-lazy-img.loaded {
+      opacity: 1;
+    }
+    
+    @keyframes starSpin {
+      0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+      50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.2); }
+      100% { transform: translate(-50%, -50%) rotate(360deg) scale(1); }
+    }
+    
+    @keyframes starPulse {
+      0%, 100% { opacity: 1; filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.8)); }
+      50% { opacity: 0.6; filter: drop-shadow(0 0 20px rgba(255, 215, 0, 1)); }
+    }
   </style>
 
   <!-- Set current user ID for JavaScript -->
@@ -2418,6 +2961,55 @@ if ($db) {
     
     // Initial count load
     updateNotificationCount();
+  </script>
+
+  <!-- Profile Picture Lazy Loading Script -->
+  <script>
+    // Optimized lazy loading for profile pictures with preloading
+    document.addEventListener('DOMContentLoaded', function() {
+      const profileImages = document.querySelectorAll('.profile-lazy-img');
+      
+      // Preload visible images first (first 3 posts)
+      const visibleImages = Array.from(profileImages).slice(0, 3);
+      const belowFoldImages = Array.from(profileImages).slice(3);
+      
+      // Load visible images immediately
+      visibleImages.forEach(img => {
+        img.loading = 'eager';
+        if (img.complete && img.naturalHeight !== 0) {
+          img.classList.add('loaded');
+        }
+      });
+      
+      // Use Intersection Observer for below-the-fold images
+      if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              const img = entry.target;
+              // Force load if not already loaded
+              if (!img.classList.contains('loaded')) {
+                const src = img.src;
+                img.src = '';
+                img.src = src;
+              }
+              imageObserver.unobserve(img);
+            }
+          });
+        }, {
+          rootMargin: '50px' // Start loading 50px before entering viewport
+        });
+        
+        belowFoldImages.forEach(img => imageObserver.observe(img));
+      } else {
+        // Fallback for browsers without Intersection Observer
+        belowFoldImages.forEach(img => {
+          if (img.complete && img.naturalHeight !== 0) {
+            img.classList.add('loaded');
+          }
+        });
+      }
+    });
   </script>
 
 </body>

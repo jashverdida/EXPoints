@@ -174,6 +174,222 @@ $started_fmt = !empty($dateStarted) ? date('n/j/y', strtotime($dateStarted)) : '
   <link rel="stylesheet" href="../assets/css/profile.css" />
   
   <style>
+    /* Full-page loading overlay */
+    .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #0a1a4d 0%, #1b378d 50%, #0a1a4d 100%);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        flex-direction: column;
+        animation: gradientShift 3s ease infinite;
+    }
+    
+    @keyframes gradientShift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+    
+    .loading-overlay.active {
+        display: flex;
+    }
+    
+    .loading-stars-container {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Single glowing star with halo */
+    .loading-star-main {
+        font-size: 5rem;
+        position: relative;
+        animation: starRotateGlow 2s ease-in-out infinite;
+        filter: drop-shadow(0 0 30px rgba(255, 215, 0, 1));
+    }
+    
+    /* Halo rings around star */
+    .star-halo {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        border: 2px solid rgba(255, 215, 0, 0.4);
+        border-radius: 50%;
+        animation: haloExpand 2s ease-out infinite;
+    }
+    
+    .star-halo:nth-child(1) {
+        width: 120px;
+        height: 120px;
+        animation-delay: 0s;
+    }
+    
+    .star-halo:nth-child(2) {
+        width: 160px;
+        height: 160px;
+        animation-delay: 0.5s;
+    }
+    
+    .star-halo:nth-child(3) {
+        width: 200px;
+        height: 200px;
+        animation-delay: 1s;
+    }
+    
+    @keyframes starRotateGlow {
+        0% {
+            transform: rotate(0deg) scale(1);
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
+        }
+        50% {
+            transform: rotate(180deg) scale(1.2);
+            filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1)) drop-shadow(0 0 60px rgba(255, 215, 0, 0.6));
+        }
+        100% {
+            transform: rotate(360deg) scale(1);
+            filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
+        }
+    }
+    
+    @keyframes haloExpand {
+        0% {
+            transform: translate(-50%, -50%) scale(0.8);
+            opacity: 0;
+            border-width: 3px;
+        }
+        50% {
+            opacity: 0.6;
+            border-width: 2px;
+        }
+        100% {
+            transform: translate(-50%, -50%) scale(1.3);
+            opacity: 0;
+            border-width: 1px;
+        }
+    }
+    
+    .loading-text {
+        margin-top: 3rem;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 600;
+        animation: textFade 2s ease-in-out infinite;
+        text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+    }
+    
+    @keyframes textFade {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
+    }
+    
+    /* Progress bar container */
+    .progress-container {
+        width: 400px;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 2rem;
+        position: relative;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700);
+        background-size: 200% 100%;
+        border-radius: 10px;
+        animation: progressGlow 2s ease-in-out infinite, progressMove 15s ease-out forwards;
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.5);
+        width: 0%;
+    }
+    
+    @keyframes progressGlow {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+    
+    @keyframes progressMove {
+        0% { width: 0%; }
+        95% { width: 95%; }
+        100% { width: 100%; }
+    }
+    
+    .progress-text {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        font-weight: 500;
+    }
+    
+    /* Floating Particles Background */
+    .profile-particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    
+    .profile-particle {
+      position: absolute;
+      font-size: 1.5rem;
+      opacity: 0.3;
+      animation: floatParticle 20s linear infinite;
+    }
+    
+    @keyframes floatParticle {
+      0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 0.3;
+      }
+      90% {
+        opacity: 0.3;
+      }
+      100% {
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0;
+      }
+    }
+    
+    /* Enhanced level bar */
+    .level-bar {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      height: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(56, 160, 255, 0.3) inset;
+    }
+    
+    .level-bar .progress-bar {
+      background: linear-gradient(90deg, #ffd700, #38a0ff, #ffd700);
+      background-size: 200% 100%;
+      height: 100%;
+      border-radius: 999px;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+      animation: progressShimmer 3s ease-in-out infinite;
+    }
+    
+    @keyframes progressShimmer {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    
     /* ===== PROFILE AVATAR & CARD IMPROVEMENTS ===== */
     
     .avatar-wrap {
@@ -271,10 +487,28 @@ $started_fmt = !empty($dateStarted) ? date('n/j/y', strtotime($dateStarted)) : '
 </head>
 <body class="bg-exp">
 
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-stars-container">
+          <div class="star-halo"></div>
+          <div class="star-halo"></div>
+          <div class="star-halo"></div>
+          <div class="loading-star-main">⭐</div>
+      </div>
+      <div class="loading-text">Loading your dashboard...</div>
+      <div class="progress-container">
+          <div class="progress-bar"></div>
+      </div>
+      <div class="progress-text">Please wait...</div>
+  </div>
+
   <div class="container py-4">
+    <!-- Floating particles effect -->
+    <div class="profile-particles" id="profileParticles"></div>
+    
     <div class="d-flex align-items-center gap-2 mb-3">
       <a href="dashboard.php">
-        <img id="brand_logo" src="../assets/Assets/EXPoints Logo.png" alt="EXPoints" class="brand-logo" style="height: 50px; cursor: pointer;" />
+        <img id="brand_logo" src="../assets/Assets/EXPoints Logo.png" alt="EXPoints" class="brand-logo" style="height: 120px; cursor: pointer; filter: drop-shadow(0 0 20px rgba(56, 160, 255, 0.4)); transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.1)'; this.style.filter='drop-shadow(0 0 30px rgba(56, 160, 255, 0.6))'" onmouseout="this.style.transform='scale(1)'; this.style.filter='drop-shadow(0 0 20px rgba(56, 160, 255, 0.4))'" />
       </a>
     </div>
 
@@ -427,7 +661,48 @@ $started_fmt = !empty($dateStarted) ? date('n/j/y', strtotime($dateStarted)) : '
     const allPosts = <?= json_encode($allPosts) ?>;
     const userId = <?= json_encode($userId) ?>;
     const userData = <?= json_encode($userData) ?>;
+    
+    // Create floating particles
+    function createProfileParticles() {
+      const container = document.getElementById('profileParticles');
+      const particles = ['⭐', '🎮', '🏆', '⚡', '💫', '🌟'];
+      const particleCount = 15;
+      
+      for (let i = 0; i < particleCount; i++) {
+        setTimeout(() => {
+          const particle = document.createElement('div');
+          particle.className = 'profile-particle';
+          particle.textContent = particles[Math.floor(Math.random() * particles.length)];
+          
+          // Random horizontal position
+          particle.style.left = Math.random() * 100 + '%';
+          
+          // Random animation duration
+          const duration = 15 + Math.random() * 10;
+          particle.style.animationDuration = duration + 's';
+          
+          // Random delay
+          const delay = Math.random() * 5;
+          particle.style.animationDelay = delay + 's';
+          
+          // Random size
+          const scale = 0.8 + Math.random() * 0.7;
+          particle.style.transform = `scale(${scale})`;
+          
+          container.appendChild(particle);
+          
+          // Recreate particle after animation
+          particle.addEventListener('animationiteration', () => {
+            particle.style.left = Math.random() * 100 + '%';
+          });
+        }, i * 150);
+      }
+    }
+    
+    // Initialize particles on load
+    document.addEventListener('DOMContentLoaded', createProfileParticles);
   </script>
+  <script src="../assets/js/loading-screen.js"></script>
   <script src="../assets/js/profile.js?v=<?= time() ?>"></script>
 </body>
 </html>

@@ -19,26 +19,103 @@ $username = $_SESSION['username'] ?? 'User';
 $user_email = $_SESSION['user_email'] ?? '';
 $userId = $_SESSION['user_id'] ?? null;
 $userProfilePicture = '../assets/img/cat1.jpg'; // Default profile picture
+$posts = [];
 
-// Get database connection and fetch user's profile picture
+// Get database connection
 $db = getDBConnection();
 
 if ($db && $userId) {
     try {
-        $profileStmt = $db->prepare("SELECT profile_picture FROM user_info WHERE user_id = ?");
-        $profileStmt->bind_param("i", $userId);
-        $profileStmt->execute();
-        $profileResult = $profileStmt->get_result();
-        if ($profileData = $profileResult->fetch_assoc()) {
-            if (!empty($profileData['profile_picture'])) {
-                $userProfilePicture = $profileData['profile_picture'];
+        // Fetch CURRENT username from database
+        $userInfoStmt = $db->prepare("SELECT username, profile_picture FROM user_info WHERE user_id = ?");
+        $userInfoStmt->bind_param("i", $userId);
+        $userInfoStmt->execute();
+        $userInfoResult = $userInfoStmt->get_result();
+        
+        if ($userInfoData = $userInfoResult->fetch_assoc()) {
+            $username = $userInfoData['username'];
+            $_SESSION['username'] = $username;
+            
+            if (!empty($userInfoData['profile_picture'])) {
+                $userProfilePicture = $userInfoData['profile_picture'];
             }
         }
-        $profileStmt->close();
+        $userInfoStmt->close();
+        
+        // Query posts ordered by newest first (created_at DESC)
+        $query = "SELECT * FROM posts WHERE hidden = 0 ORDER BY created_at DESC LIMIT 100";
+        $result = $db->query($query);
+        
+        if ($result) {
+            $postsData = [];
+            while ($post = $result->fetch_assoc()) {
+                $postsData[] = $post;
+            }
+            
+            // Build maps for batch lookups
+            $userInfoMap = [];
+            $commentCountMap = [];
+            $likeCountMap = [];
+            
+            // Collect all unique usernames
+            $uniqueUsernames = array_unique(array_column($postsData, 'username'));
+            
+            // Fetch ALL user info
+            foreach ($uniqueUsernames as $postUsername) {
+                $stmt = $db->prepare("SELECT username, profile_picture, exp_points, is_banned FROM user_info WHERE username = ?");
+                $stmt->bind_param("s", $postUsername);
+                $stmt->execute();
+                $res = $stmt->get_result();
+                
+                if ($res && $res->num_rows > 0) {
+                    $userInfoMap[$postUsername] = $res->fetch_assoc();
+                }
+                $stmt->close();
+            }
+            
+            // Get comment and like counts
+            foreach ($postsData as $post) {
+                $postId = $post['id'];
+                
+                // Comment count
+                $commentStmt = $db->prepare("SELECT COUNT(*) as count FROM post_comments WHERE post_id = ?");
+                $commentStmt->bind_param("i", $postId);
+                $commentStmt->execute();
+                $commentResult = $commentStmt->get_result();
+                $commentRow = $commentResult->fetch_assoc();
+                $commentCountMap[$postId] = (int)($commentRow['count'] ?? 0);
+                $commentStmt->close();
+                
+                // Like count
+                $likeStmt = $db->prepare("SELECT COUNT(*) as count FROM post_likes WHERE post_id = ?");
+                $likeStmt->bind_param("i", $postId);
+                $likeStmt->execute();
+                $likeResult = $likeStmt->get_result();
+                $likeRow = $likeResult->fetch_assoc();
+                $likeCountMap[$postId] = (int)($likeRow['count'] ?? 0);
+                $likeStmt->close();
+            }
+            
+            // Process all posts using cached data
+            foreach ($postsData as $post) {
+                $userInfo = $userInfoMap[$post['username']] ?? null;
+                
+                if ($userInfo && $userInfo['is_banned']) {
+                    continue;
+                }
+                
+                $post['author_profile_picture'] = $userInfo['profile_picture'] ?? '../assets/img/cat1.jpg';
+                $post['exp_points'] = $userInfo['exp_points'] ?? 0;
+                $post['comment_count'] = $commentCountMap[$post['id']] ?? 0;
+                $post['like_count'] = $likeCountMap[$post['id']] ?? 0;
+                $post['comments_list'] = [];
+                
+                $posts[] = $post;
+            }
+        }
     } catch (Exception $e) {
-        error_log("Error fetching profile picture: " . $e->getMessage());
+        error_log("Newest posts error: " . $e->getMessage());
     }
-    $db->close();
 }
 ?>
 <!doctype html>
@@ -327,21 +404,65 @@ if ($db && $userId) {
     <!-- Stats Bar -->
     <div class="stats-bar">
       <div class="stat-item">
-        <span class="stat-value" id="totalPosts">0</span>
+        <span class="stat-value" id="totalPosts"><?php echo count($posts); ?></span>
         <span class="stat-label">New Posts</span>
       </div>
       <div class="stat-item">
-        <span class="stat-value" id="todayPosts">0</span>
+        <span class="stat-value" id="todayPosts"><?php 
+          $today = date('Y-m-d');
+          $todayCount = 0;
+          foreach ($posts as $p) {
+            if (date('Y-m-d', strtotime($p['created_at'])) == $today) {
+              $todayCount++;
+            }
+          }
+          echo $todayCount;
+        ?></span>
         <span class="stat-label">Posted Today</span>
       </div>
     </div>
 
     <!-- Posts Container -->
     <div id="postsContainer">
-      <div class="loading-spinner">
-        <div class="spinner"></div>
-        <p style="color: rgba(255, 255, 255, 0.6); font-size: 1.1rem;">Loading newest posts...</p>
-      </div>
+      <?php if (count($posts) > 0): ?>
+        <?php foreach ($posts as $post): ?>
+          <div class="card-post" data-post-id="<?php echo $post['id']; ?>">
+            <div class="post-header">
+              <div class="row gap-3 align-items-start">
+                <div class="col-auto">
+                  <div class="avatar-us avatar-loading">
+                    <div class="star-loader">⭐</div>
+                    <img src="<?php echo htmlspecialchars($post['author_profile_picture'] ?? '../assets/img/cat1.jpg'); ?>" 
+                         alt="Profile" 
+                         loading="lazy"
+                         class="profile-lazy-img"
+                         onload="this.classList.add('loaded'); this.parentElement.classList.remove('avatar-loading');">
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="game-badge"><?php echo htmlspecialchars($post['game']); ?></div>
+                  <h2 class="title mb-1"><?php echo htmlspecialchars($post['title']); ?></h2>
+                  <div class="handle mb-3">@<?php echo htmlspecialchars($post['username']); ?></div>
+                  <p class="mb-3"><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
+                  <div class="time-badge">
+                    <i class="bi bi-clock"></i>
+                    <?php echo date('M j, Y g:i A', strtotime($post['created_at'])); ?>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="actions">
+              <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b><?php echo $post['like_count'] ?? 0; ?></b></span>
+              <span class="a comment-btn" data-comments="<?php echo $post['comment_count'] ?? 0; ?>"><i class="bi bi-chat-left-text"></i><b><?php echo $post['comment_count'] ?? 0; ?></b></span>
+            </div>
+          </div>
+        <?php endforeach; ?>
+      <?php else: ?>
+        <div class="empty-state">
+          <i class="bi bi-inbox"></i>
+          <p style="color: rgba(255, 255, 255, 0.8); font-size: 1.3rem;">No posts yet. Be the first to share!</p>
+        </div>
+      <?php endif; ?>
     </div>
   </main>
 
@@ -398,46 +519,3 @@ if ($db && $userId) {
   <script src="../assets/js/newest-posts.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
-    document.addEventListener('DOMContentLoaded', function() {
-      const settingsBtn = document.querySelector('.settings-btn');
-      const dropdownMenu = document.querySelector('.dropdown-menu');
-      const logoutBtn = document.querySelector('.logout-btn');
-      const profileBtn = document.querySelector('.profile-btn');
-      
-      // Only setup dropdown if elements exist (logged in users)
-      if (settingsBtn && dropdownMenu) {
-        // Toggle dropdown when settings button is clicked
-        settingsBtn.addEventListener('click', function(e) {
-          e.stopPropagation();
-          dropdownMenu.classList.toggle('show');
-        });
-        
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-          if (!e.target.closest('.settings-dropdown')) {
-            dropdownMenu.classList.remove('show');
-          }
-        });
-      }
-      
-      // Profile button functionality
-      if (profileBtn) {
-        profileBtn.addEventListener('click', function() {
-          window.location.href = 'profile.php';
-        });
-      }
-      
-      // Handle logout button click
-      if (logoutBtn) {
-        logoutBtn.addEventListener('click', function() {
-          // Redirect to logout script for proper session cleanup
-          window.location.href = 'logout.php';
-        });
-      }
-    });
-  </script>
-
-</body>
-</html>
-
-

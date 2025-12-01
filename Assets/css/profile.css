@@ -6,6 +6,7 @@
   --brand2:#6d5bff;
   --accent:#ffb03a;
   --avatar-size:110px;
+  --muted:rgba(255,255,255,0.7);
 }
 
 *{
@@ -14,7 +15,16 @@
 
 body{
   font-family:"Poppins",system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
-  color:var(--ink);
+  color:#ffffff;
+}
+
+/* Force all text to white */
+.card-glass, .card-pill, .mini-card, .best-post, p, span, div, label, input {
+  color:#ffffff !important;
+}
+
+.text-muted, .small {
+  color:rgba(255,255,255,0.7) !important;
 }
 
 .bg-exp{
@@ -41,54 +51,131 @@ body{
   }
 }
 
-/* main cards */
+/* main cards - ENHANCED WITH GLOW */
 .card-glass{
   position:relative;
-  border:1px solid var(--line);
-  border-radius:22px;
-  background:linear-gradient(180deg,#0f1631cc,var(--glass));
-  box-shadow:0 0 0 1px #6ea0ff22 inset, 0 18px 40px #0009;
+  border:1px solid rgba(56, 160, 255, 0.4);
+  border-radius:24px;
+  background:linear-gradient(180deg, rgba(15, 22, 49, 0.95), rgba(17, 26, 58, 0.9));
+  box-shadow:
+    0 0 0 1px rgba(110, 160, 255, 0.2) inset,
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    0 0 100px rgba(56, 160, 255, 0.15);
+  backdrop-filter:blur(20px);
+  transition:all 0.3s ease;
+  animation:cardPulse 6s ease-in-out infinite;
+}
+
+.card-glass:hover{
+  transform:translateY(-5px);
+  box-shadow:
+    0 0 0 1px rgba(110, 160, 255, 0.3) inset,
+    0 25px 70px rgba(0, 0, 0, 0.7),
+    0 0 120px rgba(56, 160, 255, 0.25);
+  border-color:rgba(56, 160, 255, 0.6);
+}
+
+@keyframes cardPulse{
+  0%, 100%{
+    box-shadow:
+      0 0 0 1px rgba(110, 160, 255, 0.15) inset,
+      0 20px 60px rgba(0, 0, 0, 0.6),
+      0 0 80px rgba(56, 160, 255, 0.1);
+  }
+  50%{
+    box-shadow:
+      0 0 0 1px rgba(110, 160, 255, 0.25) inset,
+      0 20px 60px rgba(0, 0, 0, 0.6),
+      0 0 120px rgba(56, 160, 255, 0.2);
+  }
 }
 
 .card-pill{
-  border:1px solid var(--line);
-  border-radius:16px;
-  background:linear-gradient(180deg,#0f1631cc,var(--glass));
-  box-shadow:0 0 0 1px #6ea0ff22 inset;
+  border:1px solid rgba(56, 160, 255, 0.3);
+  border-radius:18px;
+  background:linear-gradient(180deg, rgba(15, 22, 49, 0.95), rgba(17, 26, 58, 0.9));
+  box-shadow:
+    0 0 0 1px rgba(110, 160, 255, 0.15) inset,
+    0 10px 40px rgba(0, 0, 0, 0.5),
+    0 0 60px rgba(56, 160, 255, 0.1);
+  backdrop-filter:blur(15px);
+  transition:all 0.3s ease;
 }
 
-/* avatar overlap */
+.card-pill:hover{
+  transform:translateY(-3px);
+  box-shadow:
+    0 0 0 1px rgba(110, 160, 255, 0.25) inset,
+    0 15px 50px rgba(0, 0, 0, 0.6),
+    0 0 80px rgba(56, 160, 255, 0.2);
+}
+
+/* avatar overlap - ENHANCED WITH WOW FACTOR */
 .avatar-wrap{
-  position:absolute;
-  left:-28px;
-  top:-16px;                /* <-- was negative; now inside card */
-  width:110px;
-  height:110px;
+  position:relative;
+  width:160px;
+  height:160px;
+  margin:0 auto 1.5rem;
   border-radius:50%;
-  background:#0b1a44;
-  display:grid;
-  place-items:center;
-  border:6px solid #eef2ff20;
-  box-shadow:0 8px 26px #0007, 0 0 0 2px #6ea0ff55 inset;
+  background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding:6px;
+  box-shadow:
+    0 0 60px rgba(255, 215, 0, 0.4),
+    0 0 80px rgba(56, 160, 255, 0.3),
+    0 8px 32px rgba(0, 0, 0, 0.5),
+    0 0 0 3px rgba(255, 215, 0, 0.3) inset,
+    0 0 100px rgba(102, 126, 234, 0.2);
   z-index:2;
+  transition:all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  animation:avatarGlow 3s ease-in-out infinite;
+}
+
+.avatar-wrap:hover{
+  transform:scale(1.15) rotate(5deg);
+  box-shadow:
+    0 0 100px rgba(255, 215, 0, 0.6),
+    0 0 120px rgba(56, 160, 255, 0.5),
+    0 12px 50px rgba(0, 0, 0, 0.6),
+    0 0 0 4px rgba(255, 215, 0, 0.5) inset,
+    0 0 150px rgba(102, 126, 234, 0.4);
+}
+
+@keyframes avatarGlow{
+  0%, 100%{
+    box-shadow:
+      0 0 60px rgba(255, 215, 0, 0.3),
+      0 0 80px rgba(56, 160, 255, 0.2),
+      0 8px 32px rgba(0, 0, 0, 0.5),
+      0 0 0 3px rgba(255, 215, 0, 0.2) inset;
+  }
+  50%{
+    box-shadow:
+      0 0 80px rgba(255, 215, 0, 0.5),
+      0 0 100px rgba(56, 160, 255, 0.4),
+      0 8px 32px rgba(0, 0, 0, 0.5),
+      0 0 0 3px rgba(255, 215, 0, 0.4) inset;
+  }
 }
 
 .avatar-xl{
-  width:98px;
-  height:98px;
+  width:100%;
+  height:100%;
   border-radius:50%;
   object-fit:cover;
+  object-position:center;
+  display:block;
+  border:3px solid rgba(255, 255, 255, 0.2);
+  transition:all 0.3s ease;
 }
 
-/* push header text away from avatar */
+.avatar-wrap:hover .avatar-xl{
+  border-color:rgba(255, 215, 0, 0.5);
+}
+
+/* center content below avatar */
 .content-shift{
   padding-left:0;
-}
-
-@media (min-width:768px){
-  .content-shift{
-    margin-left:88px;
-  }
+  text-align:center;
 }
 
 /* header text */

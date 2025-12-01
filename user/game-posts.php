@@ -32,6 +32,94 @@ $userStmt->close();
 $username = $userData['username'] ?? 'User';
 $userProfilePicture = $userData['profile_picture'] ?? '../assets/img/cat1.jpg';
 
+// Query posts for this specific game
+$posts = [];
+$gameStats = ['total' => 0, 'likes' => 0, 'comments' => 0];
+
+try {
+    // Query posts for this game
+    $query = "SELECT * FROM posts WHERE game = ? AND hidden = 0 ORDER BY created_at DESC LIMIT 100";
+    $stmt = $db->prepare($query);
+    $stmt->bind_param("s", $gameName);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result) {
+        $postsData = [];
+        while ($post = $result->fetch_assoc()) {
+            $postsData[] = $post;
+        }
+        $stmt->close();
+        
+        // Build maps for batch lookups
+        $userInfoMap = [];
+        $commentCountMap = [];
+        $likeCountMap = [];
+        
+        // Collect all unique usernames
+        $uniqueUsernames = array_unique(array_column($postsData, 'username'));
+        
+        // Fetch ALL user info
+        foreach ($uniqueUsernames as $postUsername) {
+            $userStmt = $db->prepare("SELECT username, profile_picture, exp_points, is_banned FROM user_info WHERE username = ?");
+            $userStmt->bind_param("s", $postUsername);
+            $userStmt->execute();
+            $res = $userStmt->get_result();
+            
+            if ($res && $res->num_rows > 0) {
+                $userInfoMap[$postUsername] = $res->fetch_assoc();
+            }
+            $userStmt->close();
+        }
+        
+        // Get comment and like counts
+        foreach ($postsData as $post) {
+            $postId = $post['id'];
+            
+            // Comment count
+            $commentStmt = $db->prepare("SELECT COUNT(*) as count FROM post_comments WHERE post_id = ?");
+            $commentStmt->bind_param("i", $postId);
+            $commentStmt->execute();
+            $commentResult = $commentStmt->get_result();
+            $commentRow = $commentResult->fetch_assoc();
+            $commentCountMap[$postId] = (int)($commentRow['count'] ?? 0);
+            $commentStmt->close();
+            
+            // Like count
+            $likeStmt = $db->prepare("SELECT COUNT(*) as count FROM post_likes WHERE post_id = ?");
+            $likeStmt->bind_param("i", $postId);
+            $likeStmt->execute();
+            $likeResult = $likeStmt->get_result();
+            $likeRow = $likeResult->fetch_assoc();
+            $likeCountMap[$postId] = (int)($likeRow['count'] ?? 0);
+            $likeStmt->close();
+        }
+        
+        // Process all posts using cached data
+        foreach ($postsData as $post) {
+            $userInfo = $userInfoMap[$post['username']] ?? null;
+            
+            if ($userInfo && $userInfo['is_banned']) {
+                continue;
+            }
+            
+            $post['author_profile_picture'] = $userInfo['profile_picture'] ?? '../assets/img/cat1.jpg';
+            $post['exp_points'] = $userInfo['exp_points'] ?? 0;
+            $post['comment_count'] = $commentCountMap[$post['id']] ?? 0;
+            $post['like_count'] = $likeCountMap[$post['id']] ?? 0;
+            $post['comments_list'] = [];
+            
+            $gameStats['total']++;
+            $gameStats['likes'] += $post['like_count'];
+            $gameStats['comments'] += $post['comment_count'];
+            
+            $posts[] = $post;
+        }
+    }
+} catch (Exception $e) {
+    error_log("Game posts error: " . $e->getMessage());
+}
+
 $db->close();
 ?>
 <!DOCTYPE html>
@@ -190,7 +278,15 @@ $db->close();
                 <div class="game-stats">
                     <span>
                         <i class="bi bi-file-text"></i>
-                        <strong id="postCount">0</strong> posts
+                        <strong id="postCount"><?php echo $gameStats['total']; ?></strong> posts
+                    </span>
+                    <span>
+                        <i class="bi bi-star-fill"></i>
+                        <strong><?php echo $gameStats['likes']; ?></strong> likes
+                    </span>
+                    <span>
+                        <i class="bi bi-chat-left-text"></i>
+                        <strong><?php echo $gameStats['comments']; ?></strong> comments
                     </span>
                 </div>
             </div>
@@ -198,10 +294,46 @@ $db->close();
 
     <!-- Posts Container -->
     <div id="postsContainer">
-        <div class="loading">
-            <i class="bi bi-arrow-repeat"></i>
-            <p>Loading posts...</p>
-        </div>
+        <?php if (count($posts) > 0): ?>
+            <?php foreach ($posts as $post): ?>
+                <div class="card-post" data-post-id="<?php echo $post['id']; ?>">
+                    <div class="post-header">
+                        <div class="row gap-3 align-items-start">
+                            <div class="col-auto">
+                                <div class="avatar-us avatar-loading">
+                                    <div class="star-loader">⭐</div>
+                                    <img src="<?php echo htmlspecialchars($post['author_profile_picture'] ?? '../assets/img/cat1.jpg'); ?>" 
+                                         alt="Profile" 
+                                         loading="lazy"
+                                         class="profile-lazy-img"
+                                         onload="this.classList.add('loaded'); this.parentElement.classList.remove('avatar-loading');">
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="game-badge"><?php echo htmlspecialchars($post['game']); ?></div>
+                                <h2 class="title mb-1"><?php echo htmlspecialchars($post['title']); ?></h2>
+                                <div class="handle mb-3">@<?php echo htmlspecialchars($post['username']); ?></div>
+                                <p class="mb-3"><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
+                                <div class="time-badge">
+                                    <i class="bi bi-clock"></i>
+                                    <?php echo date('M j, Y g:i A', strtotime($post['created_at'])); ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b><?php echo $post['like_count'] ?? 0; ?></b></span>
+                        <span class="a comment-btn" data-comments="<?php echo $post['comment_count'] ?? 0; ?>"><i class="bi bi-chat-left-text"></i><b><?php echo $post['comment_count'] ?? 0; ?></b></span>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="no-posts">
+                <i class="bi bi-inbox"></i>
+                <h3>No posts for this game yet</h3>
+                <p>Be the first to review <?php echo htmlspecialchars($gameName); ?>!</p>
+            </div>
+        <?php endif; ?>
     </div>
 </main>
 

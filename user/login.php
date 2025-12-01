@@ -130,8 +130,181 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <link href="../assets/css/login.css" rel="stylesheet">
+    <style>
+        /* Full-page loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a1a4d 0%, #1b378d 50%, #0a1a4d 100%);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+            animation: gradientShift 3s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .loading-overlay.active {
+            display: flex;
+        }
+        
+        .loading-stars-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Single glowing star with halo */
+        .loading-star-main {
+            font-size: 5rem;
+            position: relative;
+            animation: starRotateGlow 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px rgba(255, 215, 0, 1));
+        }
+        
+        /* Halo rings around star */
+        .star-halo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px solid rgba(255, 215, 0, 0.4);
+            border-radius: 50%;
+            animation: haloExpand 2s ease-out infinite;
+        }
+        
+        .star-halo:nth-child(1) {
+            width: 120px;
+            height: 120px;
+            animation-delay: 0s;
+        }
+        
+        .star-halo:nth-child(2) {
+            width: 160px;
+            height: 160px;
+            animation-delay: 0.5s;
+        }
+        
+        .star-halo:nth-child(3) {
+            width: 200px;
+            height: 200px;
+            animation-delay: 1s;
+        }
+        
+        @keyframes starRotateGlow {
+            0% {
+                transform: rotate(0deg) scale(1);
+                filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
+            }
+            50% {
+                transform: rotate(180deg) scale(1.2);
+                filter: drop-shadow(0 0 40px rgba(255, 215, 0, 1)) drop-shadow(0 0 60px rgba(255, 215, 0, 0.6));
+            }
+            100% {
+                transform: rotate(360deg) scale(1);
+                filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.8));
+            }
+        }
+        
+        @keyframes haloExpand {
+            0% {
+                transform: translate(-50%, -50%) scale(0.8);
+                opacity: 0;
+                border-width: 3px;
+            }
+            50% {
+                opacity: 0.6;
+                border-width: 2px;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1.3);
+                opacity: 0;
+                border-width: 1px;
+            }
+        }
+        
+        .loading-text {
+            margin-top: 3rem;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 600;
+            animation: textFade 2s ease-in-out infinite;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+        
+        @keyframes textFade {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        
+        /* Progress bar container */
+        .progress-container {
+            width: 400px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 2rem;
+            position: relative;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700);
+            background-size: 200% 100%;
+            border-radius: 10px;
+            animation: progressGlow 2s ease-in-out infinite, progressMove 15s ease-out forwards;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 255, 255, 0.5);
+            width: 0%;
+        }
+        
+        @keyframes progressGlow {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        @keyframes progressMove {
+            0% { width: 0%; }
+            95% { width: 95%; }
+            100% { width: 100%; }
+        }
+        
+        .progress-text {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+    </style>
 </head>
 <body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-stars-container">
+            <div class="star-halo"></div>
+            <div class="star-halo"></div>
+            <div class="star-halo"></div>
+            <div class="loading-star-main">⭐</div>
+        </div>
+        <div class="loading-text">Loading your dashboard...</div>
+        <div class="progress-container">
+            <div class="progress-bar"></div>
+        </div>
+        <div class="progress-text">Please wait...</div>
+    </div>
+
     <!-- Custom Alert -->
     <?php if ($error): ?>
     <div class="custom-alert alert-dismissible fade show" role="alert">
@@ -170,7 +343,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h2 class="login-title">Login to Your Account</h2>
                 <p class="login-subtitle">Enter your credentials to access your account</p>
 
-                <form method="POST" action="login.php">
+                <form method="POST" action="login.php" id="loginForm">
                     <div class="mb-3">
                         <label for="email" class="form-label">Email Address</label>
                         <input type="email" class="form-control input-glass" id="email" name="email" required 
@@ -182,7 +355,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                placeholder="Enter your password">
                     </div>
                     
-                    <button type="submit" class="btn btn-brand w-100 mb-3">LOGIN</button>
+                    <button type="submit" class="btn btn-brand w-100 mb-3" id="loginBtn">LOGIN</button>
                     
                     <div class="text-center mb-3">
                         <a href="forgot.php" class="forgot-link">Forgot Password?</a>
@@ -205,6 +378,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Show loading overlay on form submit
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Only show loading if fields are filled
+            if (email && password) {
+                document.getElementById('loadingOverlay').classList.add('active');
+            }
+        });
+        
         // Auto-hide alerts after 5 seconds
         document.addEventListener('DOMContentLoaded', function() {
             const alerts = document.querySelectorAll('.custom-alert');

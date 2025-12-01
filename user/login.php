@@ -18,11 +18,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($email) || empty($password)) {
         $error = 'Please enter both email and password';
     } else {
-        $db = getDBConnection();
-        
-        if (!$db) {
-            $error = 'Database connection failed. Please try again later.';
-        } else {
+        try {
+            $db = getDBConnection();
+            
             // Query user from Supabase - include role field and disabled status
             $stmt = $db->prepare("SELECT id, email, password, role, is_disabled, disabled_reason, disabled_at, disabled_by FROM users WHERE email = ?");
             $stmt->bind_param("s", $email);
@@ -116,6 +114,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $userInfoStmt->close();
             }
             $db->close();
+        } catch (Exception $e) {
+            error_log("Login error: " . $e->getMessage());
+            $error = 'Database connection failed. Please try again later.';
         }
     }
 }

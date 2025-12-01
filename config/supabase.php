@@ -17,6 +17,7 @@ class SupabaseService {
         $this->supabaseKey = getenv('SUPABASE_SERVICE_KEY'); // Use service key for admin operations
         
         if (!$this->supabaseUrl || !$this->supabaseKey) {
+            error_log("Supabase credentials missing - URL: " . ($this->supabaseUrl ? "SET" : "NOT SET") . ", Key: " . ($this->supabaseKey ? "SET" : "NOT SET"));
             throw new Exception('Supabase credentials not configured. Check .env file.');
         }
 

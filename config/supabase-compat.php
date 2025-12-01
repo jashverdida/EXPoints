@@ -204,6 +204,9 @@ class SupabaseStatement {
             // Add ORDER BY
             if (preg_match('/ORDER BY\s+(.+?)(?:LIMIT|$)/i', $sql, $matches)) {
                 $orderBy = trim($matches[1]);
+                // Convert MySQL DESC to Supabase format
+                $orderBy = str_replace(' DESC', '.desc', $orderBy);
+                $orderBy = str_replace(' ASC', '.asc', $orderBy);
                 $endpoint .= (strpos($endpoint, '?') ? '&' : '?') . 'order=' . urlencode($orderBy);
             }
             
@@ -213,14 +216,21 @@ class SupabaseStatement {
                 $endpoint .= (strpos($endpoint, '?') ? '&' : '?') . 'limit=' . $limit;
             }
             
+            // Add select=* to get all columns
+            $selectParam = (strpos($endpoint, '?') ? '&' : '?') . 'select=*';
+            $fullEndpoint = $endpoint . $selectParam;
+            
             // Execute via SupabaseService request method
             $reflection = new ReflectionClass($this->supabase);
             $method = $reflection->getMethod('request');
             $method->setAccessible(true);
             
-            return $method->invoke($this->supabase, 'GET', $endpoint . '&select=*');
+            $result = $method->invoke($this->supabase, 'GET', $fullEndpoint);
+            
+            return $result;
         } catch (Exception $e) {
             error_log("Supabase SELECT error: " . $e->getMessage());
+            error_log("Supabase SELECT trace: " . $e->getTraceAsString());
             return [];
         }
     }
@@ -282,14 +292,41 @@ class SupabaseStatement {
         // Simple parsing for common patterns
         // user_id = 1 => user_id=eq.1
         // email = 'test@example.com' => email=eq.test@example.com
+        // hidden = 0 => hidden=eq.0
         
         $filters = [];
         
-        // Match: column = value
-        if (preg_match('/(\w+)\s*=\s*[\'"]?([^\'"]+)[\'"]?/', $where, $matches)) {
-            $column = $matches[1];
-            $value = trim($matches[2], "'\"");
-            $filters[] = $column . '=eq.' . urlencode($value);
+        // Handle AND conditions first (split and process each)
+        if (stripos($where, ' AND ') !== false) {
+            $conditions = preg_split('/\s+AND\s+/i', $where);
+            foreach ($conditions as $condition) {
+                // Match: column = 'value with quotes' or column = value
+                if (preg_match('/(\w+)\s*=\s*[\'"]([^\'"]+)[\'"]/', $condition, $matches)) {
+                    // Quoted value
+                    $column = $matches[1];
+                    $value = $matches[2];
+                    $filters[] = $column . '=eq.' . urlencode($value);
+                } elseif (preg_match('/(\w+)\s*=\s*([^\s]+)/', $condition, $matches)) {
+                    // Unquoted value
+                    $column = $matches[1];
+                    $value = $matches[2];
+                    $filters[] = $column . '=eq.' . urlencode($value);
+                }
+            }
+        } else {
+            // Single condition
+            // Match: column = 'value with quotes' or column = value
+            if (preg_match('/(\w+)\s*=\s*[\'"]([^\'"]+)[\'"]/', $where, $matches)) {
+                // Quoted value
+                $column = $matches[1];
+                $value = $matches[2];
+                $filters[] = $column . '=eq.' . urlencode($value);
+            } elseif (preg_match('/(\w+)\s*=\s*([^\s]+)/', $where, $matches)) {
+                // Unquoted value
+                $column = $matches[1];
+                $value = $matches[2];
+                $filters[] = $column . '=eq.' . urlencode($value);
+            }
         }
         
         return implode('&', $filters);

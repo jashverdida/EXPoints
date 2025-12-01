@@ -102,12 +102,17 @@ if ($db) {
             INDEX idx_user_id (user_id)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-        // Simplified query for Supabase - avoid LEFT JOIN and complex WHERE with OR
+        // Query posts from Supabase - get all non-hidden posts
         $query = "SELECT * FROM posts WHERE hidden = 0 ORDER BY created_at DESC";
         $result = $db->query($query);
         
         if ($result) {
+            $postsData = [];
             while ($post = $result->fetch_assoc()) {
+                $postsData[] = $post;
+            }
+            
+            foreach ($postsData as $post) {
                 // Get user info separately  
                 $userInfoStmt = $db->prepare("SELECT profile_picture, exp_points, is_banned FROM user_info WHERE username = ?");
                 $userInfoStmt->bind_param("s", $post['username']);
@@ -171,15 +176,18 @@ if ($db) {
                 $post['comments_list'] = [];
                 
                 $posts[] = $post;
+                
+                $posts[] = $post;
             }
+        } else {
+            error_log("Dashboard: Query returned no result object");
         }
     } catch (Exception $e) {
         error_log("Dashboard database error: " . $e->getMessage());
-        // Silently log error without showing message to user
+        $errorMessage = "Unable to load posts. Please check your database connection.";
     }
 }
 ?>
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -386,6 +394,24 @@ if ($db) {
         <div class="no-posts-message">
           <i class="bi bi-inbox"></i>
           <p>No posts to display yet. Be the first to share your review!</p>
+          <?php if ($errorMessage): ?>
+            <div style="background: #ff4444; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
+              <strong>Error:</strong> <?php echo htmlspecialchars($errorMessage); ?>
+            </div>
+          <?php endif; ?>
+          <?php if (!$db): ?>
+            <div style="background: #ff9800; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
+              <strong>Debug:</strong> Database connection failed. Check your .env file and Supabase credentials.
+            </div>
+          <?php endif; ?>
+          <div style="background: #2196F3; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
+            <strong>Debug Info:</strong>
+            <ul style="text-align: left; margin-top: 10px;">
+              <li>Posts array count: <?php echo count($posts); ?></li>
+              <li>Database connected: <?php echo $db ? 'Yes (' . get_class($db) . ')' : 'No'; ?></li>
+              <li>Test page: <a href="../test-posts-simple.php" style="color: #fff; text-decoration: underline;">Click here to run diagnostics</a></li>
+            </ul>
+          </div>
         </div>
       <?php endif; ?>
     </div>

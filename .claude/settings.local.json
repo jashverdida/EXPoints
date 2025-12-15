@@ -13,7 +13,12 @@
       "Bash(git fetch:*)",
       "Bash(git checkout:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(where:*)",
+      "Bash(dir \"C:\\xampp1\\php\\composer*\")",
+      "Bash(cmd.exe /c \"where composer.bat 2>&1\")",
+      "Bash(cmd.exe /c \"where composer.phar 2>&1\")",
+      "Bash(curl:*)"
     ]
   }
 }

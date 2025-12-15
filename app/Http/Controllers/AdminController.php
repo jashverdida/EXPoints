@@ -24,6 +24,8 @@ class AdminController extends Controller
             // Get stats
             $totalUsers = $this->supabase->count('users');
             $totalPosts = $this->supabase->count('posts');
+            $totalComments = $this->supabase->count('post_comments');
+            $totalAdmins = $this->supabase->count('users', ['role' => 'admin']);
             $bannedUsers = $this->supabase->count('user_info', ['is_banned' => true]);
             $disabledUsers = $this->supabase->count('users', ['is_disabled' => true]);
 
@@ -41,15 +43,24 @@ class AdminController extends Controller
                 $user['is_banned'] = $userInfo['is_banned'] ?? false;
             }
 
-            // Get recent posts
+            // Get recent posts for moderation (50 posts)
             $recentPosts = $this->supabase->select('posts', '*', [], [
                 'order' => 'created_at.desc',
-                'limit' => 10
+                'limit' => 50
             ]);
+
+            // Enrich posts with username
+            foreach ($recentPosts as &$post) {
+                $userInfo = $this->supabase->findBy('user_info', 'user_id', $post['user_id']);
+                $post['username'] = $userInfo['username'] ?? 'Unknown';
+                $post['profile_picture'] = $userInfo['profile_picture'] ?? '/assets/img/cat1.jpg';
+            }
 
             return view('admin.dashboard', [
                 'totalUsers' => $totalUsers,
                 'totalPosts' => $totalPosts,
+                'totalComments' => $totalComments,
+                'totalAdmins' => $totalAdmins,
                 'bannedUsers' => $bannedUsers,
                 'disabledUsers' => $disabledUsers,
                 'recentUsers' => $recentUsers,
@@ -61,12 +72,82 @@ class AdminController extends Controller
             return view('admin.dashboard', [
                 'totalUsers' => 0,
                 'totalPosts' => 0,
+                'totalComments' => 0,
+                'totalAdmins' => 0,
                 'bannedUsers' => 0,
                 'disabledUsers' => 0,
                 'recentUsers' => [],
                 'recentPosts' => [],
                 'error' => 'Failed to load dashboard data',
             ]);
+        }
+    }
+
+    /**
+     * Ban appeals page
+     */
+    public function banAppeals()
+    {
+        try {
+            // Get users with active ban appeals (if you have a ban_appeals table)
+            // For now, just show banned users
+            $bannedUsers = $this->supabase->select('user_info', '*', ['is_banned' => true]);
+
+            foreach ($bannedUsers as &$bannedUser) {
+                $user = $this->supabase->find('users', $bannedUser['user_id']);
+                $bannedUser['email'] = $user['email'] ?? '';
+            }
+
+            return view('admin.ban-appeals', [
+                'bannedUsers' => $bannedUsers,
+            ]);
+
+        } catch (Exception $e) {
+            \Log::error("Ban appeals error: " . $e->getMessage());
+            return view('admin.ban-appeals', [
+                'bannedUsers' => [],
+                'error' => 'Failed to load ban appeals',
+            ]);
+        }
+    }
+
+    /**
+     * Flag a user for ban (from post moderation)
+     */
+    public function flagBan(Request $request)
+    {
+        $request->validate([
+            'post_id' => 'required|integer',
+            'reason' => 'required|string|max:500',
+        ]);
+
+        try {
+            $postId = $request->input('post_id');
+            $reason = $request->input('reason');
+            $adminId = session('user_id');
+
+            // Get the post to find the user
+            $post = $this->supabase->find('posts', $postId);
+
+            if (!$post) {
+                return response()->json(['success' => false, 'error' => 'Post not found'], 404);
+            }
+
+            $userId = $post['user_id'];
+
+            // Ban the user
+            $this->supabase->update('user_info', [
+                'is_banned' => true,
+                'ban_reason' => $reason,
+                'banned_at' => now()->toIso8601String(),
+                'banned_by' => $adminId,
+            ], ['user_id' => $userId]);
+
+            return response()->json(['success' => true]);
+
+        } catch (Exception $e) {
+            \Log::error("Flag ban error: " . $e->getMessage());
+            return response()->json(['success' => false, 'error' => 'Failed to ban user'], 500);
         }
     }
 

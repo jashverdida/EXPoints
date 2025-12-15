@@ -16,6 +16,30 @@ class DashboardController extends Controller
     }
 
     /**
+     * Normalize profile picture path from database
+     * Converts "..\assets\img\..." to "assets/img/..." (for use with asset() helper)
+     */
+    protected function normalizeProfilePicture(?string $path): string
+    {
+        $default = 'assets/img/cat1.jpg';  // No leading / for asset() helper
+
+        if (empty($path)) {
+            return $default;
+        }
+
+        // Convert backslashes to forward slashes
+        $path = str_replace('\\', '/', $path);
+
+        // Remove leading ".." or "../"
+        $path = preg_replace('/^\.\.\//', '', $path);
+
+        // Remove leading "/" if present (for asset() helper compatibility)
+        $path = ltrim($path, '/');
+
+        return $path;
+    }
+
+    /**
      * Show the dashboard
      */
     public function index(Request $request)
@@ -30,8 +54,8 @@ class DashboardController extends Controller
         try {
             // Get user profile picture
             $userInfo = $this->supabase->findBy('user_info', 'user_id', $userId);
-            if ($userInfo && !empty($userInfo['profile_picture'])) {
-                $userProfilePicture = $userInfo['profile_picture'];
+            if ($userInfo) {
+                $userProfilePicture = $this->normalizeProfilePicture($userInfo['profile_picture'] ?? null);
                 // Update username from DB (in case it changed)
                 $username = $userInfo['username'] ?? $username;
                 session(['username' => $username]);
@@ -53,6 +77,12 @@ class DashboardController extends Controller
             foreach ($postsData as $post) {
                 $authorInfo = $this->supabase->findBy('user_info', 'username', $post['username']);
 
+                // Debug: Log author lookup
+                \Log::info("Author lookup for '{$post['username']}'", [
+                    'found' => $authorInfo !== null,
+                    'profile_picture_raw' => $authorInfo ? ($authorInfo['profile_picture'] ?? 'NULL') : 'AUTHOR_NOT_FOUND'
+                ]);
+
                 // Get like count
                 $likeCount = $this->supabase->count('post_likes', ['post_id' => $post['id']]);
 
@@ -69,6 +99,17 @@ class DashboardController extends Controller
                     $userLiked = !empty($userLike);
                 }
 
+                // Handle null authorInfo safely - check if authorInfo exists first
+                $rawProfilePic = $authorInfo ? ($authorInfo['profile_picture'] ?? null) : null;
+                $profilePic = $this->normalizeProfilePicture($rawProfilePic);
+                $expPoints = $authorInfo ? ($authorInfo['exp_points'] ?? 0) : 0;
+
+                // Debug: Log normalized path
+                \Log::info("Profile picture for '{$post['username']}'", [
+                    'raw' => $rawProfilePic,
+                    'normalized' => $profilePic
+                ]);
+
                 $posts[] = [
                     'id' => $post['id'],
                     'game' => $post['game'] ?? 'Unknown Game',
@@ -76,8 +117,8 @@ class DashboardController extends Controller
                     'content' => $post['content'] ?? '',
                     'username' => $post['username'],
                     'user_email' => $post['user_email'] ?? '',
-                    'profile_picture' => $authorInfo['profile_picture'] ?? '/assets/img/cat1.jpg',
-                    'exp_points' => $authorInfo['exp_points'] ?? 0,
+                    'profile_picture' => $profilePic,
+                    'exp_points' => $expPoints,
                     'likes' => $likeCount,
                     'comments' => $commentCount,
                     'user_liked' => $userLiked,
@@ -117,9 +158,69 @@ class DashboardController extends Controller
     /**
      * Show newest posts
      */
-    public function newest()
+    public function newest(Request $request)
     {
-        return $this->index(request());
+        $userId = session('user_id');
+        $username = session('username', 'User');
+        $userProfilePicture = '/assets/img/cat1.jpg';
+
+        $posts = [];
+
+        try {
+            // Get user profile picture
+            $userInfo = $this->supabase->findBy('user_info', 'user_id', $userId);
+            if ($userInfo) {
+                $userProfilePicture = $this->normalizeProfilePicture($userInfo['profile_picture'] ?? null);
+            }
+
+            // Fetch posts ordered by newest (created_at DESC) - limit to 20 for performance
+            $postsData = $this->supabase->select(
+                'posts',
+                '*',
+                ['hidden' => 0],
+                ['order' => 'created_at.desc', 'limit' => 20]
+            );
+
+            // Cache user info lookups to avoid duplicate calls
+            $userCache = [];
+
+            // Get user info and counts for each post
+            foreach ($postsData as $post) {
+                $authorUsername = $post['username'];
+
+                // Check cache first
+                if (!isset($userCache[$authorUsername])) {
+                    $userCache[$authorUsername] = $this->supabase->findBy('user_info', 'username', $authorUsername);
+                }
+                $authorInfo = $userCache[$authorUsername];
+
+                // Handle null authorInfo safely - check if authorInfo exists first
+                $profilePic = $this->normalizeProfilePicture(
+                    $authorInfo ? ($authorInfo['profile_picture'] ?? null) : null
+                );
+
+                $posts[] = [
+                    'id' => $post['id'],
+                    'game' => $post['game'] ?? 'Unknown Game',
+                    'title' => $post['title'] ?? '',
+                    'content' => $post['content'] ?? '',
+                    'username' => $authorUsername,
+                    'profile_picture' => $profilePic,
+                    'likes' => $post['likes'] ?? 0,
+                    'comments' => $post['comments'] ?? 0,
+                    'created_at' => $post['created_at'],
+                ];
+            }
+
+        } catch (Exception $e) {
+            \Log::error("Newest posts error: " . $e->getMessage());
+        }
+
+        return view('newest', [
+            'username' => $username,
+            'userProfilePicture' => $userProfilePicture,
+            'posts' => $posts,
+        ]);
     }
 
     /**
@@ -136,41 +237,54 @@ class DashboardController extends Controller
         try {
             // Get user profile picture
             $userInfo = $this->supabase->findBy('user_info', 'user_id', $userId);
-            if ($userInfo && !empty($userInfo['profile_picture'])) {
-                $userProfilePicture = $userInfo['profile_picture'];
+            if ($userInfo) {
+                $userProfilePicture = $this->normalizeProfilePicture($userInfo['profile_picture'] ?? null);
             }
 
-            // Fetch all posts
+            // Fetch posts - limit to 30 for performance
             $postsData = $this->supabase->select(
                 'posts',
                 '*',
                 ['hidden' => 0],
-                ['limit' => 100]
+                ['limit' => 30]
             );
 
-            // Get user info and counts for each post
+            // Cache user info lookups to avoid duplicate calls
+            $userCache = [];
+
+            // Get user info for each post
             foreach ($postsData as $post) {
-                $authorInfo = $this->supabase->findBy('user_info', 'username', $post['username']);
-                $likeCount = $this->supabase->count('post_likes', ['post_id' => $post['id']]);
-                $commentCount = $this->supabase->count('post_comments', ['post_id' => $post['id']]);
+                $authorUsername = $post['username'];
+
+                // Check cache first
+                if (!isset($userCache[$authorUsername])) {
+                    $userCache[$authorUsername] = $this->supabase->findBy('user_info', 'username', $authorUsername);
+                }
+                $authorInfo = $userCache[$authorUsername];
+
+                // Handle null authorInfo safely - check if authorInfo exists first
+                $profilePic = $this->normalizeProfilePicture(
+                    $authorInfo ? ($authorInfo['profile_picture'] ?? null) : null
+                );
+                $expPoints = $authorInfo ? ($authorInfo['exp_points'] ?? 0) : 0;
 
                 $posts[] = [
                     'id' => $post['id'],
                     'game' => $post['game'] ?? 'Unknown Game',
                     'title' => $post['title'] ?? '',
                     'content' => $post['content'] ?? '',
-                    'username' => $post['username'],
-                    'profile_picture' => $authorInfo['profile_picture'] ?? '/assets/img/cat1.jpg',
-                    'exp_points' => $authorInfo['exp_points'] ?? 0,
-                    'likes' => $likeCount,
-                    'comments' => $commentCount,
+                    'username' => $authorUsername,
+                    'profile_picture' => $profilePic,
+                    'exp_points' => $expPoints,
+                    'likes' => $post['likes'] ?? 0,
+                    'comments' => $post['comments'] ?? 0,
                     'created_at' => $post['created_at'],
                 ];
             }
 
             // Sort by likes (most popular)
             usort($posts, fn($a, $b) => $b['likes'] - $a['likes']);
-            $posts = array_slice($posts, 0, 50);
+            $posts = array_slice($posts, 0, 20);
 
         } catch (Exception $e) {
             \Log::error("Popular posts error: " . $e->getMessage());
@@ -180,6 +294,66 @@ class DashboardController extends Controller
             'username' => $username,
             'userProfilePicture' => $userProfilePicture,
             'posts' => $posts,
+        ]);
+    }
+
+    /**
+     * Show games page
+     */
+    public function games(Request $request)
+    {
+        $userId = session('user_id');
+        $username = session('username', 'User');
+        $userProfilePicture = '/assets/img/cat1.jpg';
+
+        $games = [];
+
+        try {
+            // Get user profile picture
+            $userInfo = $this->supabase->findBy('user_info', 'user_id', $userId);
+            if ($userInfo) {
+                $userProfilePicture = $this->normalizeProfilePicture($userInfo['profile_picture'] ?? null);
+            }
+
+            // Fetch all posts to extract unique games
+            $postsData = $this->supabase->select(
+                'posts',
+                'game',
+                ['hidden' => 0],
+                ['limit' => 1000]
+            );
+
+            // Count reviews per game
+            $gameCounts = [];
+            foreach ($postsData as $post) {
+                $gameName = $post['game'] ?? 'Unknown Game';
+                if (!isset($gameCounts[$gameName])) {
+                    $gameCounts[$gameName] = 0;
+                }
+                $gameCounts[$gameName]++;
+            }
+
+            // Sort by review count (most reviewed first)
+            arsort($gameCounts);
+
+            // Build games array
+            foreach ($gameCounts as $gameName => $count) {
+                $games[] = [
+                    'name' => $gameName,
+                    'review_count' => $count,
+                ];
+            }
+
+        } catch (Exception $e) {
+            \Log::error("Games page error: " . $e->getMessage());
+        }
+
+        return view('games', [
+            'username' => $username,
+            'userProfilePicture' => $userProfilePicture,
+            'games' => $games,
+            'totalGames' => count($games),
+            'totalReviews' => array_sum(array_column($games, 'review_count')),
         ]);
     }
 
@@ -197,12 +371,12 @@ class DashboardController extends Controller
         try {
             // Get user profile picture
             $userInfo = $this->supabase->findBy('user_info', 'user_id', $userId);
-            if ($userInfo && !empty($userInfo['profile_picture'])) {
-                $userProfilePicture = $userInfo['profile_picture'];
+            if ($userInfo) {
+                $userProfilePicture = $this->normalizeProfilePicture($userInfo['profile_picture'] ?? null);
             }
 
             // Get bookmarked post IDs
-            $bookmarks = $this->supabase->select('bookmarks', 'post_id', ['user_id' => $userId]);
+            $bookmarks = $this->supabase->select('post_bookmarks', 'post_id', ['user_id' => $userId]);
 
             foreach ($bookmarks as $bookmark) {
                 $post = $this->supabase->find('posts', $bookmark['post_id']);
@@ -211,13 +385,18 @@ class DashboardController extends Controller
                     $likeCount = $this->supabase->count('post_likes', ['post_id' => $post['id']]);
                     $commentCount = $this->supabase->count('post_comments', ['post_id' => $post['id']]);
 
+                    // Handle null authorInfo safely - check if authorInfo exists first
+                    $profilePic = $this->normalizeProfilePicture(
+                        $authorInfo ? ($authorInfo['profile_picture'] ?? null) : null
+                    );
+
                     $posts[] = [
                         'id' => $post['id'],
                         'game' => $post['game'] ?? 'Unknown Game',
                         'title' => $post['title'] ?? '',
                         'content' => $post['content'] ?? '',
                         'username' => $post['username'],
-                        'profile_picture' => $authorInfo['profile_picture'] ?? '/assets/img/cat1.jpg',
+                        'profile_picture' => $profilePic,
                         'likes' => $likeCount,
                         'comments' => $commentCount,
                         'created_at' => $post['created_at'],

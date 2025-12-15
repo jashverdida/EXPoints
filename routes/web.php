@@ -26,8 +26,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
 });
 
-// Logout (authenticated only)
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth.supabase');
+// Logout (authenticated only) - support both GET and POST
+Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth.supabase');
 
 // Banned/Disabled pages
 Route::get('/banned', [AuthController::class, 'banned'])->name('banned');
@@ -69,6 +69,8 @@ Route::middleware(['auth.supabase', 'role:admin'])->prefix('admin')->name('admin
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/moderators', [AdminController::class, 'moderators'])->name('moderators');
+    Route::get('/ban-appeals', [AdminController::class, 'banAppeals'])->name('ban-appeals');
+    Route::post('/flag-ban', [AdminController::class, 'flagBan'])->name('flag-ban');
     Route::post('/users/{id}/ban', [AdminController::class, 'banUser'])->name('users.ban');
     Route::post('/users/{id}/unban', [AdminController::class, 'unbanUser'])->name('users.unban');
     Route::post('/users/{id}/disable', [AdminController::class, 'disableUser'])->name('users.disable');

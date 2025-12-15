@@ -460,17 +460,63 @@ main.container-xl > *{
 }
 
 .avatar-us::after{
-  content: '';
+  /* Disabled - using <img> tag instead of CSS background */
+  display: none;
+}
+
+.avatar-us {
+  --sz: 56px;
+  width: var(--sz);
+  height: var(--sz);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.avatar-us img,
+.avatar-us .profile-lazy-img {
   position: absolute;
   top: 2px;
   left: 2px;
   right: 2px;
   bottom: 2px;
-  background-image: url('../img/lara.jpg');
-  background-size: cover;
-  background-position: center;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
+  object-fit: cover;
   border-radius: 50%;
+  z-index: 3;
+}
+
+/* Profile lazy loading animation */
+.avatar-us.avatar-loading .star-loader {
+  display: flex;
+}
+
+.avatar-us:not(.avatar-loading) .star-loader {
+  display: none;
+}
+
+.star-loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.2rem;
   z-index: 2;
+  animation: pulse-star 1s ease-in-out infinite;
+}
+
+@keyframes pulse-star {
+  0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+}
+
+.profile-lazy-img {
+  opacity: 0;
+  transition: opacity 0.3s ease-in;
+}
+
+.profile-lazy-img.loaded {
+  opacity: 1;
 }
 
 /* ========== Cards (larger) ========== */

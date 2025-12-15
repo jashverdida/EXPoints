@@ -226,7 +226,7 @@ class AuthController extends Controller
                 'bio' => '',
                 'profile_picture' => '/assets/img/cat1.jpg',
                 'exp_points' => 0,
-                'is_banned' => false,
+                'is_banned' => 0,  // smallint, not boolean
                 'created_at' => now()->toIso8601String(),
             ];
 

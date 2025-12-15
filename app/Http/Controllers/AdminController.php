@@ -418,6 +418,79 @@ class AdminController extends Controller
     }
 
     /**
+     * Create a new administrator
+     * Optimized: Skip duplicate checks and let Supabase handle unique constraints
+     */
+    public function createAdmin(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'username' => 'required|string|min:3|max:50',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $email = $request->input('email');
+        $username = $request->input('username');
+        $password = $request->input('password');
+
+        try {
+            // Create user with admin role - let DB constraints handle duplicates
+            $userData = [
+                'email' => $email,
+                'password' => $password,
+                'role' => 'admin',
+                'created_at' => now()->toIso8601String(),
+            ];
+
+            \Log::info("Creating admin user: $email");
+            $newUser = $this->supabase->insert('users', $userData);
+            \Log::info("User insert result: " . json_encode($newUser));
+
+            if (!$newUser || !isset($newUser['id'])) {
+                \Log::error("Failed to create user - no ID returned");
+                return response()->json(['success' => false, 'error' => 'Failed to create account'], 500);
+            }
+
+            // Create user_info record
+            $userInfoData = [
+                'user_id' => $newUser['id'],
+                'username' => $username,
+                'first_name' => '',
+                'middle_name' => '',
+                'last_name' => '',
+                'suffix' => '',
+                'bio' => '',
+                'profile_picture' => '/assets/img/cat1.jpg',
+                'exp_points' => 0,
+                'is_banned' => 0,  // smallint, not boolean
+                'created_at' => now()->toIso8601String(),
+            ];
+
+            \Log::info("Creating user_info for user: " . $newUser['id']);
+            $this->supabase->insert('user_info', $userInfoData);
+
+            return response()->json(['success' => true, 'message' => 'Administrator created successfully']);
+
+        } catch (Exception $e) {
+            $errorMsg = $e->getMessage();
+            \Log::error("Create admin error: " . $errorMsg);
+
+            // Check for duplicate key errors from Supabase
+            if (str_contains($errorMsg, 'duplicate') || str_contains($errorMsg, 'unique') || str_contains($errorMsg, '23505')) {
+                if (str_contains($errorMsg, 'email')) {
+                    return response()->json(['success' => false, 'error' => 'Email already registered'], 422);
+                }
+                if (str_contains($errorMsg, 'username')) {
+                    return response()->json(['success' => false, 'error' => 'Username already taken'], 422);
+                }
+                return response()->json(['success' => false, 'error' => 'User already exists'], 422);
+            }
+
+            return response()->json(['success' => false, 'error' => 'Failed to create administrator: ' . $errorMsg], 500);
+        }
+    }
+
+    /**
      * Hide/unhide a post (moderation)
      */
     public function togglePostVisibility($postId)

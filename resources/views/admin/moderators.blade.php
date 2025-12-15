@@ -356,7 +356,7 @@
         return;
       }
 
-      fetch('/register', {
+      fetch('/admin/create-admin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -367,9 +367,7 @@
         body: JSON.stringify({
           email,
           username,
-          password,
-          password_confirmation: passwordConfirm,
-          role: 'admin'
+          password
         })
       })
       .then(response => {

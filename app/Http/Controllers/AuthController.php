@@ -44,8 +44,13 @@ class AuthController extends Controller
         $isAjax = $request->ajax() || $request->wantsJson();
 
         try {
-            // Query user from Supabase
-            $users = $this->supabase->select('users', '*', ['email' => $email], ['limit' => 1]);
+            // Optimized: Fetch user with user_info in ONE query using JOIN
+            $users = $this->supabase->select(
+                'users', 
+                'id,email,password,role,is_disabled,disabled_reason,disabled_at,disabled_by,user_info(username,is_banned,ban_reason,banned_at,banned_by)',
+                ['email' => $email],
+                ['limit' => 1]
+            );
 
             if (empty($users)) {
                 if ($isAjax) {
@@ -77,25 +82,19 @@ class AuthController extends Controller
                 return redirect()->route('disabled');
             }
 
-            // Get username and ban status from user_info table
-            $userInfo = $this->supabase->findBy('user_info', 'user_id', $user['id']);
+            // Extract user_info from joined data (already fetched in one query)
+            $userInfo = $user['user_info'][0] ?? null;
+            $username = $userInfo['username'] ?? $user['email'];
+            $isBanned = !empty($userInfo['is_banned']) && $userInfo['is_banned'] == 1;
 
-            $username = $user['email']; // Default to email
-            $isBanned = false;
-
-            if ($userInfo) {
-                $username = $userInfo['username'] ?? $user['email'];
-                $isBanned = !empty($userInfo['is_banned']) && $userInfo['is_banned'] == 1;
-
-                if ($isBanned) {
-                    Session::put('ban_reason', $userInfo['ban_reason'] ?? '');
-                    Session::put('banned_at', $userInfo['banned_at'] ?? '');
-                    Session::put('banned_by', $userInfo['banned_by'] ?? '');
-                    if ($isAjax) {
-                        return response()->json(['success' => false, 'error' => 'Account banned', 'redirect' => route('banned')], 403);
-                    }
-                    return redirect()->route('banned');
+            if ($isBanned) {
+                Session::put('ban_reason', $userInfo['ban_reason'] ?? '');
+                Session::put('banned_at', $userInfo['banned_at'] ?? '');
+                Session::put('banned_by', $userInfo['banned_by'] ?? '');
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'error' => 'Account banned', 'redirect' => route('banned')], 403);
                 }
+                return redirect()->route('banned');
             }
 
             // Set session variables

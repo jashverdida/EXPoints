@@ -1,5 +1,20 @@
 <?php
 
+// Load environment variables if not already loaded
+if (!getenv('SUPABASE_URL')) {
+    require_once __DIR__ . '/env.php';
+}
+
+/**
+ * Helper function to mimic Laravel's env() for standalone PHP
+ */
+if (!function_exists('env')) {
+    function env($key, $default = null) {
+        $value = getenv($key);
+        return $value !== false ? $value : $default;
+    }
+}
+
 return [
     /*
     |--------------------------------------------------------------------------

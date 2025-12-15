@@ -40,6 +40,7 @@ Route::middleware(['auth.supabase'])->group(function () {
     Route::get('/popular', [DashboardController::class, 'popular'])->name('popular');
     Route::get('/newest', [DashboardController::class, 'newest'])->name('newest');
     Route::get('/bookmarks', [DashboardController::class, 'bookmarks'])->name('bookmarks');
+    Route::get('/games', [DashboardController::class, 'games'])->name('games');
 
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');

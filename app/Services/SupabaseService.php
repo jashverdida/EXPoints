@@ -234,13 +234,17 @@ class SupabaseService
     public function count(string $table, array $filters = []): int
     {
         $url = $this->getTableUrl($table);
-        $params = ['select' => 'count'];
+        $params = ['select' => '*'];
 
         foreach ($filters as $key => $value) {
             if (strpos($key, '.') !== false) {
                 $params[$key] = $value;
             } else {
-                $params[$key] = 'eq.' . $value;
+                if (is_bool($value)) {
+                    $params[$key] = 'eq.' . ($value ? 'true' : 'false');
+                } else {
+                    $params[$key] = 'eq.' . $value;
+                }
             }
         }
 
@@ -249,14 +253,17 @@ class SupabaseService
 
         $response = Http::withHeaders($headers)
             ->timeout($this->timeout)
-            ->head($url, $params);
+            ->get($url, $params);
 
+        // Extract count from Content-Range header
         $contentRange = $response->header('content-range');
         if ($contentRange && preg_match('/\/(\d+)$/', $contentRange, $matches)) {
             return (int) $matches[1];
         }
 
-        return 0;
+        // Fallback: count the returned array
+        $data = $response->json();
+        return is_array($data) ? count($data) : 0;
     }
 
     /**

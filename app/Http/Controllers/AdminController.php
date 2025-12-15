@@ -21,40 +21,68 @@ class AdminController extends Controller
     public function dashboard()
     {
         try {
-            // Get stats
+            // Get stats - using optimized count method
             $totalUsers = $this->supabase->count('users');
+            \Log::info("Total users: " . $totalUsers);
+            
             $totalPosts = $this->supabase->count('posts');
+            \Log::info("Total posts: " . $totalPosts);
+            
             $totalComments = $this->supabase->count('post_comments');
             $totalAdmins = $this->supabase->count('users', ['role' => 'admin']);
             $bannedUsers = $this->supabase->count('user_info', ['is_banned' => true]);
             $disabledUsers = $this->supabase->count('users', ['is_disabled' => true]);
 
-            // Get recent users
-            $recentUsers = $this->supabase->select('users', '*', [], [
-                'order' => 'created_at.desc',
-                'limit' => 10
-            ]);
+            // Get recent users with joined user_info in ONE query
+            $recentUsers = $this->supabase->select(
+                'users', 
+                'id,email,role,created_at,is_disabled,user_info(username,profile_picture,is_banned)',
+                [],
+                ['order' => 'created_at.desc', 'limit' => 10]
+            );
+            \Log::info("Recent users count: " . count($recentUsers));
 
-            // Enrich with user_info
+            // Format user data
             foreach ($recentUsers as &$user) {
-                $userInfo = $this->supabase->findBy('user_info', 'user_id', $user['id']);
+                $userInfo = $user['user_info'][0] ?? null;
                 $user['username'] = $userInfo['username'] ?? $user['email'];
                 $user['profile_picture'] = $userInfo['profile_picture'] ?? '/assets/img/cat1.jpg';
                 $user['is_banned'] = $userInfo['is_banned'] ?? false;
+                unset($user['user_info']); // Clean up
             }
 
-            // Get recent posts for moderation (50 posts)
-            $recentPosts = $this->supabase->select('posts', '*', [], [
-                'order' => 'created_at.desc',
-                'limit' => 50
-            ]);
+            // Get recent posts - simplified query first
+            $recentPosts = $this->supabase->select(
+                'posts',
+                '*',
+                [],
+                ['order' => 'created_at.desc', 'limit' => 50]
+            );
+            \Log::info("Recent posts fetched: " . count($recentPosts));
+            \Log::info("Sample post data: " . json_encode(array_slice($recentPosts, 0, 2)));
+
+            // Fetch user info for all posts in batch (more efficient)
+            $userIds = array_unique(array_column($recentPosts, 'user_id'));
+            $userInfoMap = [];
+            
+            if (!empty($userIds)) {
+                $userInfos = $this->supabase->select('user_info', 'user_id,username,profile_picture', [
+                    'user_id.in' => '(' . implode(',', $userIds) . ')'
+                ]);
+                
+                foreach ($userInfos as $info) {
+                    $userInfoMap[$info['user_id']] = $info;
+                }
+            }
 
             // Enrich posts with username
             foreach ($recentPosts as &$post) {
-                $userInfo = $this->supabase->findBy('user_info', 'user_id', $post['user_id']);
+                $userInfo = $userInfoMap[$post['user_id']] ?? null;
                 $post['username'] = $userInfo['username'] ?? 'Unknown';
                 $post['profile_picture'] = $userInfo['profile_picture'] ?? '/assets/img/cat1.jpg';
             }
+
+            \Log::info("Passing to view - Posts: " . count($recentPosts));
 
             return view('admin.dashboard', [
                 'totalUsers' => $totalUsers,
@@ -69,6 +97,7 @@ class AdminController extends Controller
 
         } catch (Exception $e) {
             \Log::error("Admin dashboard error: " . $e->getMessage());
+            \Log::error("Stack trace: " . $e->getTraceAsString());
             return view('admin.dashboard', [
                 'totalUsers' => 0,
                 'totalPosts' => 0,
@@ -78,7 +107,7 @@ class AdminController extends Controller
                 'disabledUsers' => 0,
                 'recentUsers' => [],
                 'recentPosts' => [],
-                'error' => 'Failed to load dashboard data',
+                'error' => 'Failed to load dashboard data: ' . $e->getMessage(),
             ]);
         }
     }

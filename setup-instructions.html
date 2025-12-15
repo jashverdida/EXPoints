@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Instructions - EXPoints</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #764ba2;
+            margin-top: 30px;
+        }
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #667eea;
+            border-radius: 5px;
+        }
+        .code {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: bold;
+            margin: 10px 10px 10px 0;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .warning {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        ul {
+            line-height: 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 EXPoints Registration Setup</h1>
+        <p><strong>Status:</strong> <span class="warning">Setup Required</span></p>
+        
+        <h2>Quick Setup (2 Minutes)</h2>
+        
+        <div class="step">
+            <h3>Step 1: Open phpMyAdmin</h3>
+            <p>1. Open your browser and go to: <code>http://localhost/phpmyadmin</code></p>
+            <p>2. Click on your database: <strong>expoints_db</strong></p>
+            <p>3. Click the <strong>SQL</strong> tab at the top</p>
+        </div>
+
+        <div class="step">
+            <h3>Step 2: Run This SQL Script</h3>
+            <p>Copy and paste the following SQL code into the SQL text area:</p>
+            <div class="code">
+CREATE TABLE IF NOT EXISTS `user_info` (<br>
+&nbsp;&nbsp;`id` int(11) NOT NULL AUTO_INCREMENT,<br>
+&nbsp;&nbsp;`user_id` int(11) NOT NULL,<br>
+&nbsp;&nbsp;`username` varchar(50) NOT NULL UNIQUE,<br>
+&nbsp;&nbsp;`first_name` varchar(50) DEFAULT NULL,<br>
+&nbsp;&nbsp;`last_name` varchar(50) DEFAULT NULL,<br>
+&nbsp;&nbsp;`bio` text DEFAULT NULL,<br>
+&nbsp;&nbsp;`exp_points` int(11) DEFAULT 0,<br>
+&nbsp;&nbsp;`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,<br>
+&nbsp;&nbsp;PRIMARY KEY (`id`),<br>
+&nbsp;&nbsp;UNIQUE KEY `username` (`username`),<br>
+&nbsp;&nbsp;KEY `user_id` (`user_id`),<br>
+&nbsp;&nbsp;CONSTRAINT `user_info_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE<br>
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            </div>
+            <p>4. Click the <strong>Go</strong> button</p>
+            <p>5. You should see: <span class="success">✓ MySQL returned an empty result set</span></p>
+        </div>
+
+        <div class="step">
+            <h3>Step 3: Test Registration!</h3>
+            <p>Now you can test the new registration system:</p>
+            <a href="user/register.php" class="button">Go to Registration Page</a>
+            <a href="user/login.php" class="button">Go to Login Page</a>
+        </div>
+
+        <h2>What's New?</h2>
+        <ul>
+            <li>✅ <strong>No more Firebase</strong> - Everything uses MySQL now</li>
+            <li>✅ <strong>Username selection</strong> - Beautiful modal popup after registration</li>
+            <li>✅ <strong>User Info table</strong> - Stores username, first/last name, bio, XP points</li>
+            <li>✅ <strong>Auto role assignment</strong> - New users get 'user' role automatically</li>
+            <li>✅ <strong>Form validation</strong> - Real-time feedback on username availability</li>
+            <li>✅ <strong>Session management</strong> - Works with existing login system</li>
+        </ul>
+
+        <h2>How to Register a New User</h2>
+        <ol>
+            <li>Fill in: First Name, Last Name, Email, Password, Confirm Password</li>
+            <li>Click <strong>"CONTINUE"</strong></li>
+            <li>A modal will appear asking for a username</li>
+            <li>Enter a unique username (3-20 characters, letters/numbers/underscore)</li>
+            <li>Click <strong>"Complete Registration"</strong></li>
+            <li>You'll be redirected to the dashboard!</li>
+        </ol>
+
+        <h2>Database Structure</h2>
+        <p><strong>users</strong> table: id, email, password, role, created_at</p>
+        <p><strong>user_info</strong> table: id, user_id, username, first_name, last_name, bio, exp_points, created_at</p>
+        <p style="color: #6c757d; font-style: italic;">The user_id in user_info links to id in users table</p>
+
+        <h2>Need Help?</h2>
+        <p>Check these files for detailed documentation:</p>
+        <ul>
+            <li><code>QUICK_START.md</code> - Quick start guide</li>
+            <li><code>REGISTRATION_SYSTEM.md</code> - Full system documentation</li>
+            <li><code>setup-user-info-table.sql</code> - SQL script file</li>
+        </ul>
+
+        <div style="margin-top: 40px; padding: 20px; background: #e7f3ff; border-radius: 10px;">
+            <h3>🚀 Ready to Test?</h3>
+            <p>Once you've run the SQL script above, click the button below to try registering a new user:</p>
+            <a href="user/register.php" class="button" style="font-size: 18px; padding: 15px 40px;">Start Registration</a>
+        </div>
+    </div>
+</body>
+</html>

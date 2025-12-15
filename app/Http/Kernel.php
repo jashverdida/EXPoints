@@ -66,5 +66,6 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'role' => \App\Http\Middleware\CheckRole::class,
         'check.banned' => \App\Http\Middleware\CheckBanned::class,
+        'auth.supabase' => \App\Http\Middleware\SupabaseAuth::class,
     ];
 }

@@ -1,17 +1,16 @@
 <?php
 
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
 | Web Routes
 |--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
 */
 
 // Public routes
@@ -19,70 +18,61 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::get('/discover', function () {
-    return view('discover');
-})->name('discover');
+// Auth routes (guests only)
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register']);
+});
 
-Route::get('/games/{game}', function ($game) {
-    return view('games.show', ['game' => $game]);
-})->name('games.show');
+// Logout (authenticated only)
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth.supabase');
 
-// Banned page
-Route::get('/banned', function () {
-    return view('banned');
-})->name('banned');
+// Banned/Disabled pages
+Route::get('/banned', [AuthController::class, 'banned'])->name('banned');
+Route::get('/disabled', [AuthController::class, 'disabled'])->name('disabled');
 
-// User dashboard and authenticated routes
-Route::middleware(['auth', 'check.banned'])->group(function () {
-    // User dashboard
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+// User authenticated routes
+Route::middleware(['auth.supabase'])->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/popular', [DashboardController::class, 'popular'])->name('popular');
+    Route::get('/newest', [DashboardController::class, 'newest'])->name('newest');
+    Route::get('/bookmarks', [DashboardController::class, 'bookmarks'])->name('bookmarks');
 
     // Profile routes
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile.show');
+    Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::post('/profile/picture', [ProfileController::class, 'updatePicture'])->name('profile.picture');
+    Route::get('/user/{username}', [ProfileController::class, 'viewProfile'])->name('profile.view');
 
-    // Bookmarks
-    Route::get('/bookmarks', function () {
-        return view('bookmarks');
-    })->name('bookmarks');
-
-    // Posts
-    Route::get('/posts/create', function () {
-        return view('posts.create');
-    })->name('posts.create');
-
-    Route::get('/posts/{id}', function ($id) {
-        return view('posts.show', ['id' => $id]);
-    })->name('posts.show');
+    // Posts routes
+    Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
+    Route::get('/posts/{id}', [PostController::class, 'show'])->name('posts.show');
+    Route::delete('/posts/{id}', [PostController::class, 'destroy'])->name('posts.destroy');
+    Route::post('/posts/{id}/like', [PostController::class, 'toggleLike'])->name('posts.like');
+    Route::post('/posts/{id}/bookmark', [PostController::class, 'toggleBookmark'])->name('posts.bookmark');
+    Route::post('/posts/{id}/comment', [PostController::class, 'addComment'])->name('posts.comment');
 });
 
 // Moderator routes
-Route::middleware(['auth', 'check.banned', 'role:mod,admin'])->prefix('mod')->name('mod.')->group(function () {
+Route::middleware(['auth.supabase', 'role:mod'])->prefix('mod')->name('mod.')->group(function () {
     Route::get('/dashboard', function () {
         return view('mod.dashboard');
     })->name('dashboard');
-
-    Route::get('/ban-reviews', function () {
-        return view('mod.ban-reviews');
-    })->name('ban-reviews');
 });
 
 // Admin routes
-Route::middleware(['auth', 'check.banned', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard');
-    })->name('dashboard');
-
-    Route::get('/users', function () {
-        return view('admin.users');
-    })->name('users');
-
-    Route::get('/moderators', function () {
-        return view('admin.moderators');
-    })->name('moderators');
+Route::middleware(['auth.supabase', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/users', [AdminController::class, 'users'])->name('users');
+    Route::get('/moderators', [AdminController::class, 'moderators'])->name('moderators');
+    Route::post('/users/{id}/ban', [AdminController::class, 'banUser'])->name('users.ban');
+    Route::post('/users/{id}/unban', [AdminController::class, 'unbanUser'])->name('users.unban');
+    Route::post('/users/{id}/disable', [AdminController::class, 'disableUser'])->name('users.disable');
+    Route::post('/users/{id}/enable', [AdminController::class, 'enableUser'])->name('users.enable');
+    Route::post('/users/{id}/role', [AdminController::class, 'updateRole'])->name('users.role');
+    Route::post('/posts/{id}/visibility', [AdminController::class, 'togglePostVisibility'])->name('posts.visibility');
 });
-
-require __DIR__.'/auth.php';

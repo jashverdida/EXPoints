@@ -1,0 +1,2 @@
+# Keep empty directories in git
+database/backups/.gitkeep export-ignore

@@ -17,11 +17,11 @@ class DashboardController extends Controller
 
     /**
      * Normalize profile picture path from database
-     * Converts "..\assets\img\..." to "/assets/img/..."
+     * Converts "..\assets\img\..." to "assets/img/..." (for use with asset() helper)
      */
     protected function normalizeProfilePicture(?string $path): string
     {
-        $default = '/assets/img/cat1.jpg';
+        $default = 'assets/img/cat1.jpg';  // No leading / for asset() helper
 
         if (empty($path)) {
             return $default;
@@ -33,10 +33,8 @@ class DashboardController extends Controller
         // Remove leading ".." or "../"
         $path = preg_replace('/^\.\.\//', '', $path);
 
-        // Ensure path starts with /
-        if (!str_starts_with($path, '/')) {
-            $path = '/' . $path;
-        }
+        // Remove leading "/" if present (for asset() helper compatibility)
+        $path = ltrim($path, '/');
 
         return $path;
     }

@@ -37,7 +37,7 @@
           <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
         </button>
         <a href="{{ route('profile.show') }}" class="avatar-nav">
-          <img src="{{ $userProfilePicture ?? asset('assets/img/cat1.jpg') }}" alt="Profile" class="avatar-img" loading="eager">
+          <img src="{{ asset($userProfilePicture ?? 'assets/img/cat1.jpg') }}" alt="Profile" class="avatar-img" loading="eager" onerror="this.src='{{ asset('assets/img/cat1.jpg') }}'">
         </a>
       </div>
     </header>
@@ -112,13 +112,13 @@
       <div class="row gap-3 align-items-start">
         <div class="col-auto">
           <div class="avatar-us">
-            <img src="{{ $userProfilePicture ?? asset('assets/img/cat1.jpg') }}" alt="Profile" style="position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px; width: calc(100% - 4px); height: calc(100% - 4px); object-fit: cover; border-radius: 50%; z-index: 3;">
+            <img src="{{ asset($userProfilePicture ?? 'assets/img/cat1.jpg') }}" alt="Profile" onerror="this.src='{{ asset('assets/img/cat1.jpg') }}'" style="position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px; width: calc(100% - 4px); height: calc(100% - 4px); object-fit: cover; border-radius: 50%; z-index: 3;">
           </div>
         </div>
         <div class="col">
           <!-- Simple textbox (initial state) -->
           <div id="simplePostBox" class="simple-post-box">
-            <input type="text" id="simplePostInput" class="simple-post-input" placeholder="What's on your mind, @{{ session('username', 'User') }}?" readonly data-username="{{ session('username', 'User') }}" data-userid="{{ session('user_id') }}">
+            <input type="text" id="simplePostInput" class="simple-post-input" placeholder="What's on your mind, {{ session('username', 'User') }}?" readonly data-username="{{ session('username', 'User') }}" data-userid="{{ session('user_id') }}">
           </div>
 
           <!-- Expanded form (hidden initially) -->
@@ -182,17 +182,18 @@
               <div class="col-auto">
                 <div class="avatar-us avatar-loading">
                   <div class="star-loader">&#11088;</div>
-                  <img src="{{ $post['profile_picture'] ?? asset('assets/img/cat1.jpg') }}"
+                  <img src="{{ asset($post['profile_picture'] ?? 'assets/img/cat1.jpg') }}"
                        alt="Profile"
                        loading="lazy"
                        class="profile-lazy-img"
+                       onerror="this.src='{{ asset('assets/img/cat1.jpg') }}'"
                        onload="this.classList.add('loaded'); this.parentElement.classList.remove('avatar-loading');">
                 </div>
               </div>
               <div class="col">
                 <div class="game-badge">{{ $post['game'] }}</div>
                 <h2 class="title mb-1">{{ $post['title'] }}</h2>
-                <div class="handle mb-3">@{{ $post['username'] }}</div>
+                <div class="handle mb-3">{{ '@' . $post['username'] }}</div>
                 <p class="mb-3">{!! nl2br(e($post['content'])) !!}</p>
               </div>
             </div>
@@ -254,9 +255,9 @@
     <span class="side-hotspot"></span>
     <div class="side-inner">
       <div class="side-box">
-        <button class="side-btn" onclick="window.location.href='{{ route('dashboard') }}'" title="Home"><i class="bi bi-house"></i></button>
+        <button class="side-btn active" onclick="window.location.href='{{ route('dashboard') }}'" title="Home"><i class="bi bi-house-fill"></i></button>
         <button class="side-btn" onclick="window.location.href='{{ route('bookmarks') }}'" title="Bookmarks"><i class="bi bi-bookmark"></i></button>
-        <button class="side-btn" onclick="window.location.href='#'" title="Games"><i class="bi bi-grid-3x3-gap"></i></button>
+        <button class="side-btn" onclick="window.location.href='{{ route('games') }}'" title="Games"><i class="bi bi-grid-3x3-gap"></i></button>
         <button class="side-btn" onclick="window.location.href='{{ route('popular') }}'" title="Popular"><i class="bi bi-compass"></i></button>
         <button class="side-btn" onclick="window.location.href='{{ route('newest') }}'" title="Newest"><i class="bi bi-star-fill"></i></button>
         <button class="side-btn side-bottom logout-btn-sidebar" title="Logout"><i class="bi bi-box-arrow-right"></i></button>
@@ -327,6 +328,7 @@
     const currentUserId = {{ session('user_id', 0) }};
     const currentUsername = '{{ session('username', 'User') }}';
     const csrfToken = '{{ csrf_token() }}';
+    const assetBaseUrl = '{{ asset('') }}';
 
     // Logout and Welcome Modal functionality
     document.addEventListener('DOMContentLoaded', function() {
@@ -688,7 +690,7 @@
         commentDiv.className = 'comment-item';
         commentDiv.innerHTML = `
           <div class="comment-header" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-            <img src="${comment.profile_picture || '{{ asset('assets/img/cat1.jpg') }}'}" alt="Profile" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+            <img src="${comment.profile_picture ? assetBaseUrl + comment.profile_picture : '{{ asset('assets/img/cat1.jpg') }}'}" alt="Profile" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
             <span class="comment-author">@${escapeHtml(comment.username)}</span>
             <span style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">${timeAgo(comment.created_at)}</span>
           </div>

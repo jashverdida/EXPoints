@@ -477,7 +477,7 @@
           <!-- Avatar with proper sizing, centering, and error handling -->
           <div class="avatar-wrap">
             <img id="avatar"
-                 src="{{ $profilePicture }}"
+                 src="{{ asset($profilePicture ?? 'assets/img/cat1.jpg') }}"
                  alt="{{ $displayName }}'s Profile"
                  class="avatar-xl"
                  data-edit="img"
@@ -609,16 +609,16 @@
     // Pass data to JavaScript
     const allPosts = @json($allPosts ?? []);
     const userId = @json(session('user_id'));
-    const userData = @json([
-        'first_name' => $firstName ?? '',
-        'middle_name' => $middleName ?? '',
-        'last_name' => $lastName ?? '',
-        'suffix' => $suffix ?? '',
-        'username' => $displayName,
-        'bio' => $bio ?? '',
-        'profile_picture' => $profilePicture,
-        'exp_points' => $expPoints ?? 0
-    ]);
+    const userData = {
+        first_name: @json($firstName ?? ''),
+        middle_name: @json($middleName ?? ''),
+        last_name: @json($lastName ?? ''),
+        suffix: @json($suffix ?? ''),
+        username: @json($displayName ?? ''),
+        bio: @json($bio ?? ''),
+        profile_picture: @json($profilePicture ?? ''),
+        exp_points: @json($expPoints ?? 0)
+    };
 
     // Create floating particles
     function createProfileParticles() {

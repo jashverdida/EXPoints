@@ -222,20 +222,24 @@ class AuthController extends Controller
                 'created_at' => now()->toIso8601String(),
             ];
 
-            $this->supabase->insert('user_info', $userInfoData);
-
-            // Auto login after registration
-            Session::put('user_id', $newUser['id']);
-            Session::put('user_email', $email);
-            Session::put('username', $username);
-            Session::put('user_role', 'user');
-            Session::put('authenticated', true);
-            Session::put('login_time', time());
-
-            if ($isAjax) {
-                return response()->json(['success' => true, 'redirect' => route('dashboard')]);
+            try {
+                $this->supabase->insert('user_info', $userInfoData);
+            } catch (Exception $e) {
+                // If user_info insert fails, delete the created user to avoid orphaned records
+                \Log::error("user_info insert failed, rolling back user creation: " . $e->getMessage());
+                try {
+                    $this->supabase->deleteById('users', $newUser['id']);
+                } catch (Exception $deleteEx) {
+                    \Log::error("Failed to rollback user creation: " . $deleteEx->getMessage());
+                }
+                throw new Exception('Failed to create user profile. Please try again.');
             }
-            return redirect()->route('dashboard')->with('success', 'Account created successfully!');
+
+            // Redirect to login page after successful registration (no auto-login)
+            if ($isAjax) {
+                return response()->json(['success' => true, 'redirect' => route('login')]);
+            }
+            return redirect()->route('login')->with('success', 'Account created successfully! Please login.');
 
         } catch (Exception $e) {
             \Log::error("Registration error: " . $e->getMessage());

@@ -16,17 +16,16 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        $user = $request->user();
-
-        if (!$user) {
+        // Use session-based authentication (Supabase)
+        if (!session('authenticated') || session('authenticated') !== true) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Unauthenticated.'], 401);
             }
             return redirect()->route('login');
         }
 
-        // Get user's role
-        $userRole = $user->role ?? 'user';
+        // Get role from session
+        $userRole = session('user_role', 'user');
 
         // Admin has access to everything
         if ($userRole === 'admin') {

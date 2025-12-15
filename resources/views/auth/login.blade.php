@@ -25,8 +25,7 @@
         .loading-text { margin-top: 3rem; color: white; font-size: 1.5rem; font-weight: 600; animation: textFade 2s ease-in-out infinite; }
         @keyframes textFade { 0%, 100% { opacity: 0.7; } 50% { opacity: 1; } }
         .progress-container { width: 400px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin-top: 2rem; }
-        .progress-bar { height: 100%; background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700); border-radius: 10px; animation: progressMove 15s ease-out forwards; width: 0%; }
-        @keyframes progressMove { 0% { width: 0%; } 95% { width: 95%; } 100% { width: 100%; } }
+        .progress-bar { height: 100%; background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700); border-radius: 10px; width: 0%; transition: width 0.1s ease-out; }
         .progress-text { color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-top: 0.5rem; }
     </style>
 </head>
@@ -109,13 +108,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            if (email && password) {
-                document.getElementById('loadingOverlay').classList.add('active');
-            }
-        });
         const welcomeTexts = [
             "Ready to earn more XP? Jump back in and keep leveling up!",
             "Your next achievement awaits! log in and continue your grind!",
@@ -124,6 +116,100 @@
             "Log in. Level up. Let's play."
         ];
         document.getElementById('rotatingText').textContent = welcomeTexts[Math.floor(Math.random() * welcomeTexts.length)];
+
+        // Login with loading bar that redirects when complete
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const progressBar = document.querySelector('.progress-bar');
+            const progressText = document.querySelector('.progress-text');
+            const loadingText = document.querySelector('.loading-text');
+
+            if (!email || !password) return;
+
+            // Show loading overlay
+            document.getElementById('loadingOverlay').classList.add('active');
+            loginBtn.disabled = true;
+
+            // Track state
+            let loginResponse = null;
+            let loginError = null;
+            let serverResponded = false;
+            let progressInterval = null;
+
+            // Start progress bar animation - slow and steady
+            let progress = 0;
+            progressInterval = setInterval(() => {
+                if (progress < 70) {
+                    progress += 0.7; // Reach 70% in ~10 seconds
+                } else if (progress < 95) {
+                    progress += 0.1; // Very slow crawl from 70-95%
+                }
+                progressBar.style.width = progress + '%';
+            }, 100);
+
+            // Make AJAX login request
+            try {
+                const response = await fetch('{{ route("login") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                loginResponse = await response.json();
+                serverResponded = true;
+
+                if (!loginResponse.success) {
+                    loginError = loginResponse.error || 'Login failed';
+                }
+            } catch (error) {
+                serverResponded = true;
+                loginError = 'Connection error. Please try again.';
+            }
+
+            // Server responded - stop the progress bar and handle result
+            clearInterval(progressInterval);
+
+            if (loginError) {
+                // Show error
+                document.getElementById('loadingOverlay').classList.remove('active');
+                loginBtn.disabled = false;
+                progressBar.style.width = '0%';
+
+                // Create and show error alert
+                const existingAlert = document.querySelector('.custom-alert');
+                if (existingAlert) existingAlert.remove();
+
+                const alertHtml = `
+                    <div class="custom-alert alert-dismissible fade show" role="alert">
+                        <div class="alert-content">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                            <span>${loginError}</span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    </div>
+                `;
+                document.body.insertAdjacentHTML('afterbegin', alertHtml);
+            } else if (loginResponse && loginResponse.success) {
+                // Success - complete the bar with smooth animation then redirect
+                progressBar.style.transition = 'width 0.5s ease-out';
+                progressBar.style.width = '100%';
+                loadingText.textContent = 'Welcome back!';
+                progressText.textContent = 'Loading dashboard...';
+
+                // Redirect after bar completes
+                setTimeout(() => {
+                    window.location.href = loginResponse.redirect || '{{ route("dashboard") }}';
+                }, 600);
+            }
+        });
     </script>
 </body>
 </html>

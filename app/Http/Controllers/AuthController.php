@@ -41,12 +41,16 @@ class AuthController extends Controller
 
         $email = $request->input('email');
         $password = $request->input('password');
+        $isAjax = $request->ajax() || $request->wantsJson();
 
         try {
             // Query user from Supabase
             $users = $this->supabase->select('users', '*', ['email' => $email], ['limit' => 1]);
 
             if (empty($users)) {
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'error' => 'Invalid email or password'], 401);
+                }
                 return back()->withInput()->with('error', 'Invalid email or password');
             }
 
@@ -54,6 +58,9 @@ class AuthController extends Controller
 
             // Direct password comparison (matching existing system)
             if ($password !== $user['password']) {
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'error' => 'Invalid email or password'], 401);
+                }
                 return back()->withInput()->with('error', 'Invalid email or password');
             }
 
@@ -64,6 +71,9 @@ class AuthController extends Controller
                 Session::put('disabled_reason', $user['disabled_reason'] ?? 'Your account has been disabled by an administrator.');
                 Session::put('disabled_at', $user['disabled_at'] ?? null);
                 Session::put('disabled_by', $user['disabled_by'] ?? null);
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'error' => 'Account disabled', 'redirect' => route('disabled')], 403);
+                }
                 return redirect()->route('disabled');
             }
 
@@ -81,6 +91,9 @@ class AuthController extends Controller
                     Session::put('ban_reason', $userInfo['ban_reason'] ?? '');
                     Session::put('banned_at', $userInfo['banned_at'] ?? '');
                     Session::put('banned_by', $userInfo['banned_by'] ?? '');
+                    if ($isAjax) {
+                        return response()->json(['success' => false, 'error' => 'Account banned', 'redirect' => route('banned')], 403);
+                    }
                     return redirect()->route('banned');
                 }
             }
@@ -94,10 +107,21 @@ class AuthController extends Controller
             Session::put('login_time', time());
 
             // Redirect based on role
+            if ($isAjax) {
+                $redirect = match($role) {
+                    'admin' => route('admin.dashboard'),
+                    'mod' => route('mod.dashboard'),
+                    default => route('dashboard'),
+                };
+                return response()->json(['success' => true, 'redirect' => $redirect]);
+            }
             return $this->redirectBasedOnRole($role);
 
         } catch (Exception $e) {
             \Log::error("Login error: " . $e->getMessage());
+            if ($isAjax) {
+                return response()->json(['success' => false, 'error' => 'Database connection failed. Please try again later.'], 500);
+            }
             return back()->withInput()->with('error', 'Database connection failed. Please try again later.');
         }
     }
@@ -119,30 +143,50 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        $request->validate([
+        $isAjax = $request->ajax() || $request->wantsJson();
+
+        // Custom validation for AJAX
+        $rules = [
             'email' => 'required|email',
             'password' => 'required|string|min:6',
             'username' => 'required|string|min:3|max:50',
             'first_name' => 'nullable|string|max:50',
             'last_name' => 'nullable|string|max:50',
-        ]);
+        ];
+
+        $validator = \Validator::make($request->all(), $rules);
+
+        if ($validator->fails()) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+            }
+            return back()->withErrors($validator)->withInput();
+        }
 
         $email = $request->input('email');
         $password = $request->input('password');
         $username = $request->input('username');
         $firstName = $request->input('first_name', '');
+        $middleName = $request->input('middle_name', '');
         $lastName = $request->input('last_name', '');
+        $suffix = $request->input('suffix', '');
 
         try {
             // Check if email already exists
             $existingUser = $this->supabase->findBy('users', 'email', $email);
             if ($existingUser) {
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'errors' => ['email' => ['Email already registered']]], 422);
+                }
                 return back()->withInput()->with('error', 'Email already registered');
             }
 
             // Check if username already exists
             $existingUsername = $this->supabase->findBy('user_info', 'username', $username);
             if ($existingUsername) {
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'errors' => ['username' => ['Username already taken']]], 422);
+                }
                 return back()->withInput()->with('error', 'Username already taken');
             }
 
@@ -157,6 +201,9 @@ class AuthController extends Controller
             $newUser = $this->supabase->insert('users', $userData);
 
             if (!$newUser || !isset($newUser['id'])) {
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'error' => 'Failed to create account'], 500);
+                }
                 return back()->withInput()->with('error', 'Failed to create account');
             }
 
@@ -165,7 +212,9 @@ class AuthController extends Controller
                 'user_id' => $newUser['id'],
                 'username' => $username,
                 'first_name' => $firstName,
+                'middle_name' => $middleName,
                 'last_name' => $lastName,
+                'suffix' => $suffix,
                 'bio' => '',
                 'profile_picture' => '/assets/img/cat1.jpg',
                 'exp_points' => 0,
@@ -183,10 +232,16 @@ class AuthController extends Controller
             Session::put('authenticated', true);
             Session::put('login_time', time());
 
+            if ($isAjax) {
+                return response()->json(['success' => true, 'redirect' => route('dashboard')]);
+            }
             return redirect()->route('dashboard')->with('success', 'Account created successfully!');
 
         } catch (Exception $e) {
             \Log::error("Registration error: " . $e->getMessage());
+            if ($isAjax) {
+                return response()->json(['success' => false, 'error' => 'Registration failed: ' . $e->getMessage()], 500);
+            }
             return back()->withInput()->with('error', 'Registration failed. Please try again later.');
         }
     }

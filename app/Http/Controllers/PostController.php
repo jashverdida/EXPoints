@@ -30,12 +30,18 @@ class PostController extends Controller
         $username = session('username');
         $userEmail = session('user_email');
 
+        // Handle custom game selection
+        $game = $request->input('game');
+        if ($game === 'Other' && $request->filled('custom_game')) {
+            $game = $request->input('custom_game');
+        }
+
         try {
             $postData = [
                 'user_id' => $userId,
                 'username' => $username,
                 'user_email' => $userEmail,
-                'game' => $request->input('game'),
+                'game' => $game,
                 'title' => $request->input('title'),
                 'content' => $request->input('content'),
                 'hidden' => 0,
@@ -115,7 +121,7 @@ class PostController extends Controller
             // Check if bookmarked
             $isBookmarked = false;
             if ($userId) {
-                $bookmark = $this->supabase->select('bookmarks', 'id', [
+                $bookmark = $this->supabase->select('post_bookmarks', 'id', [
                     'post_id' => $id,
                     'user_id' => $userId
                 ], ['limit' => 1]);
@@ -239,19 +245,19 @@ class PostController extends Controller
         $userId = session('user_id');
 
         try {
-            $existingBookmark = $this->supabase->select('bookmarks', '*', [
+            $existingBookmark = $this->supabase->select('post_bookmarks', '*', [
                 'post_id' => $id,
                 'user_id' => $userId
             ], ['limit' => 1]);
 
             if (!empty($existingBookmark)) {
-                $this->supabase->delete('bookmarks', [
+                $this->supabase->delete('post_bookmarks', [
                     'post_id' => $id,
                     'user_id' => $userId
                 ]);
                 $bookmarked = false;
             } else {
-                $this->supabase->insert('bookmarks', [
+                $this->supabase->insert('post_bookmarks', [
                     'post_id' => (int)$id,
                     'user_id' => $userId,
                     'created_at' => now()->toIso8601String(),
@@ -293,7 +299,7 @@ class PostController extends Controller
             // Delete related data
             $this->supabase->delete('post_likes', ['post_id' => $id]);
             $this->supabase->delete('post_comments', ['post_id' => $id]);
-            $this->supabase->delete('bookmarks', ['post_id' => $id]);
+            $this->supabase->delete('post_bookmarks', ['post_id' => $id]);
             $this->supabase->deleteById('posts', $id);
 
             return response()->json(['success' => true]);

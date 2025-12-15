@@ -711,7 +711,7 @@
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': csrfToken
           },
-          body: JSON.stringify({comment_text: commentText})
+          body: JSON.stringify({text: commentText})
         });
         const data = await response.json();
 

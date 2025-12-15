@@ -21,39 +21,112 @@ class AdminController extends Controller
     public function dashboard()
     {
         try {
-            // Get stats
-            $totalUsers = $this->supabase->count('users');
-            $totalPosts = $this->supabase->count('posts');
-            $totalComments = $this->supabase->count('post_comments');
-            $totalAdmins = $this->supabase->count('users', ['role' => 'admin']);
-            $bannedUsers = $this->supabase->count('user_info', ['is_banned' => true]);
-            $disabledUsers = $this->supabase->count('users', ['is_disabled' => true]);
+            // DEBUG: Check Supabase configuration
+            $supabaseUrl = config('supabase.url');
+            $hasKeys = !empty(config('supabase.anon_key')) && !empty(config('supabase.service_key'));
+            
+            if (empty($supabaseUrl) || !$hasKeys) {
+                throw new Exception("Supabase not configured. URL: $supabaseUrl, Has Keys: " . ($hasKeys ? 'Yes' : 'No'));
+            }
+
+            // Get stats with error handling
+            try {
+                $totalUsers = $this->supabase->count('users');
+            } catch (Exception $e) {
+                \Log::error("Count users error: " . $e->getMessage());
+                $totalUsers = 0;
+            }
+
+            try {
+                $totalPosts = $this->supabase->count('posts');
+            } catch (Exception $e) {
+                \Log::error("Count posts error: " . $e->getMessage());
+                $totalPosts = 0;
+            }
+
+            try {
+                $totalComments = $this->supabase->count('post_comments');
+            } catch (Exception $e) {
+                \Log::error("Count comments error: " . $e->getMessage());
+                $totalComments = 0;
+            }
+
+            try {
+                $totalAdmins = $this->supabase->count('users', ['role' => 'admin']);
+            } catch (Exception $e) {
+                \Log::error("Count admins error: " . $e->getMessage());
+                $totalAdmins = 0;
+            }
+
+            try {
+                $bannedUsers = $this->supabase->count('user_info', ['is_banned' => true]);
+            } catch (Exception $e) {
+                \Log::error("Count banned error: " . $e->getMessage());
+                $bannedUsers = 0;
+            }
+
+            try {
+                $disabledUsers = $this->supabase->count('users', ['is_disabled' => true]);
+            } catch (Exception $e) {
+                \Log::error("Count disabled error: " . $e->getMessage());
+                $disabledUsers = 0;
+            }
 
             // Get recent users
-            $recentUsers = $this->supabase->select('users', '*', [], [
-                'order' => 'created_at.desc',
-                'limit' => 10
-            ]);
+            try {
+                $recentUsers = $this->supabase->select('users', '*', [], [
+                    'order' => 'created_at.desc',
+                    'limit' => 10
+                ]);
+                \Log::info("Fetched " . count($recentUsers) . " users");
+            } catch (Exception $e) {
+                \Log::error("Fetch users error: " . $e->getMessage());
+                $recentUsers = [];
+            }
 
             // Enrich with user_info
             foreach ($recentUsers as &$user) {
-                $userInfo = $this->supabase->findBy('user_info', 'user_id', $user['id']);
-                $user['username'] = $userInfo['username'] ?? $user['email'];
-                $user['profile_picture'] = $userInfo['profile_picture'] ?? '/assets/img/cat1.jpg';
-                $user['is_banned'] = $userInfo['is_banned'] ?? false;
+                try {
+                    $userInfo = $this->supabase->findBy('user_info', 'user_id', $user['id']);
+                    $user['username'] = $userInfo['username'] ?? $user['email'];
+                    $user['profile_picture'] = $userInfo['profile_picture'] ?? '/assets/img/cat1.jpg';
+                    $user['is_banned'] = $userInfo['is_banned'] ?? false;
+                } catch (Exception $e) {
+                    \Log::error("Enrich user {$user['id']} error: " . $e->getMessage());
+                    $user['username'] = $user['email'];
+                    $user['profile_picture'] = '/assets/img/cat1.jpg';
+                    $user['is_banned'] = false;
+                }
             }
 
             // Get recent posts for moderation (50 posts)
-            $recentPosts = $this->supabase->select('posts', '*', [], [
-                'order' => 'created_at.desc',
-                'limit' => 50
-            ]);
+            try {
+                $recentPosts = $this->supabase->select('posts', '*', [], [
+                    'order' => 'created_at.desc',
+                    'limit' => 50
+                ]);
+                \Log::info("Fetched " . count($recentPosts) . " posts from Supabase");
+                
+                if (!empty($recentPosts)) {
+                    \Log::info("First post: " . json_encode($recentPosts[0]));
+                }
+            } catch (Exception $e) {
+                \Log::error("Fetch posts error: " . $e->getMessage());
+                \Log::error("Stack: " . $e->getTraceAsString());
+                $recentPosts = [];
+            }
 
             // Enrich posts with username
             foreach ($recentPosts as &$post) {
-                $userInfo = $this->supabase->findBy('user_info', 'user_id', $post['user_id']);
-                $post['username'] = $userInfo['username'] ?? 'Unknown';
-                $post['profile_picture'] = $userInfo['profile_picture'] ?? '/assets/img/cat1.jpg';
+                try {
+                    $userInfo = $this->supabase->findBy('user_info', 'user_id', $post['user_id']);
+                    $post['username'] = $userInfo['username'] ?? 'Unknown';
+                    $post['profile_picture'] = $userInfo['profile_picture'] ?? '/assets/img/cat1.jpg';
+                } catch (Exception $e) {
+                    \Log::error("Enrich post {$post['id']} error: " . $e->getMessage());
+                    $post['username'] = 'Unknown';
+                    $post['profile_picture'] = '/assets/img/cat1.jpg';
+                }
             }
 
             return view('admin.dashboard', [
@@ -317,28 +390,29 @@ class AdminController extends Controller
     }
 
     /**
-     * Manage moderators
+     * Manage administrators (not moderators)
      */
     public function moderators()
     {
         try {
-            $moderators = $this->supabase->select('users', '*', ['role' => 'mod']);
+            // Only fetch admin role users
+            $admins = $this->supabase->select('users', '*', ['role' => 'admin']);
 
-            foreach ($moderators as &$mod) {
-                $userInfo = $this->supabase->findBy('user_info', 'user_id', $mod['id']);
-                $mod['username'] = $userInfo['username'] ?? $mod['email'];
-                $mod['profile_picture'] = $userInfo['profile_picture'] ?? '/assets/img/cat1.jpg';
+            foreach ($admins as &$admin) {
+                $userInfo = $this->supabase->findBy('user_info', 'user_id', $admin['id']);
+                $admin['username'] = $userInfo['username'] ?? $admin['email'];
+                $admin['profile_picture'] = $userInfo['profile_picture'] ?? '/assets/img/cat1.jpg';
             }
 
             return view('admin.moderators', [
-                'moderators' => $moderators,
+                'moderators' => $admins,  // Keeping variable name for compatibility with view
             ]);
 
         } catch (Exception $e) {
             \Log::error("Moderators list error: " . $e->getMessage());
             return view('admin.moderators', [
                 'moderators' => [],
-                'error' => 'Failed to load moderators',
+                'error' => 'Failed to load administrators',
             ]);
         }
     }

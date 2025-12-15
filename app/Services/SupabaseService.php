@@ -93,7 +93,6 @@ class SupabaseService
         }
 
         $response = Http::withHeaders($this->getHeaders())
-            ->connectTimeout(3)
             ->timeout($this->timeout)
             ->get($url, $params);
 
@@ -132,7 +131,6 @@ class SupabaseService
         $url = $this->getTableUrl($table);
 
         $response = Http::withHeaders($this->getHeaders(true))
-            ->connectTimeout(3)
             ->timeout($this->timeout)
             ->post($url, $data);
 
@@ -149,7 +147,6 @@ class SupabaseService
         $url = $this->getTableUrl($table);
 
         $response = Http::withHeaders($this->getHeaders(true))
-            ->connectTimeout(3)
             ->timeout($this->timeout)
             ->post($url, $records);
 
@@ -178,7 +175,6 @@ class SupabaseService
         }
 
         $response = Http::withHeaders($this->getHeaders(true))
-            ->connectTimeout(3)
             ->timeout($this->timeout)
             ->patch($url . '?' . http_build_query($params), $data);
 
@@ -216,7 +212,6 @@ class SupabaseService
         }
 
         $response = Http::withHeaders($this->getHeaders(true))
-            ->connectTimeout(3)
             ->timeout($this->timeout)
             ->delete($url . '?' . http_build_query($params));
 
@@ -239,13 +234,24 @@ class SupabaseService
     public function count(string $table, array $filters = []): int
     {
         $url = $this->getTableUrl($table);
-        $params = ['select' => 'count'];
+        $params = ['select' => '*']; // Use * instead of count for better compatibility
 
         foreach ($filters as $key => $value) {
             if (strpos($key, '.') !== false) {
+                // Already has operator
                 $params[$key] = $value;
             } else {
-                $params[$key] = 'eq.' . $value;
+                // Convert boolean values properly
+                if (is_bool($value)) {
+                    $params[$key] = 'eq.' . ($value ? 'true' : 'false');
+                } elseif ($value === null) {
+                    $params[$key] = 'is.null';
+                } elseif ($value === '') {
+                    // Skip empty string filters
+                    continue;
+                } else {
+                    $params[$key] = 'eq.' . $value;
+                }
             }
         }
 
@@ -253,16 +259,18 @@ class SupabaseService
         $headers['Prefer'] = 'count=exact';
 
         $response = Http::withHeaders($headers)
-            ->connectTimeout(3)
             ->timeout($this->timeout)
-            ->head($url, $params);
+            ->get($url, $params);
 
+        // Try to get count from Content-Range header
         $contentRange = $response->header('content-range');
         if ($contentRange && preg_match('/\/(\d+)$/', $contentRange, $matches)) {
             return (int) $matches[1];
         }
 
-        return 0;
+        // Fallback: count returned results
+        $data = $response->json();
+        return is_array($data) ? count($data) : 0;
     }
 
     /**
@@ -283,7 +291,6 @@ class SupabaseService
         $url = rtrim($this->url, '/') . '/rest/v1/rpc/' . $functionName;
 
         $response = Http::withHeaders($this->getHeaders(true))
-            ->connectTimeout(3)
             ->timeout($this->timeout)
             ->post($url, $params);
 

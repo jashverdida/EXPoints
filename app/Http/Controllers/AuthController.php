@@ -191,10 +191,18 @@ class AuthController extends Controller
             }
 
             // Create user in users table
+            // Allow role to be specified (for admin creation) or default to 'user'
+            $role = $request->input('role', 'user');
+            
+            // Validate role is one of the allowed values
+            if (!in_array($role, ['user', 'mod', 'admin'])) {
+                $role = 'user';
+            }
+            
             $userData = [
                 'email' => $email,
                 'password' => $password, // Plain text (matching existing system)
-                'role' => 'user',
+                'role' => $role,
                 'created_at' => now()->toIso8601String(),
             ];
 
@@ -218,28 +226,31 @@ class AuthController extends Controller
                 'bio' => '',
                 'profile_picture' => '/assets/img/cat1.jpg',
                 'exp_points' => 0,
-                'is_banned' => 0,
+                'is_banned' => false,
                 'created_at' => now()->toIso8601String(),
             ];
 
-            try {
-                $this->supabase->insert('user_info', $userInfoData);
-            } catch (Exception $e) {
-                // If user_info insert fails, delete the created user to avoid orphaned records
-                \Log::error("user_info insert failed, rolling back user creation: " . $e->getMessage());
-                try {
-                    $this->supabase->deleteById('users', $newUser['id']);
-                } catch (Exception $deleteEx) {
-                    \Log::error("Failed to rollback user creation: " . $deleteEx->getMessage());
-                }
-                throw new Exception('Failed to create user profile. Please try again.');
-            }
+            $this->supabase->insert('user_info', $userInfoData);
 
-            // Redirect to login page after successful registration (no auto-login)
+            // Auto login after registration
+            Session::put('user_id', $newUser['id']);
+            Session::put('user_email', $email);
+            Session::put('username', $username);
+            Session::put('user_role', $role);
+            Session::put('authenticated', true);
+            Session::put('login_time', time());
+
             if ($isAjax) {
-                return response()->json(['success' => true, 'redirect' => route('login')]);
+                $redirect = match($role) {
+                    'admin' => route('admin.dashboard'),
+                    'mod' => route('mod.dashboard'),
+                    default => route('dashboard'),
+                };
+                return response()->json(['success' => true, 'redirect' => $redirect]);
             }
-            return redirect()->route('login')->with('success', 'Account created successfully! Please login.');
+            
+            // Redirect based on role
+            return $this->redirectBasedOnRole($role);
 
         } catch (Exception $e) {
             \Log::error("Registration error: " . $e->getMessage());
@@ -267,7 +278,7 @@ class AuthController extends Controller
      */
     public function banned()
     {
-        return view('banned', [
+        return view('auth.banned', [
             'reason' => session('ban_reason', ''),
             'bannedAt' => session('banned_at', ''),
             'bannedBy' => session('banned_by', ''),

@@ -218,7 +218,7 @@ class AuthController extends Controller
                 'bio' => '',
                 'profile_picture' => '/assets/img/cat1.jpg',
                 'exp_points' => 0,
-                'is_banned' => false,
+                'is_banned' => 0,
                 'created_at' => now()->toIso8601String(),
             ];
 
@@ -263,7 +263,7 @@ class AuthController extends Controller
      */
     public function banned()
     {
-        return view('auth.banned', [
+        return view('banned', [
             'reason' => session('ban_reason', ''),
             'bannedAt' => session('banned_at', ''),
             'bannedBy' => session('banned_by', ''),

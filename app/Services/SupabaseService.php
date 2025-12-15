@@ -93,6 +93,7 @@ class SupabaseService
         }
 
         $response = Http::withHeaders($this->getHeaders())
+            ->connectTimeout(3)
             ->timeout($this->timeout)
             ->get($url, $params);
 
@@ -131,6 +132,7 @@ class SupabaseService
         $url = $this->getTableUrl($table);
 
         $response = Http::withHeaders($this->getHeaders(true))
+            ->connectTimeout(3)
             ->timeout($this->timeout)
             ->post($url, $data);
 
@@ -147,6 +149,7 @@ class SupabaseService
         $url = $this->getTableUrl($table);
 
         $response = Http::withHeaders($this->getHeaders(true))
+            ->connectTimeout(3)
             ->timeout($this->timeout)
             ->post($url, $records);
 
@@ -175,6 +178,7 @@ class SupabaseService
         }
 
         $response = Http::withHeaders($this->getHeaders(true))
+            ->connectTimeout(3)
             ->timeout($this->timeout)
             ->patch($url . '?' . http_build_query($params), $data);
 
@@ -212,6 +216,7 @@ class SupabaseService
         }
 
         $response = Http::withHeaders($this->getHeaders(true))
+            ->connectTimeout(3)
             ->timeout($this->timeout)
             ->delete($url . '?' . http_build_query($params));
 
@@ -248,6 +253,7 @@ class SupabaseService
         $headers['Prefer'] = 'count=exact';
 
         $response = Http::withHeaders($headers)
+            ->connectTimeout(3)
             ->timeout($this->timeout)
             ->head($url, $params);
 
@@ -277,6 +283,7 @@ class SupabaseService
         $url = rtrim($this->url, '/') . '/rest/v1/rpc/' . $functionName;
 
         $response = Http::withHeaders($this->getHeaders(true))
+            ->connectTimeout(3)
             ->timeout($this->timeout)
             ->post($url, $params);
 

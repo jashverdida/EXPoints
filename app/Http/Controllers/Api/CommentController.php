@@ -25,24 +25,42 @@ class CommentController extends Controller
      */
     public function index(int $postId): JsonResponse
     {
-        $post = Post::find($postId);
+        try {
+            $post = Post::find($postId);
 
-        if (!$post) {
-            return response()->json(['message' => 'Post not found'], 404);
+            if (!$post) {
+                return response()->json(['success' => false, 'error' => 'Post not found'], 404);
+            }
+
+            $comments = PostComment::forPost($postId);
+
+            // Add like status and profile pictures for authenticated user
+            $user = Auth::user();
+            $commentsData = array_map(function ($comment) use ($user) {
+                $data = $comment->toArray();
+                $data['is_liked'] = $user ? $comment->isLikedBy($user->id) : false;
+                $data['reply_count'] = $comment->getReplyCount();
+
+                // Get profile picture from user_info
+                $userInfo = UserInfo::findByUserId($comment->user_id);
+                $data['profile_picture'] = $userInfo ? $userInfo->profile_picture : '/assets/img/cat1.jpg';
+                $data['commenter_profile_picture'] = $data['profile_picture'];
+                $data['exp_points'] = $userInfo ? ($userInfo->exp_points ?? 0) : 0;
+
+                return $data;
+            }, $comments);
+
+            return response()->json([
+                'success' => true,
+                'comments' => $commentsData
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'comments' => []
+            ]);
         }
-
-        $comments = PostComment::forPost($postId);
-
-        // Add like status for authenticated user
-        $user = Auth::user();
-        $commentsData = array_map(function ($comment) use ($user) {
-            $data = $comment->toArray();
-            $data['is_liked'] = $user ? $comment->isLikedBy($user->id) : false;
-            $data['reply_count'] = $comment->getReplyCount();
-            return $data;
-        }, $comments);
-
-        return response()->json($commentsData);
     }
 
     /**

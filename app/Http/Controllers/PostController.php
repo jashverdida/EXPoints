@@ -28,7 +28,6 @@ class PostController extends Controller
 
         $userId = session('user_id');
         $username = session('username');
-        $userEmail = session('user_email');
 
         // Handle custom game selection
         $game = $request->input('game');
@@ -37,14 +36,19 @@ class PostController extends Controller
         }
 
         try {
+            // Generate unique ID based on timestamp to avoid sequence conflicts
+            $uniqueId = (int)(microtime(true) * 1000) % 2147483647;
+
             $postData = [
+                'id' => $uniqueId,
                 'user_id' => $userId,
                 'username' => $username,
-                'user_email' => $userEmail,
                 'game' => $game,
                 'title' => $request->input('title'),
                 'content' => $request->input('content'),
                 'hidden' => 0,
+                'like_count' => 0,
+                'comment_count' => 0,
                 'created_at' => now()->toIso8601String(),
                 'updated_at' => now()->toIso8601String(),
             ];
@@ -200,6 +204,8 @@ class PostController extends Controller
      */
     public function addComment(Request $request, $id)
     {
+        \Log::info("addComment called", ['post_id' => $id, 'request_data' => $request->all()]);
+
         $request->validate([
             'text' => 'required|string|max:1000',
         ]);
@@ -207,16 +213,32 @@ class PostController extends Controller
         $userId = session('user_id');
         $username = session('username');
 
+        \Log::info("Comment user info", ['user_id' => $userId, 'username' => $username]);
+
+        if (!$userId || !$username) {
+            \Log::error("Comment failed: User not authenticated");
+            return response()->json(['error' => 'User not authenticated', 'success' => false], 401);
+        }
+
         try {
+            // Generate unique ID based on timestamp to avoid sequence conflicts
+            $uniqueId = (int)(microtime(true) * 1000) % 2147483647;
+
             $commentData = [
+                'id' => $uniqueId,
                 'post_id' => (int)$id,
                 'user_id' => $userId,
                 'username' => $username,
-                'text' => $request->input('text'),
+                'comment' => $request->input('text'),
+                'like_count' => 0,
                 'created_at' => now()->toIso8601String(),
             ];
 
+            \Log::info("Inserting comment", $commentData);
+
             $comment = $this->supabase->insert('post_comments', $commentData);
+
+            \Log::info("Comment inserted successfully", ['comment' => $comment]);
 
             // Give EXP
             $this->updateUserExp($userId, 2);
@@ -233,7 +255,7 @@ class PostController extends Controller
 
         } catch (Exception $e) {
             \Log::error("Comment add error: " . $e->getMessage());
-            return response()->json(['error' => 'Failed to add comment'], 500);
+            return response()->json(['error' => 'Failed to add comment: ' . $e->getMessage(), 'success' => false], 500);
         }
     }
 

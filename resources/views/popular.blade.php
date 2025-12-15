@@ -283,6 +283,157 @@
       color: rgba(255, 107, 107, 0.3);
       margin-bottom: 2rem;
     }
+
+    /* Post Menu */
+    .post-menu {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+    }
+
+    .bookmark-btn {
+      background: rgba(255, 107, 107, 0.1);
+      border: 1px solid rgba(255, 107, 107, 0.3);
+      color: rgba(255, 255, 255, 0.7);
+      padding: 0.5rem;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .bookmark-btn:hover, .bookmark-btn.bookmarked {
+      background: rgba(255, 107, 107, 0.3);
+      color: #ff6b6b;
+    }
+
+    .bookmark-btn.bookmarked i {
+      color: #ff6b6b;
+    }
+
+    /* Comments Section */
+    .comments-section {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255, 107, 107, 0.2);
+    }
+
+    .comments-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .comments-header h4 {
+      color: #fff;
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .close-comments {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .close-comments:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .add-comment-form {
+      margin-bottom: 1rem;
+    }
+
+    .comment-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 107, 107, 0.3);
+      border-radius: 0.75rem;
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.95rem;
+      resize: none;
+    }
+
+    .comment-input:focus {
+      outline: none;
+      border-color: #ff6b6b;
+    }
+
+    .btn-submit-comment {
+      padding: 0.5rem 1.5rem;
+      background: linear-gradient(135deg, #ff6b6b, #ff8e53);
+      border: none;
+      border-radius: 0.5rem;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-submit-comment:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+    }
+
+    .btn-submit-comment:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .comments-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .comment-item {
+      padding: 1rem;
+      background: rgba(15, 30, 90, 0.3);
+      border-radius: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .comment-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .comment-header img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .comment-author {
+      color: #ff6b6b;
+      font-weight: 600;
+    }
+
+    .comment-text {
+      color: #fff;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .loading-comments {
+      text-align: center;
+      padding: 2rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
+    }
   </style>
 </head>
 <body data-user-id="{{ session('user_id') }}">
@@ -386,9 +537,31 @@
                 </div>
               </div>
             </div>
+            <div class="post-menu">
+              <button class="icon bookmark-btn" data-post-id="{{ $post['id'] }}" title="Bookmark">
+                <i class="bi bi-bookmark"></i>
+              </button>
+            </div>
             <div class="actions">
-              <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b>{{ $post['likes'] ?? 0 }}</b></span>
-              <span class="a comment-btn" data-comments="{{ $post['comments'] ?? 0 }}"><i class="bi bi-chat-left-text"></i><b>{{ $post['comments'] ?? 0 }}</b></span>
+              <span class="a like-btn" data-post-id="{{ $post['id'] }}" data-liked="false"><i class="bi bi-star"></i><b>{{ $post['likes'] ?? 0 }}</b></span>
+              <span class="a comment-btn" data-post-id="{{ $post['id'] }}" data-comments="{{ $post['comments'] ?? 0 }}"><i class="bi bi-chat-left-text"></i><b>{{ $post['comments'] ?? 0 }}</b></span>
+            </div>
+
+            <!-- Comments Section (hidden by default) -->
+            <div class="comments-section" style="display: none;">
+              <div class="comments-header">
+                <h4>Comments</h4>
+                <button class="close-comments"><i class="bi bi-x-lg"></i></button>
+              </div>
+              <div class="add-comment-form">
+                <textarea class="comment-input" placeholder="Write a comment..." rows="2"></textarea>
+                <button class="btn-submit-comment">Post Comment</button>
+              </div>
+              <div class="comments-list">
+                <div class="loading-comments">
+                  <i class="bi bi-arrow-repeat spin"></i> Loading comments...
+                </div>
+              </div>
             </div>
           </div>
         @endforeach
@@ -418,6 +591,8 @@
 
   <script>
     const currentUserId = @json(session('user_id'));
+    const baseUrl = '{{ url('') }}';
+    const csrfToken = '{{ csrf_token() }}';
 
     // Create animated particles
     function createParticles() {
@@ -450,7 +625,269 @@
           window.location.href = '{{ route('logout') }}';
         });
       }
+
+      // Like button functionality
+      document.querySelectorAll('.like-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+          const postId = this.dataset.postId;
+          try {
+            const response = await fetch(`${baseUrl}/posts/${postId}/like`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+              }
+            });
+            const data = await response.json();
+            if (data.success) {
+              const isLiked = this.getAttribute('data-liked') === 'true';
+              const icon = this.querySelector('i');
+              const count = this.querySelector('b');
+
+              if (isLiked) {
+                this.setAttribute('data-liked', 'false');
+                icon.className = 'bi bi-star';
+                count.textContent = parseInt(count.textContent) - 1;
+              } else {
+                this.setAttribute('data-liked', 'true');
+                icon.className = 'bi bi-star-fill';
+                count.textContent = parseInt(count.textContent) + 1;
+              }
+
+              // Update total likes counter
+              const totalLikesEl = document.getElementById('totalLikes');
+              if (totalLikesEl) {
+                const currentTotal = parseInt(totalLikesEl.textContent);
+                totalLikesEl.textContent = isLiked ? currentTotal - 1 : currentTotal + 1;
+              }
+            }
+          } catch (error) {
+            console.error('Error:', error);
+          }
+        });
+      });
     });
+
+    // Helper functions
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function timeAgo(dateString) {
+      const now = new Date();
+      const past = new Date(dateString);
+      const seconds = Math.floor((now - past) / 1000);
+
+      if (seconds < 60) return 'Just now';
+
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return minutes + 'm';
+
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return hours + 'h';
+
+      const days = Math.floor(hours / 24);
+      if (days === 1) return 'Yesterday';
+      if (days < 7) return days + 'd';
+
+      const weeks = Math.floor(days / 7);
+      if (weeks < 4) return weeks + 'w';
+
+      const options = { month: 'short', day: 'numeric' };
+      if (past.getFullYear() !== now.getFullYear()) {
+        options.year = 'numeric';
+      }
+      return past.toLocaleDateString('en-US', options);
+    }
+
+    // Comment button click handler
+    document.querySelectorAll('.comment-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const postElement = this.closest('.card-post');
+        const commentsSection = postElement.querySelector('.comments-section');
+        const isVisible = commentsSection.style.display !== 'none';
+
+        if (isVisible) {
+          commentsSection.style.display = 'none';
+        } else {
+          commentsSection.style.display = 'block';
+          loadComments(postElement);
+        }
+      });
+    });
+
+    // Close comments handler
+    document.querySelectorAll('.close-comments').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const commentsSection = this.closest('.comments-section');
+        commentsSection.style.display = 'none';
+      });
+    });
+
+    // Submit comment handler
+    document.querySelectorAll('.btn-submit-comment').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const postElement = this.closest('.card-post');
+        const postId = postElement.getAttribute('data-post-id');
+        const commentInput = postElement.querySelector('.comment-input');
+        const commentText = commentInput.value.trim();
+
+        if (commentText) {
+          submitComment(postId, commentText, postElement);
+        }
+      });
+    });
+
+    // Enter key to submit comment
+    document.querySelectorAll('.comment-input').forEach(input => {
+      input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          const postElement = this.closest('.card-post');
+          const postId = postElement.getAttribute('data-post-id');
+          const commentText = this.value.trim();
+
+          if (commentText) {
+            submitComment(postId, commentText, postElement);
+          }
+        }
+      });
+    });
+
+    // Bookmark button handler
+    document.querySelectorAll('.bookmark-btn').forEach(btn => {
+      btn.addEventListener('click', async function() {
+        const postId = this.dataset.postId;
+        try {
+          const response = await fetch(`${baseUrl}/posts/${postId}/bookmark`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-TOKEN': csrfToken
+            }
+          });
+          const data = await response.json();
+          if (data.success) {
+            const icon = this.querySelector('i');
+            if (data.bookmarked) {
+              icon.classList.remove('bi-bookmark');
+              icon.classList.add('bi-bookmark-fill');
+              this.classList.add('bookmarked');
+            } else {
+              icon.classList.remove('bi-bookmark-fill');
+              icon.classList.add('bi-bookmark');
+              this.classList.remove('bookmarked');
+            }
+          }
+        } catch (error) {
+          console.error('Error toggling bookmark:', error);
+        }
+      });
+    });
+
+    // Load comments function
+    async function loadComments(postElement) {
+      const postId = postElement.getAttribute('data-post-id');
+      const commentsList = postElement.querySelector('.comments-list');
+
+      commentsList.innerHTML = '<div class="loading-comments"><i class="bi bi-arrow-repeat spin"></i> Loading comments...</div>';
+
+      try {
+        const response = await fetch(`${baseUrl}/api/posts/${postId}/comments`);
+        const data = await response.json();
+
+        if (data.success) {
+          displayComments(data.comments, commentsList, postElement);
+        } else {
+          commentsList.innerHTML = '<p style="color: #ff6b6b; text-align: center; padding: 1rem;">Error loading comments</p>';
+        }
+      } catch (error) {
+        console.error('Error loading comments:', error);
+        commentsList.innerHTML = '<p style="color: #ff6b6b; text-align: center; padding: 1rem;">Error loading comments</p>';
+      }
+    }
+
+    // Display comments function
+    function displayComments(comments, commentsList, postElement) {
+      // Update comment count in button
+      const commentBtn = postElement.querySelector('.comment-btn');
+      if (commentBtn) {
+        const countB = commentBtn.querySelector('b');
+        if (countB) countB.textContent = comments.length;
+        commentBtn.dataset.comments = comments.length;
+      }
+
+      // Update total comments counter
+      const totalCommentsEl = document.getElementById('totalComments');
+      if (totalCommentsEl) {
+        // Recalculate total based on all visible comment counts
+        let total = 0;
+        document.querySelectorAll('.comment-btn').forEach(btn => {
+          total += parseInt(btn.dataset.comments) || 0;
+        });
+        totalCommentsEl.textContent = total;
+      }
+
+      if (comments.length === 0) {
+        commentsList.innerHTML = '<p style="color: rgba(255, 255, 255, 0.5); text-align: center; padding: 1rem;">No comments yet. Be the first!</p>';
+        return;
+      }
+
+      commentsList.innerHTML = '';
+      comments.forEach(comment => {
+        const profilePic = comment.profile_picture || comment.commenter_profile_picture || '{{ asset("assets/img/cat1.jpg") }}';
+        const timestamp = timeAgo(comment.created_at);
+
+        const commentHtml = `
+          <div class="comment-item" data-comment-id="${comment.id}">
+            <div class="comment-header">
+              <img src="${escapeHtml(profilePic)}" alt="Profile">
+              <span class="comment-author">@${escapeHtml(comment.username)}</span>
+              <span style="color: rgba(255, 255, 255, 0.4); font-size: 0.8rem; margin-left: auto;">${timestamp}</span>
+            </div>
+            <p class="comment-text">${escapeHtml(comment.comment || comment.text)}</p>
+          </div>
+        `;
+        commentsList.insertAdjacentHTML('beforeend', commentHtml);
+      });
+    }
+
+    // Submit comment function
+    async function submitComment(postId, commentText, postElement) {
+      const submitBtn = postElement.querySelector('.btn-submit-comment');
+      const commentInput = postElement.querySelector('.comment-input');
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Posting...';
+
+      try {
+        const response = await fetch(`${baseUrl}/posts/${postId}/comment`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+          },
+          body: JSON.stringify({ text: commentText })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          commentInput.value = '';
+          loadComments(postElement);
+        } else {
+          alert('Failed to post comment: ' + (data.message || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error posting comment:', error);
+        alert('Error posting comment');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Post Comment';
+      }
+    }
   </script>
 </body>
 </html>

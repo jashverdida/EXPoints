@@ -2,10 +2,8 @@
 
 namespace App\Http\Middleware;
 
-use App\Providers\RouteServiceProvider;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class RedirectIfAuthenticated
@@ -17,12 +15,16 @@ class RedirectIfAuthenticated
      */
     public function handle(Request $request, Closure $next, string ...$guards): Response
     {
-        $guards = empty($guards) ? [null] : $guards;
+        // Use session-based auth check (like original PHP)
+        // This avoids Supabase API calls on every page load
+        if (session('authenticated') === true) {
+            $role = session('user_role', 'user');
 
-        foreach ($guards as $guard) {
-            if (Auth::guard($guard)->check()) {
-                return redirect(RouteServiceProvider::HOME);
-            }
+            return match($role) {
+                'admin' => redirect()->route('admin.dashboard'),
+                'mod' => redirect()->route('mod.dashboard'),
+                default => redirect()->route('dashboard'),
+            };
         }
 
         return $next($request);

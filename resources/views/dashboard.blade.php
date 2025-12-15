@@ -329,6 +329,7 @@
     const currentUsername = '{{ session('username', 'User') }}';
     const csrfToken = '{{ csrf_token() }}';
     const assetBaseUrl = '{{ asset('') }}';
+    const baseUrl = '{{ url('') }}';
 
     // Logout and Welcome Modal functionality
     document.addEventListener('DOMContentLoaded', function() {
@@ -464,7 +465,7 @@
         btn.addEventListener('click', async function() {
           const postId = this.dataset.postId;
           try {
-            const response = await fetch(`/posts/${postId}/like`, {
+            const response = await fetch(`${baseUrl}/posts/${postId}/like`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -500,7 +501,7 @@
           const postElement = this.closest('.card-post');
 
           try {
-            const response = await fetch(`/posts/${postId}/bookmark`, {
+            const response = await fetch(`${baseUrl}/posts/${postId}/bookmark`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -594,7 +595,7 @@
 
           confirmDelete.onclick = async function() {
             try {
-              const response = await fetch(`/posts/${postId}`, {
+              const response = await fetch(`${baseUrl}/posts/${postId}`, {
                 method: 'DELETE',
                 headers: {
                   'X-CSRF-TOKEN': csrfToken
@@ -668,7 +669,7 @@
       commentsList.innerHTML = '<div class="loading-comments"><i class="bi bi-arrow-repeat spin"></i> Loading comments...</div>';
 
       try {
-        const response = await fetch(`/api/posts/${postId}/comments`);
+        const response = await fetch(`${baseUrl}/api/posts/${postId}/comments`);
         const data = await response.json();
 
         if (data.success && data.comments && data.comments.length > 0) {
@@ -694,7 +695,7 @@
             <span class="comment-author">@${escapeHtml(comment.username)}</span>
             <span style="color: rgba(255,255,255,0.4); font-size: 0.85rem;">${timeAgo(comment.created_at)}</span>
           </div>
-          <p class="comment-text">${escapeHtml(comment.comment_text || comment.text)}</p>
+          <p class="comment-text">${escapeHtml(comment.comment)}</p>
         `;
         commentsList.appendChild(commentDiv);
       });
@@ -703,9 +704,18 @@
     // Submit comment
     async function submitComment(postId, commentText, postElement) {
       const commentInput = postElement.querySelector('.comment-input');
+      const submitBtn = postElement.querySelector('.btn-submit-comment');
+
+      // Disable button during submission
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Posting...';
+      }
 
       try {
-        const response = await fetch(`/posts/${postId}/comment`, {
+        console.log('Submitting comment:', { postId, commentText });
+
+        const response = await fetch(`${baseUrl}/posts/${postId}/comment`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -713,16 +723,31 @@
           },
           body: JSON.stringify({text: commentText})
         });
+
+        console.log('Response status:', response.status);
+
         const data = await response.json();
+        console.log('Response data:', data);
 
         if (data.success) {
           commentInput.value = '';
           loadComments(postElement);
           const commentBtn = postElement.querySelector('.comment-btn b');
-          commentBtn.textContent = parseInt(commentBtn.textContent) + 1;
+          if (commentBtn) {
+            commentBtn.textContent = parseInt(commentBtn.textContent) + 1;
+          }
+        } else {
+          alert('Failed to post comment: ' + (data.error || 'Unknown error'));
         }
       } catch (error) {
         console.error('Error posting comment:', error);
+        alert('Error posting comment. Please try again.');
+      } finally {
+        // Re-enable button
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Post Comment';
+        }
       }
     }
 
@@ -731,7 +756,7 @@
       const notificationList = document.getElementById('notificationList');
 
       try {
-        const response = await fetch('/api/notifications');
+        const response = await fetch(`${baseUrl}/api/notifications`);
         const data = await response.json();
 
         if (data.success && data.notifications && data.notifications.length > 0) {

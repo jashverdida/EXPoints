@@ -18,7 +18,25 @@
       "Bash(dir \"C:\\xampp1\\php\\composer*\")",
       "Bash(cmd.exe /c \"where composer.bat 2>&1\")",
       "Bash(cmd.exe /c \"where composer.phar 2>&1\")",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(git push:*)",
+      "Bash(cat:*)",
+      "Bash(/c/xampp1/php/php.exe artisan --version)",
+      "Bash(/c/xampp1/php/php.exe artisan:*)",
+      "Bash(/c/xampp1/php/php.exe artisan cache:clear:*)",
+      "Bash(ls:*)",
+      "Bash(/c/xampp1/php/php.exe -r \"\n$start = microtime(true);\n$ch = curl_init(''https://katkmdwiaketfmcmadxa.supabase.co/rest/v1/users?select=id&limit=1'');\ncurl_setopt($ch, CURLOPT_RETURNTRANSFER, true);\ncurl_setopt($ch, CURLOPT_HTTPHEADER, [\n    ''apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthdGttZHdpYWtldGZtY21hZHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5ODA5ODUsImV4cCI6MjA3NTU1Njk4NX0.OZbBqJzpW-QKVfGyz9vd2iO3xjfQsLFR3sED_rfaNSE'',\n    ''Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImthdGttZHdpYWtldGZtY21hZHhhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk5ODA5ODUsImV4cCI6MjA3NTU1Njk4NX0.OZbBqJzpW-QKVfGyz9vd2iO3xjfQsLFR3sED_rfaNSE''\n]);\ncurl_setopt($ch, CURLOPT_TIMEOUT, 10);\n$result = curl_exec($ch);\n$time = round((microtime(true) - $start) * 1000);\necho \"\"Response time: {$time}ms\\n\"\";\necho \"\"Result: \"\" . substr($result, 0, 100) . \"\"\\n\"\";\ncurl_close($ch);\n\")",
+      "Bash(php artisan config:clear:*)",
+      "Bash(dir /s /b \"C:\\xampp1\\htdocs\\EXPoints-Laravel\\storage\\logs\")",
+      "Bash(test:*)",
+      "Bash(\"C:\\xampp1\\php\\php.exe\" -v)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(dir /s /b \"C:\\xampp1\\htdocs\")",
+      "Bash(C:xampp1phpphp.exe artisan view:clear)",
+      "Bash(dir /b \"C:\\xampp1\\htdocs\\EXPoints-Laravel\\public\\assets\\img\\profiles\")",
+      "WebFetch(domain:localhost)",
+      "Bash(del \"c:\\xampp1\\htdocs\\EXPoints-Laravel\\.htaccess\")"
     ]
   }
 }

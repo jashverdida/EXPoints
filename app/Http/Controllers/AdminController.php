@@ -332,7 +332,7 @@ class AdminController extends Controller
             $adminId = session('user_id');
 
             $this->supabase->update('users', [
-                'is_disabled' => true,
+                'is_disabled' => 1,  // smallint, not boolean
                 'disabled_reason' => $request->input('reason'),
                 'disabled_at' => now()->toIso8601String(),
                 'disabled_by' => $adminId,
@@ -353,7 +353,7 @@ class AdminController extends Controller
     {
         try {
             $this->supabase->update('users', [
-                'is_disabled' => false,
+                'is_disabled' => 0,  // smallint, not boolean
                 'disabled_reason' => null,
                 'disabled_at' => null,
                 'disabled_by' => null,

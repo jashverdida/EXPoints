@@ -223,6 +223,152 @@
       font-weight: 700;
       text-shadow: 0 4px 20px rgba(59, 130, 246, 0.6);
     }
+
+    /* Custom Modal Styles */
+    .modal-content {
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3d 100%);
+      border: 2px solid rgba(59, 130, 246, 0.5);
+      border-radius: 1.5rem;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
+    }
+
+    .modal-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1.5rem 2rem;
+    }
+
+    .modal-title {
+      color: white;
+      font-weight: 700;
+      font-size: 1.5rem;
+    }
+
+    .modal-body {
+      padding: 2rem;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .modal-footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1.5rem 2rem;
+    }
+
+    .btn-close {
+      filter: invert(1);
+    }
+
+    .modal-success .modal-header {
+      background: linear-gradient(135deg, rgba(22, 163, 74, 0.3), rgba(21, 128, 61, 0.2));
+      border-bottom-color: rgba(22, 163, 74, 0.3);
+    }
+
+    .modal-success .modal-content {
+      border-color: rgba(22, 163, 74, 0.5);
+    }
+
+    .modal-success .modal-title {
+      color: #4ade80;
+    }
+
+    .modal-error .modal-header {
+      background: linear-gradient(135deg, rgba(220, 38, 38, 0.3), rgba(153, 27, 27, 0.2));
+      border-bottom-color: rgba(220, 38, 38, 0.3);
+    }
+
+    .modal-error .modal-content {
+      border-color: rgba(220, 38, 38, 0.5);
+    }
+
+    .modal-error .modal-title {
+      color: #f87171;
+    }
+
+    .modal-warning .modal-header {
+      background: linear-gradient(135deg, rgba(234, 179, 8, 0.3), rgba(202, 138, 4, 0.2));
+      border-bottom-color: rgba(234, 179, 8, 0.3);
+    }
+
+    .modal-warning .modal-content {
+      border-color: rgba(234, 179, 8, 0.5);
+    }
+
+    .modal-warning .modal-title {
+      color: #fbbf24;
+    }
+
+    .modal-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .modal-icon-success { color: #4ade80; }
+    .modal-icon-error { color: #f87171; }
+    .modal-icon-warning { color: #fbbf24; }
+
+    .btn-modal-primary {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    .btn-modal-primary:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+    }
+
+    .btn-modal-danger {
+      background: linear-gradient(135deg, #dc2626, #991b1b);
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    .btn-modal-danger:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 25px rgba(220, 38, 38, 0.5);
+    }
+
+    .btn-modal-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 0.75rem 2rem;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      color: white;
+      transition: all 0.3s ease;
+    }
+
+    .btn-modal-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-input {
+      background: rgba(30, 58, 138, 0.3);
+      border: 2px solid rgba(59, 130, 246, 0.4);
+      border-radius: 0.75rem;
+      color: white;
+      padding: 0.875rem 1rem;
+      width: 100%;
+      transition: all 0.3s ease;
+    }
+
+    .modal-input:focus {
+      outline: none;
+      background: rgba(30, 58, 138, 0.5);
+      border-color: rgba(59, 130, 246, 0.9);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+    }
+
+    .modal-input::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
   </style>
 </head>
 <body>
@@ -340,8 +486,160 @@
     @endif
   </div>
 
+  <!-- Alert Modal -->
+  <div class="modal fade" id="alertModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi" id="alertModalIcon"></i>
+            <span id="alertModalTitle">Alert</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div class="modal-icon" id="alertModalIconLarge"></div>
+          <p id="alertModalMessage" class="fs-5 mb-0"></p>
+        </div>
+        <div class="modal-footer justify-content-center">
+          <button type="button" class="btn-modal-primary" data-bs-dismiss="modal" id="alertModalOkBtn">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-question-circle-fill text-warning"></i>
+            <span id="confirmModalTitle">Confirm</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body text-center">
+          <div class="modal-icon modal-icon-warning"><i class="bi bi-question-circle-fill"></i></div>
+          <p id="confirmModalMessage" class="fs-5 mb-0"></p>
+        </div>
+        <div class="modal-footer justify-content-center gap-3">
+          <button type="button" class="btn-modal-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn-modal-danger" id="confirmModalYesBtn">Yes, Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prompt Modal (for disable reason) -->
+  <div class="modal fade" id="promptModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-slash-circle-fill text-danger"></i>
+            <span id="promptModalTitle">Disable Administrator</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p id="promptModalMessage" class="mb-3"></p>
+          <input type="text" class="modal-input" id="promptModalInput" placeholder="Enter reason for disabling...">
+        </div>
+        <div class="modal-footer justify-content-center gap-3">
+          <button type="button" class="btn-modal-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn-modal-danger" id="promptModalSubmitBtn">
+            <i class="bi bi-slash-circle-fill"></i> Disable
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // Custom modal functions
+    const alertModal = new bootstrap.Modal(document.getElementById('alertModal'));
+    const confirmModal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    const promptModal = new bootstrap.Modal(document.getElementById('promptModal'));
+
+    function showAlert(type, title, message, callback = null) {
+      const modal = document.getElementById('alertModal');
+      const modalDialog = modal.querySelector('.modal-dialog');
+      const iconLarge = document.getElementById('alertModalIconLarge');
+      const modalTitle = document.getElementById('alertModalTitle');
+      const modalMessage = document.getElementById('alertModalMessage');
+      const okBtn = document.getElementById('alertModalOkBtn');
+
+      // Reset classes
+      modalDialog.classList.remove('modal-success', 'modal-error', 'modal-warning');
+
+      if (type === 'success') {
+        modalDialog.classList.add('modal-success');
+        iconLarge.innerHTML = '<i class="bi bi-check-circle-fill modal-icon-success"></i>';
+        okBtn.className = 'btn-modal-primary';
+      } else if (type === 'error') {
+        modalDialog.classList.add('modal-error');
+        iconLarge.innerHTML = '<i class="bi bi-x-circle-fill modal-icon-error"></i>';
+        okBtn.className = 'btn-modal-danger';
+      } else {
+        modalDialog.classList.add('modal-warning');
+        iconLarge.innerHTML = '<i class="bi bi-exclamation-circle-fill modal-icon-warning"></i>';
+        okBtn.className = 'btn-modal-primary';
+      }
+
+      modalTitle.textContent = title;
+      modalMessage.textContent = message;
+
+      // Handle callback on close
+      if (callback) {
+        const handler = () => {
+          callback();
+          modal.removeEventListener('hidden.bs.modal', handler);
+        };
+        modal.addEventListener('hidden.bs.modal', handler);
+      }
+
+      alertModal.show();
+    }
+
+    function showConfirm(title, message, callback) {
+      document.getElementById('confirmModalTitle').textContent = title;
+      document.getElementById('confirmModalMessage').textContent = message;
+
+      const yesBtn = document.getElementById('confirmModalYesBtn');
+      const newYesBtn = yesBtn.cloneNode(true);
+      yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
+
+      newYesBtn.addEventListener('click', () => {
+        confirmModal.hide();
+        callback();
+      });
+
+      confirmModal.show();
+    }
+
+    function showPrompt(title, message, callback) {
+      document.getElementById('promptModalTitle').textContent = title;
+      document.getElementById('promptModalMessage').textContent = message;
+      document.getElementById('promptModalInput').value = '';
+
+      const submitBtn = document.getElementById('promptModalSubmitBtn');
+      const newSubmitBtn = submitBtn.cloneNode(true);
+      submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+
+      newSubmitBtn.addEventListener('click', () => {
+        const value = document.getElementById('promptModalInput').value.trim();
+        if (value) {
+          promptModal.hide();
+          callback(value);
+        }
+      });
+
+      promptModal.show();
+      setTimeout(() => document.getElementById('promptModalInput').focus(), 500);
+    }
+
     // Create new admin
     document.getElementById('createAdminForm').addEventListener('submit', function(e) {
       e.preventDefault();
@@ -350,9 +648,9 @@
       const username = document.getElementById('adminUsername').value;
       const password = document.getElementById('adminPassword').value;
       const passwordConfirm = document.getElementById('adminPasswordConfirm').value;
-      
+
       if (password !== passwordConfirm) {
-        alert('Passwords do not match!');
+        showAlert('error', 'Password Mismatch', 'Passwords do not match!');
         return;
       }
 
@@ -378,69 +676,65 @@
       })
       .then(data => {
         if (data.success) {
-          alert('Admin created successfully!');
-          location.reload();
+          showAlert('success', 'Success', 'Administrator created successfully!', () => location.reload());
         } else {
-          alert('Error: ' + (data.error || 'Failed to create admin'));
+          showAlert('error', 'Error', data.error || 'Failed to create admin');
         }
       })
       .catch(error => {
         console.error('Error:', error);
-        alert('Error: ' + (error.error || error.message || 'Failed to create admin'));
+        showAlert('error', 'Error', error.error || error.message || 'Failed to create admin');
       });
     });
 
     function disableAdmin(userId, username) {
-      const reason = prompt(`Enter reason for disabling ${username}:`);
-      if (!reason) return;
-
-      fetch(`/admin/users/${userId}/disable`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({ reason })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          alert('Administrator disabled successfully!');
-          location.reload();
-        } else {
-          alert('Error: ' + (data.error || 'Failed to disable admin'));
-        }
-      })
-      .catch(error => {
-        alert('Error: ' + error.message);
+      showPrompt('Disable Administrator', `Enter reason for disabling ${username}:`, (reason) => {
+        fetch(`/admin/users/${userId}/disable`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+          },
+          body: JSON.stringify({ reason })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showAlert('success', 'Success', 'Administrator disabled successfully!', () => location.reload());
+          } else {
+            showAlert('error', 'Error', data.error || 'Failed to disable admin');
+          }
+        })
+        .catch(error => {
+          showAlert('error', 'Error', error.message);
+        });
       });
     }
 
     function enableAdmin(userId, username) {
-      if (!confirm(`Enable ${username}?`)) return;
-
-      fetch(`/admin/users/${userId}/enable`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          alert('Administrator enabled successfully!');
-          location.reload();
-        } else {
-          alert('Error: ' + (data.error || 'Failed to enable admin'));
-        }
-      })
-      .catch(error => {
-        alert('Error: ' + error.message);
+      showConfirm('Enable Administrator', `Are you sure you want to enable ${username}?`, () => {
+        fetch(`/admin/users/${userId}/enable`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showAlert('success', 'Success', 'Administrator enabled successfully!', () => location.reload());
+          } else {
+            showAlert('error', 'Error', data.error || 'Failed to enable admin');
+          }
+        })
+        .catch(error => {
+          showAlert('error', 'Error', error.message);
+        });
       });
     }
   </script>

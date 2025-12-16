@@ -183,8 +183,18 @@
                     // Complete the loading bar then redirect to banned/disabled page
                     progressBar.style.transition = 'width 0.5s ease-out';
                     progressBar.style.width = '100%';
-                    loadingText.textContent = loginError === 'Account banned' ? 'Account Suspended' : 'Account Disabled';
-                    progressText.textContent = 'Redirecting...';
+
+                    // Show appropriate message based on account status
+                    if (loginError === 'Account banned') {
+                        loadingText.textContent = 'Account Suspended';
+                        progressText.textContent = 'Your account has been banned...';
+                    } else if (loginError === 'Account disabled') {
+                        loadingText.textContent = 'Account Disabled';
+                        progressText.textContent = 'Your account has been disabled...';
+                    } else {
+                        loadingText.textContent = 'Access Restricted';
+                        progressText.textContent = 'Redirecting...';
+                    }
 
                     setTimeout(() => {
                         window.location.href = loginResponse.redirect;

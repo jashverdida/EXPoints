@@ -178,7 +178,21 @@
             clearInterval(progressInterval);
 
             if (loginError) {
-                // Show error
+                // Check if there's a redirect (for banned/disabled accounts)
+                if (loginResponse && loginResponse.redirect) {
+                    // Complete the loading bar then redirect to banned/disabled page
+                    progressBar.style.transition = 'width 0.5s ease-out';
+                    progressBar.style.width = '100%';
+                    loadingText.textContent = loginError === 'Account banned' ? 'Account Suspended' : 'Account Disabled';
+                    progressText.textContent = 'Redirecting...';
+
+                    setTimeout(() => {
+                        window.location.href = loginResponse.redirect;
+                    }, 600);
+                    return;
+                }
+
+                // Show error for normal login failures
                 document.getElementById('loadingOverlay').classList.remove('active');
                 loginBtn.disabled = false;
                 progressBar.style.width = '0%';

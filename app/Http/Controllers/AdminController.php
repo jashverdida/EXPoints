@@ -284,7 +284,7 @@ class AdminController extends Controller
             $adminId = session('user_id');
 
             $this->supabase->update('user_info', [
-                'is_banned' => true,
+                'is_banned' => 1,  // smallint, not boolean
                 'ban_reason' => $request->input('reason'),
                 'banned_at' => now()->toIso8601String(),
                 'banned_by' => $adminId,
@@ -305,7 +305,7 @@ class AdminController extends Controller
     {
         try {
             $this->supabase->update('user_info', [
-                'is_banned' => false,
+                'is_banned' => 0,  // smallint, not boolean
                 'ban_reason' => null,
                 'banned_at' => null,
                 'banned_by' => null,

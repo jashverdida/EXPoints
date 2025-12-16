@@ -121,6 +121,129 @@
       border-color: rgba(59, 130, 246, 0.8);
       box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
     }
+
+    /* Modal Styles */
+    .modal-content {
+      background: linear-gradient(135deg, #0a0a1a 0%, #1a1a3d 50%, #0d1b3a 100%);
+      border: 2px solid rgba(59, 130, 246, 0.4);
+      border-radius: 1rem;
+      color: #f6f9ff;
+    }
+
+    .modal-header {
+      border-bottom: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 1.5rem;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      border-top: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 1rem 1.5rem;
+    }
+
+    .modal-title {
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .modal-success .modal-header {
+      border-color: rgba(22, 163, 74, 0.5);
+    }
+
+    .modal-success .modal-title {
+      color: #22c55e;
+    }
+
+    .modal-error .modal-header {
+      border-color: rgba(220, 38, 38, 0.5);
+    }
+
+    .modal-error .modal-title {
+      color: #ef4444;
+    }
+
+    .modal-warning .modal-header {
+      border-color: rgba(234, 88, 12, 0.5);
+    }
+
+    .modal-warning .modal-title {
+      color: #f97316;
+    }
+
+    .modal-input {
+      background: rgba(30, 58, 138, 0.3);
+      border: 2px solid rgba(59, 130, 246, 0.4);
+      border-radius: 0.5rem;
+      color: white;
+      padding: 0.75rem 1rem;
+      width: 100%;
+    }
+
+    .modal-input:focus {
+      outline: none;
+      border-color: rgba(59, 130, 246, 0.8);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-modal-primary {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      border: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    .btn-modal-primary:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-modal-danger {
+      background: linear-gradient(135deg, #dc2626, #991b1b);
+      border: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    .btn-modal-danger:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+    }
+
+    .btn-modal-success {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      border: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    .btn-modal-success:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
+    }
+
+    .btn-modal-secondary {
+      background: rgba(100, 116, 139, 0.5);
+      border: none;
+      padding: 0.5rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      color: white;
+    }
+
+    .btn-modal-secondary:hover {
+      background: rgba(100, 116, 139, 0.7);
+    }
   </style>
 </head>
 <body>
@@ -194,27 +317,21 @@
             <div class="col-md-3 text-end">
               <div class="d-flex gap-2 justify-content-end flex-wrap">
                 @if($user['is_banned'] ?? false)
-                  <form action="{{ route('admin.users.unban', $user['id']) }}" method="POST" style="display:inline;">
-                    @csrf
-                    <button type="submit" class="action-btn btn-unban" onclick="return confirm('Unban this user?')">
-                      <i class="bi bi-check-circle"></i> Unban
-                    </button>
-                  </form>
+                  <button type="button" class="action-btn btn-unban" onclick="unbanUser({{ $user['id'] }}, '{{ addslashes($user['username'] ?? $user['email']) }}')">
+                    <i class="bi bi-check-circle"></i> Unban
+                  </button>
                 @else
-                  <button type="button" class="action-btn btn-ban" onclick="banUser({{ $user['id'] }}, '{{ $user['username'] ?? $user['email'] }}')">
+                  <button type="button" class="action-btn btn-ban" onclick="banUser({{ $user['id'] }}, '{{ addslashes($user['username'] ?? $user['email']) }}')">
                     <i class="bi bi-ban"></i> Ban
                   </button>
                 @endif
 
                 @if($user['is_disabled'] ?? false)
-                  <form action="{{ route('admin.users.enable', $user['id']) }}" method="POST" style="display:inline;">
-                    @csrf
-                    <button type="submit" class="action-btn btn-enable" onclick="return confirm('Enable this account?')">
-                      <i class="bi bi-check-circle"></i> Enable
-                    </button>
-                  </form>
+                  <button type="button" class="action-btn btn-enable" onclick="enableUser({{ $user['id'] }}, '{{ addslashes($user['username'] ?? $user['email']) }}')">
+                    <i class="bi bi-check-circle"></i> Enable
+                  </button>
                 @else
-                  <button type="button" class="action-btn btn-disable" onclick="disableUser({{ $user['id'] }}, '{{ $user['username'] ?? $user['email'] }}')">
+                  <button type="button" class="action-btn btn-disable" onclick="disableUser({{ $user['id'] }}, '{{ addslashes($user['username'] ?? $user['email']) }}')">
                     <i class="bi bi-slash-circle"></i> Disable
                   </button>
                 @endif
@@ -232,11 +349,175 @@
     @endif
   </div>
 
+  <!-- Alert Modal -->
+  <div class="modal fade" id="alertModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" id="alertModalContent">
+        <div class="modal-header">
+          <h5 class="modal-title" id="alertModalTitle">
+            <i class="bi bi-info-circle" id="alertModalIcon"></i>
+            <span id="alertModalTitleText">Alert</span>
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="alertModalMessage" class="mb-0"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-modal-primary" data-bs-dismiss="modal" id="alertModalOkBtn">OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-warning">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-exclamation-triangle"></i>
+            <span id="confirmModalTitle">Confirm</span>
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="confirmModalMessage" class="mb-0"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-modal-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn-modal-danger" id="confirmModalYesBtn">Yes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prompt Modal -->
+  <div class="modal fade" id="promptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="bi bi-pencil-square"></i>
+            <span id="promptModalTitle">Enter Information</span>
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p id="promptModalMessage" class="mb-3"></p>
+          <input type="text" class="modal-input" id="promptModalInput" placeholder="Enter reason...">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-modal-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn-modal-primary" id="promptModalSubmitBtn">Submit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
   <script>
+    // Modal instances
+    let alertModalInstance = null;
+    let confirmModalInstance = null;
+    let promptModalInstance = null;
+    let alertCallback = null;
+    let confirmCallback = null;
+    let promptCallback = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      alertModalInstance = new bootstrap.Modal(document.getElementById('alertModal'));
+      confirmModalInstance = new bootstrap.Modal(document.getElementById('confirmModal'));
+      promptModalInstance = new bootstrap.Modal(document.getElementById('promptModal'));
+
+      // Alert modal OK button
+      document.getElementById('alertModalOkBtn').addEventListener('click', function() {
+        alertModalInstance.hide();
+        if (alertCallback) {
+          alertCallback();
+          alertCallback = null;
+        }
+      });
+
+      // Confirm modal Yes button
+      document.getElementById('confirmModalYesBtn').addEventListener('click', function() {
+        confirmModalInstance.hide();
+        if (confirmCallback) {
+          confirmCallback();
+          confirmCallback = null;
+        }
+      });
+
+      // Prompt modal Submit button
+      document.getElementById('promptModalSubmitBtn').addEventListener('click', function() {
+        const value = document.getElementById('promptModalInput').value.trim();
+        if (value) {
+          promptModalInstance.hide();
+          if (promptCallback) {
+            promptCallback(value);
+            promptCallback = null;
+          }
+        }
+      });
+
+      // Enter key for prompt
+      document.getElementById('promptModalInput').addEventListener('keyup', function(e) {
+        if (e.key === 'Enter') {
+          document.getElementById('promptModalSubmitBtn').click();
+        }
+      });
+    });
+
+    // Show alert modal
+    function showAlert(type, title, message, callback = null) {
+      const content = document.getElementById('alertModalContent');
+      const icon = document.getElementById('alertModalIcon');
+      const titleText = document.getElementById('alertModalTitleText');
+      const messageEl = document.getElementById('alertModalMessage');
+
+      // Reset classes
+      content.classList.remove('modal-success', 'modal-error', 'modal-warning');
+
+      if (type === 'success') {
+        content.classList.add('modal-success');
+        icon.className = 'bi bi-check-circle-fill';
+      } else if (type === 'error') {
+        content.classList.add('modal-error');
+        icon.className = 'bi bi-x-circle-fill';
+      } else if (type === 'warning') {
+        content.classList.add('modal-warning');
+        icon.className = 'bi bi-exclamation-triangle-fill';
+      } else {
+        icon.className = 'bi bi-info-circle-fill';
+      }
+
+      titleText.textContent = title;
+      messageEl.textContent = message;
+      alertCallback = callback;
+      alertModalInstance.show();
+    }
+
+    // Show confirm modal
+    function showConfirm(title, message, callback) {
+      document.getElementById('confirmModalTitle').textContent = title;
+      document.getElementById('confirmModalMessage').textContent = message;
+      confirmCallback = callback;
+      confirmModalInstance.show();
+    }
+
+    // Show prompt modal
+    function showPrompt(title, message, callback) {
+      document.getElementById('promptModalTitle').textContent = title;
+      document.getElementById('promptModalMessage').textContent = message;
+      document.getElementById('promptModalInput').value = '';
+      promptCallback = callback;
+      promptModalInstance.show();
+      setTimeout(() => document.getElementById('promptModalInput').focus(), 300);
+    }
+
+    // Ban user
     function banUser(userId, username) {
-      const reason = prompt(`Enter ban reason for ${username}:`);
-      if (reason) {
+      showPrompt('Ban User', `Enter ban reason for ${username}:`, function(reason) {
         fetch(`/admin/users/${userId}/ban`, {
           method: 'POST',
           headers: {
@@ -248,21 +529,48 @@
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            alert('User banned successfully');
-            location.reload();
+            showAlert('success', 'User Banned', `${username} has been banned successfully.`, function() {
+              location.reload();
+            });
           } else {
-            alert('Error: ' + (data.error || 'Failed to ban user'));
+            showAlert('error', 'Ban Failed', data.error || 'Failed to ban user');
           }
         })
         .catch(error => {
-          alert('Error: ' + error.message);
+          showAlert('error', 'Error', error.message);
         });
-      }
+      });
     }
 
+    // Unban user
+    function unbanUser(userId, username) {
+      showConfirm('Unban User', `Are you sure you want to unban ${username}?`, function() {
+        fetch(`/admin/users/${userId}/unban`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showAlert('success', 'User Unbanned', `${username} has been unbanned successfully.`, function() {
+              location.reload();
+            });
+          } else {
+            showAlert('error', 'Unban Failed', data.error || 'Failed to unban user');
+          }
+        })
+        .catch(error => {
+          showAlert('error', 'Error', error.message);
+        });
+      });
+    }
+
+    // Disable user
     function disableUser(userId, username) {
-      const reason = prompt(`Enter disable reason for ${username}:`);
-      if (reason) {
+      showPrompt('Disable Account', `Enter disable reason for ${username}:`, function(reason) {
         fetch(`/admin/users/${userId}/disable`, {
           method: 'POST',
           headers: {
@@ -274,16 +582,43 @@
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            alert('User disabled successfully');
-            location.reload();
+            showAlert('success', 'Account Disabled', `${username}'s account has been disabled.`, function() {
+              location.reload();
+            });
           } else {
-            alert('Error: ' + (data.error || 'Failed to disable user'));
+            showAlert('error', 'Disable Failed', data.error || 'Failed to disable account');
           }
         })
         .catch(error => {
-          alert('Error: ' + error.message);
+          showAlert('error', 'Error', error.message);
         });
-      }
+      });
+    }
+
+    // Enable user
+    function enableUser(userId, username) {
+      showConfirm('Enable Account', `Are you sure you want to enable ${username}'s account?`, function() {
+        fetch(`/admin/users/${userId}/enable`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            showAlert('success', 'Account Enabled', `${username}'s account has been enabled.`, function() {
+              location.reload();
+            });
+          } else {
+            showAlert('error', 'Enable Failed', data.error || 'Failed to enable account');
+          }
+        })
+        .catch(error => {
+          showAlert('error', 'Error', error.message);
+        });
+      });
     }
   </script>
 </body>

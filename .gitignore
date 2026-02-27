@@ -25,8 +25,9 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Vendor dependencies (if using Composer)
-vendor/
+# Vendor dependencies – committed so Vercel has them at build time.
+# Run `composer install` locally; the vercel.json buildCommand re-installs on each deploy.
+# vendor/
 
 # Temporary files
 *.tmp

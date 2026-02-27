@@ -1,8 +1,6 @@
 <?php
-// Start session
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/../config/session.php';
+startSecureSession();
 
 // Check authentication
 if (!isset($_SESSION['authenticated']) || $_SESSION['authenticated'] !== true) {
@@ -17,27 +15,7 @@ if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
     exit();
 }
 
-// Simple database connection function
-function getDBConnection() {
-    $host = '127.0.0.1';
-    $dbname = 'expoints_db';
-    $username = 'root';
-    $password = '';
-    
-    try {
-        $mysqli = new mysqli($host, $username, $password, $dbname);
-        
-        if ($mysqli->connect_error) {
-            throw new Exception("Connection failed: " . $mysqli->connect_error);
-        }
-        
-        $mysqli->set_charset('utf8mb4');
-        return $mysqli;
-    } catch (Exception $e) {
-        error_log("Database connection error: " . $e->getMessage());
-        return null;
-    }
-}
+
 
 // Get user info
 $username = $_SESSION['username'] ?? 'Admin';

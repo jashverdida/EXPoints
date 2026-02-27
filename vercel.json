@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "buildCommand": "php composer.phar install --no-dev --optimize-autoloader 2>/dev/null || composer install --no-dev --optimize-autoloader",
+  "functions": {
+    "**/*.php": {
+      "runtime": "vercel-php@0.7.2"
+    }
+  },
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/user/index.php"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}

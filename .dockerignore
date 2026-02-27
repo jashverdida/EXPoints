@@ -1,0 +1,6 @@
+.git
+.env
+.env.local
+node_modules
+Screenshots
+*.log

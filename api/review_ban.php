@@ -1,8 +1,7 @@
 <?php
 // Start session
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+require_once __DIR__ . '/../config/session.php';
+startSecureSession();
 
 // Set JSON header
 header('Content-Type: application/json');
@@ -42,20 +41,13 @@ if (!in_array($action, ['approved', 'rejected'])) {
     exit;
 }
 
-// Database connection
-$host = '127.0.0.1';
-$dbname = 'expoints_db';
-$username = 'root';
-$password = '';
+$db = getDBConnection();
+if (!$db) {
+    echo json_encode(['success' => false, 'message' => 'Database connection failed']);
+    exit;
+}
 
 try {
-    $db = new mysqli($host, $username, $password, $dbname);
-    
-    if ($db->connect_error) {
-        throw new Exception("Connection failed: " . $db->connect_error);
-    }
-    
-    $db->set_charset('utf8mb4');
     
     // Get reviewer username
     $reviewer = $_SESSION['username'] ?? 'Unknown';

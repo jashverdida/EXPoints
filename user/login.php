@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 // Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -306,15 +307,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 
     <!-- Custom Alert -->
-    <?php if ($error): ?>
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if ($error): ?>
     <div class="custom-alert alert-dismissible fade show" role="alert">
         <div class="alert-content">
             <i class="bi bi-exclamation-circle-fill"></i>
-            <span><?php echo htmlspecialchars($error); ?></span>
+            <span><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($error); ?></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     </div>
-    <?php endif; ?>
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
 
     <div class="split-screen-container">
         <!-- LEFT SIDE - Blue Welcome Section -->

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 // Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -710,7 +711,8 @@ if ($db) {
     <div class="topbar">
       <div>
         <h1 class="h4 mb-0">
-          Welcome, <strong><?php echo htmlspecialchars($username); ?></strong>
+          Welcome, <strong><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($username); ?></strong>
           <span class="admin-badge">
             <i class="bi bi-shield-fill-check"></i> ADMINISTRATOR
           </span>
@@ -735,86 +737,119 @@ if ($db) {
       
       <div class="stats-bar">
         <div class="stat-item">
-          <span class="stat-num"><?php echo $total_mods; ?></span>
+          <span class="stat-num"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $total_mods; ?></span>
           <span class="stat-label">Total Admins</span>
         </div>
         <div class="stat-item">
-          <span class="stat-num"><?php echo $active_mods; ?></span>
+          <span class="stat-num"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $active_mods; ?></span>
           <span class="stat-label">Active</span>
         </div>
         <div class="stat-item">
-          <span class="stat-num"><?php echo $disabled_mods; ?></span>
+          <span class="stat-num"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $disabled_mods; ?></span>
           <span class="stat-label">Disabled</span>
         </div>
       </div>
     </div>
 
     <!-- Admin Cards -->
-    <?php if (empty($moderators)): ?>
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (empty($moderators)): ?>
       <div class="empty-state">
         <i class="bi bi-person-badge"></i>
         <h3>No Admins Yet</h3>
         <p>Click "Add New Admin" to create your first administrator account.</p>
       </div>
-    <?php else: ?>
-      <?php foreach ($moderators as $mod): ?>
-        <div class="mod-card <?php echo $mod['is_disabled'] == 1 ? 'disabled' : ''; ?>">
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
+      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; foreach ($moderators as $mod): ?>
+        <div class="mod-card <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $mod['is_disabled'] == 1 ? 'disabled' : ''; ?>">
           <div class="mod-header">
             <div class="mod-info">
               <div class="mod-avatar">
-                <?php if (!empty($mod['profile_picture']) && file_exists('../' . $mod['profile_picture'])): ?>
-                  <img src="../<?php echo htmlspecialchars($mod['profile_picture']); ?>" alt="Avatar">
-                <?php else: ?>
-                  <?php echo !empty($mod['username']) ? strtoupper(substr($mod['username'], 0, 1)) : strtoupper(substr($mod['email'], 0, 1)); ?>
-                <?php endif; ?>
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (!empty($mod['profile_picture']) && file_exists('../' . $mod['profile_picture'])): ?>
+                  <img src="../<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($mod['profile_picture']); ?>" alt="Avatar">
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
+                  <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo !empty($mod['username']) ? strtoupper(substr($mod['username'], 0, 1)) : strtoupper(substr($mod['email'], 0, 1)); ?>
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
               </div>
               <div class="mod-details">
-                <h3><?php echo !empty($mod['username']) ? '@' . htmlspecialchars($mod['username']) : htmlspecialchars($mod['email']); ?></h3>
+                <h3><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo !empty($mod['username']) ? '@' . htmlspecialchars($mod['username']) : htmlspecialchars($mod['email']); ?></h3>
                 <div class="meta">
-                  <span><i class="bi bi-envelope"></i> <?php echo htmlspecialchars($mod['email']); ?></span>
-                  <span><i class="bi bi-calendar"></i> Joined: <?php echo date('M j, Y', strtotime($mod['created_at'])); ?></span>
+                  <span><i class="bi bi-envelope"></i> <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($mod['email']); ?></span>
+                  <span><i class="bi bi-calendar"></i> Joined: <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo date('M j, Y', strtotime($mod['created_at'])); ?></span>
                 </div>
               </div>
             </div>
             <div>
-              <span class="mod-badge <?php echo $mod['is_disabled'] == 1 ? 'disabled-badge' : ''; ?>">
-                <i class="bi bi-shield-check"></i> <?php echo $mod['is_disabled'] == 1 ? 'DISABLED' : 'ADMIN'; ?>
+              <span class="mod-badge <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $mod['is_disabled'] == 1 ? 'disabled-badge' : ''; ?>">
+                <i class="bi bi-shield-check"></i> <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $mod['is_disabled'] == 1 ? 'DISABLED' : 'ADMIN'; ?>
               </span>
             </div>
           </div>
 
-          <?php if ($mod['is_disabled'] == 1): ?>
+          <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if ($mod['is_disabled'] == 1): ?>
             <div style="background: rgba(107, 114, 128, 0.1); border: 1px solid rgba(107, 114, 128, 0.3); border-radius: 0.75rem; padding: 1rem; margin-bottom: 1rem;">
               <div style="font-size: 0.875rem; color: #9ca3af; font-weight: 600; margin-bottom: 0.5rem;">
                 <i class="bi bi-info-circle-fill"></i> Disabled Reason
               </div>
               <div style="color: rgba(255, 255, 255, 0.9);">
-                <?php echo !empty($mod['disabled_reason']) ? htmlspecialchars($mod['disabled_reason']) : 'No reason provided'; ?>
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo !empty($mod['disabled_reason']) ? htmlspecialchars($mod['disabled_reason']) : 'No reason provided'; ?>
               </div>
               <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(107, 114, 128, 0.2); font-size: 0.875rem; color: rgba(255, 255, 255, 0.6);">
-                <div><i class="bi bi-calendar-x"></i> Disabled: <?php echo !empty($mod['disabled_at']) ? date('M j, Y g:i A', strtotime($mod['disabled_at'])) : 'Unknown'; ?></div>
-                <div style="margin-top: 0.25rem;"><i class="bi bi-person-badge"></i> By: <?php echo !empty($mod['disabled_by']) ? htmlspecialchars($mod['disabled_by']) : 'Unknown'; ?></div>
+                <div><i class="bi bi-calendar-x"></i> Disabled: <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo !empty($mod['disabled_at']) ? date('M j, Y g:i A', strtotime($mod['disabled_at'])) : 'Unknown'; ?></div>
+                <div style="margin-top: 0.25rem;"><i class="bi bi-person-badge"></i> By: <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo !empty($mod['disabled_by']) ? htmlspecialchars($mod['disabled_by']) : 'Unknown'; ?></div>
               </div>
             </div>
-          <?php endif; ?>
+          <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
 
           <div class="mod-actions">
-            <?php if ($mod['is_disabled'] == 1): ?>
-              <button class="btn-enable" onclick="toggleModStatus(<?php echo $mod['id']; ?>, 'enable', '<?php echo htmlspecialchars($mod['email']); ?>')">
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if ($mod['is_disabled'] == 1): ?>
+              <button class="btn-enable" onclick="toggleModStatus(<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $mod['id']; ?>, 'enable', '<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($mod['email']); ?>')">
                 <i class="bi bi-check-circle-fill"></i> Enable Admin
               </button>
-            <?php else: ?>
-              <button class="btn-disable" onclick="toggleModStatus(<?php echo $mod['id']; ?>, 'disable', '<?php echo htmlspecialchars($mod['email']); ?>')">
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
+              <button class="btn-disable" onclick="toggleModStatus(<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $mod['id']; ?>, 'disable', '<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($mod['email']); ?>')">
                 <i class="bi bi-slash-circle-fill"></i> Disable Admin
               </button>
-            <?php endif; ?>
-            <button class="btn-delete" onclick="deleteMod(<?php echo $mod['id']; ?>, '<?php echo htmlspecialchars($mod['email']); ?>')">
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
+            <button class="btn-delete" onclick="deleteMod(<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $mod['id']; ?>, '<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($mod['email']); ?>')">
               <i class="bi bi-trash-fill"></i> Delete
             </button>
           </div>
         </div>
-      <?php endforeach; ?>
-    <?php endif; ?>
+      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endforeach; ?>
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
   </div>
 
   <!-- Add Admin Modal -->

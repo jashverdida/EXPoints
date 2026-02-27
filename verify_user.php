@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/config/supabase-session.php';
 // Disable any error output that could interfere with JSON
 error_reporting(0);
 ini_set('display_errors', 0);

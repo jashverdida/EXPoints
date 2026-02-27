@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 session_start();
 require_once '../includes/db_helper.php';
 require_once '../includes/exp_system.php';

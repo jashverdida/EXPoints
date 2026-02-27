@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 // Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -382,7 +383,8 @@ if ($db && $userId) {
     }
   </style>
 </head>
-<body data-user-id="<?php echo $userId; ?>">
+<body data-user-id="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $userId; ?>">
 
   <!-- Animated Background Particles -->
   <div class="particles-bg" id="particlesBg"></div>
@@ -404,7 +406,8 @@ if ($db && $userId) {
         <button class="icon" title="Settings"><i class="bi bi-gear"></i></button>
         <button class="icon" title="Notifications"><i class="bi bi-bell"></i></button>
         <a href="profile.php" class="avatar-nav">
-          <img src="<?php echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" class="avatar-img">
+          <img src="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" class="avatar-img">
         </a>
       </div>
     </header>
@@ -421,11 +424,13 @@ if ($db && $userId) {
     <!-- Stats Bar -->
     <div class="stats-bar">
       <div class="stat-item">
-        <span class="stat-value" id="totalPosts"><?php echo count($posts); ?></span>
+        <span class="stat-value" id="totalPosts"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo count($posts); ?></span>
         <span class="stat-label">Hot Posts</span>
       </div>
       <div class="stat-item">
-        <span class="stat-value" id="totalLikes"><?php 
+        <span class="stat-value" id="totalLikes"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; 
           $totalLikes = 0;
           foreach ($posts as $p) {
             $totalLikes += (int)($p['like_count'] ?? 0);
@@ -435,7 +440,8 @@ if ($db && $userId) {
         <span class="stat-label">Total Likes</span>
       </div>
       <div class="stat-item">
-        <span class="stat-value" id="totalComments"><?php 
+        <span class="stat-value" id="totalComments"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; 
           $totalComments = 0;
           foreach ($posts as $p) {
             $totalComments += (int)($p['comment_count'] ?? 0);
@@ -449,15 +455,19 @@ if ($db && $userId) {
     <!-- Posts Container -->
     <!-- Posts Container -->
     <div id="postsContainer">
-      <?php if (count($posts) > 0): ?>
-        <?php foreach ($posts as $post): ?>
-          <div class="card-post" data-post-id="<?php echo $post['id']; ?>">
+      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (count($posts) > 0): ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; foreach ($posts as $post): ?>
+          <div class="card-post" data-post-id="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['id']; ?>">
             <div class="post-header">
               <div class="row gap-3 align-items-start">
                 <div class="col-auto">
                   <div class="avatar-us avatar-loading">
                     <div class="star-loader">⭐</div>
-                    <img src="<?php echo htmlspecialchars($post['author_profile_picture'] ?? '../assets/img/cat1.jpg'); ?>" 
+                    <img src="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['author_profile_picture'] ?? '../assets/img/cat1.jpg'); ?>" 
                          alt="Profile" 
                          loading="lazy"
                          class="profile-lazy-img"
@@ -465,29 +475,40 @@ if ($db && $userId) {
                   </div>
                 </div>
                 <div class="col">
-                  <div class="game-badge"><?php echo htmlspecialchars($post['game']); ?></div>
-                  <h2 class="title mb-1"><?php echo htmlspecialchars($post['title']); ?></h2>
-                  <div class="handle mb-3">@<?php echo htmlspecialchars($post['username']); ?></div>
-                  <p class="mb-3"><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
+                  <div class="game-badge"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['game']); ?></div>
+                  <h2 class="title mb-1"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['title']); ?></h2>
+                  <div class="handle mb-3">@<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['username']); ?></div>
+                  <p class="mb-3"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo nl2br(htmlspecialchars($post['content'])); ?></p>
                   <div class="time-badge">
                     <i class="bi bi-clock"></i>
-                    <?php echo date('M j, Y g:i A', strtotime($post['created_at'])); ?>
+                    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo date('M j, Y g:i A', strtotime($post['created_at'])); ?>
                   </div>
                 </div>
               </div>
             </div>
             <div class="actions">
-              <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b><?php echo $post['like_count'] ?? 0; ?></b></span>
-              <span class="a comment-btn" data-comments="<?php echo $post['comment_count'] ?? 0; ?>"><i class="bi bi-chat-left-text"></i><b><?php echo $post['comment_count'] ?? 0; ?></b></span>
+              <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['like_count'] ?? 0; ?></b></span>
+              <span class="a comment-btn" data-comments="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['comment_count'] ?? 0; ?>"><i class="bi bi-chat-left-text"></i><b><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['comment_count'] ?? 0; ?></b></span>
             </div>
           </div>
-        <?php endforeach; ?>
-      <?php else: ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endforeach; ?>
+      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
         <div class="empty-state">
           <i class="bi bi-inbox"></i>
           <p style="color: rgba(255, 255, 255, 0.8); font-size: 1.3rem;">No popular posts yet.</p>
         </div>
-      <?php endif; ?>
+      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
     </div>
   </main>
 
@@ -507,7 +528,8 @@ if ($db && $userId) {
   </aside>
 
   <script>
-    const currentUserId = <?php echo json_encode($userId); ?>;
+    const currentUserId = <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo json_encode($userId); ?>;
     
     // Create animated particles
     function createParticles() {
@@ -530,6 +552,7 @@ if ($db && $userId) {
     
     createParticles();
   </script>
-  <script src="../assets/js/popular-posts.js?v=<?php echo time(); ?>"></script>
+  <script src="../assets/js/popular-posts.js?v=<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo time(); ?>"></script>
 </body>
 </html>

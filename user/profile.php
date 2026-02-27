@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 // Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -560,11 +561,14 @@ $started_fmt = !empty($dateStarted) ? date('n/j/y', strtotime($dateStarted)) : '
             </div>
 
             <!-- Bio -->
-            <?php if (empty($bio)): ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (empty($bio)): ?>
               <p id="bio" class="profile-bio mt-3" data-edit="textarea" style="color: var(--muted); font-style: italic;">Enter Your Bio!</p>
-            <?php else: ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
               <p id="bio" class="profile-bio mt-3" data-edit="textarea"><?= nl2br(h($bio)) ?></p>
-            <?php endif; ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
           </div>
 
           <!-- Info grid -->
@@ -602,10 +606,13 @@ $started_fmt = !empty($dateStarted) ? date('n/j/y', strtotime($dateStarted)) : '
         <div class="card card-pill p-3 p-md-4">
           <h3 class="best-title">Best Posts:</h3>
           <div id="best_posts_list">
-            <?php if (empty($bestPosts)): ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (empty($bestPosts)): ?>
               <p class="text-muted small">No posts yet. Create your first post!</p>
-            <?php else: ?>
-              <?php foreach ($bestPosts as $p): ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
+              <?php
+require_once __DIR__ . '/../config/supabase-session.php'; foreach ($bestPosts as $p): ?>
                 <div class="best-post d-block mb-2" data-post-id="<?= h($p['id']) ?>">
                   <div class="small fw-semibold text-truncate"><?= h($p['title']) ?></div>
                   <div class="d-flex align-items-center gap-3 small mt-1">
@@ -613,8 +620,10 @@ $started_fmt = !empty($dateStarted) ? date('n/j/y', strtotime($dateStarted)) : '
                     <span><i class="bi bi-chat-fill me-1"></i><?= (int)$p['comments'] ?></span>
                   </div>
                 </div>
-              <?php endforeach; ?>
-            <?php endif; ?>
+              <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endforeach; ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
           </div>
           <!-- Hidden until Edit -->
           <button id="btnEditShowcase" class="btn btn-sm btn-light-subtle mt-2 w-100 d-none">Edit Selection</button>
@@ -628,7 +637,8 @@ $started_fmt = !empty($dateStarted) ? date('n/j/y', strtotime($dateStarted)) : '
     <div class="modal-card" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
       <h5 class="mb-3">Select Your Best Posts (Choose up to 3)</h5>
       <div id="postsSelectionList">
-        <?php foreach ($allPosts as $post): ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; foreach ($allPosts as $post): ?>
           <div class="post-selection-item" data-post-id="<?= h($post['id']) ?>" style="padding: 1rem; margin-bottom: 0.5rem; border: 2px solid transparent; border-radius: 0.5rem; background: rgba(255,255,255,0.05); cursor: pointer; transition: all 0.3s;">
             <div class="fw-semibold"><?= h($post['title']) ?></div>
             <div class="d-flex align-items-center gap-3 small mt-1">
@@ -636,7 +646,8 @@ $started_fmt = !empty($dateStarted) ? date('n/j/y', strtotime($dateStarted)) : '
               <span><i class="bi bi-chat-fill me-1"></i><?= (int)$post['comments'] ?></span>
             </div>
           </div>
-        <?php endforeach; ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endforeach; ?>
       </div>
       <div class="d-flex justify-content-end gap-2 mt-3">
         <button id="closePostsModal" class="btn btn-danger btn-sm px-4">Cancel</button>

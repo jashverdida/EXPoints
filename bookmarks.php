@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/config/supabase-session.php';
 session_start();
 
 // Check if user is authenticated (but don't redirect if not - allow guest browsing)
@@ -32,7 +33,8 @@ $userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'User') : 'Guest';
       <div class="right">
         <button class="icon" title="Filter"><i class="bi bi-funnel"></i></button>
         
-        <?php if ($isLoggedIn): ?>
+        <?php
+require_once __DIR__ . '/config/supabase-session.php'; if ($isLoggedIn): ?>
         <!-- Logged in user options -->
         <div class="settings-dropdown">
           <button class="icon settings-btn" title="Settings"><i class="bi bi-gear"></i></button>
@@ -48,21 +50,25 @@ $userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'User') : 'Guest';
           </div>
         </div>
         <button class="icon" title="Notifications"><i class="bi bi-bell"></i></button>
-        <div class="avatar-nav" title="<?php echo htmlspecialchars($userName); ?>"></div>
-        <?php else: ?>
+        <div class="avatar-nav" title="<?php
+require_once __DIR__ . '/config/supabase-session.php'; echo htmlspecialchars($userName); ?>"></div>
+        <?php
+require_once __DIR__ . '/config/supabase-session.php'; else: ?>
         <!-- Guest user navigation options -->
         <a href="games.php" class="icon" title="Games"><i class="bi bi-grid-3x3-gap"></i></a>
         <a href="popular.php" class="icon" title="Popular"><i class="bi bi-compass"></i></a>
         <a href="newest.php" class="icon" title="Newest"><i class="bi bi-star"></i></a>
         <a href="login.php" class="icon" title="Login"><i class="bi bi-box-arrow-in-right"></i></a>
         <a href="register.php" class="icon" title="Register"><i class="bi bi-person-plus"></i></a>
-        <?php endif; ?>
+        <?php
+require_once __DIR__ . '/config/supabase-session.php'; endif; ?>
       </div>
     </header>
   </div>
 
   <main class="container-xl py-4">
-    <?php if ($isLoggedIn): ?>
+    <?php
+require_once __DIR__ . '/config/supabase-session.php'; if ($isLoggedIn): ?>
       <h1 class="title mb-3">Your Bookmarks</h1>
       <article class="card-post">
         <div class="row gap-3 align-items-start">
@@ -78,7 +84,8 @@ $userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'User') : 'Guest';
           <span class="a"><i class="bi bi-chat-left-text"></i><b>18</b></span>
         </div>
       </article>
-    <?php else: ?>
+    <?php
+require_once __DIR__ . '/config/supabase-session.php'; else: ?>
       <section class="card-input">
         <div class="row g-3 align-items-center">
           <div class="col-12 text-center">
@@ -90,7 +97,8 @@ $userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'User') : 'Guest';
           </div>
         </div>
       </section>
-    <?php endif; ?>
+    <?php
+require_once __DIR__ . '/config/supabase-session.php'; endif; ?>
   </main>
 
   <!-- Shared sidebar -->
@@ -99,9 +107,11 @@ $userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'User') : 'Guest';
     <div class="side-inner">
       <div class="side-box">
         <a class="side-btn" href="dashboard.php" title="Home"><i class="bi bi-house"></i></a>
-        <?php if ($isLoggedIn): ?>
+        <?php
+require_once __DIR__ . '/config/supabase-session.php'; if ($isLoggedIn): ?>
         <a class="side-btn" href="bookmarks.php" title="Bookmarks"><i class="bi bi-bookmark"></i></a>
-        <?php endif; ?>
+        <?php
+require_once __DIR__ . '/config/supabase-session.php'; endif; ?>
         <a class="side-btn" href="games.php" title="Games"><i class="bi bi-grid-3x3-gap"></i></a>
         <a class="side-btn" href="popular.php" title="Popular"><i class="bi bi-compass"></i></a>
         <a class="side-btn side-bottom" href="newest.php" title="Newest"><i class="bi bi-star-fill"></i></a>

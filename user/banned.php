@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 // Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -237,15 +238,20 @@ session_destroy();
           Reason for Ban
         </div>
         <div class="ban-reason-text">
-          <?php echo htmlspecialchars($ban_reason); ?>
+          <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($ban_reason); ?>
         </div>
         
-        <?php if ($banned_at): ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if ($banned_at): ?>
           <div class="ban-meta">
-            <div><i class="bi bi-calendar-x"></i> Banned on: <?php echo date('F j, Y \a\t g:i A', strtotime($banned_at)); ?></div>
-            <div><i class="bi bi-person-badge"></i> Banned by: <?php echo htmlspecialchars($banned_by); ?></div>
+            <div><i class="bi bi-calendar-x"></i> Banned on: <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo date('F j, Y \a\t g:i A', strtotime($banned_at)); ?></div>
+            <div><i class="bi bi-person-badge"></i> Banned by: <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($banned_by); ?></div>
           </div>
-        <?php endif; ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
       </div>
       
       <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.95rem; margin-bottom: 2rem;">

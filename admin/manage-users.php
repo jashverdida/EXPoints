@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 // Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -659,7 +660,8 @@ if ($db) {
     <div class="topbar">
       <div>
         <h1 class="h4 mb-0">
-          Welcome, <strong><?php echo htmlspecialchars($username); ?></strong>
+          Welcome, <strong><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($username); ?></strong>
           <span class="admin-badge">
             <i class="bi bi-shield-fill-check"></i> ADMINISTRATOR
           </span>
@@ -681,7 +683,8 @@ if ($db) {
       
       <div class="stats-bar">
         <div class="stat-item">
-          <span class="stat-num"><?php echo $total_banned; ?></span>
+          <span class="stat-num"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $total_banned; ?></span>
           <span class="stat-label">Total Banned</span>
         </div>
         <div class="stat-item">
@@ -696,31 +699,43 @@ if ($db) {
     </div>
 
     <!-- User Cards -->
-    <?php if (empty($banned_users)): ?>
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (empty($banned_users)): ?>
       <div class="empty-state">
         <i class="bi bi-check-circle-fill"></i>
         <h3>No Banned Users!</h3>
         <p>There are currently no banned users in the system. Great community management!</p>
       </div>
-    <?php else: ?>
-      <?php foreach ($banned_users as $user): ?>
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
+      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; foreach ($banned_users as $user): ?>
         <div class="user-card">
           <div class="user-header">
             <div class="user-info">
               <div class="user-avatar">
-                <?php if (!empty($user['profile_picture']) && file_exists('../' . $user['profile_picture'])): ?>
-                  <img src="../<?php echo htmlspecialchars($user['profile_picture']); ?>" alt="Avatar">
-                <?php else: ?>
-                  <?php echo strtoupper(substr($user['username'], 0, 1)); ?>
-                <?php endif; ?>
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (!empty($user['profile_picture']) && file_exists('../' . $user['profile_picture'])): ?>
+                  <img src="../<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($user['profile_picture']); ?>" alt="Avatar">
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
+                  <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo strtoupper(substr($user['username'], 0, 1)); ?>
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
               </div>
               <div class="user-details">
-                <h3>@<?php echo htmlspecialchars($user['username']); ?></h3>
+                <h3>@<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($user['username']); ?></h3>
                 <div class="meta">
-                  <span><i class="bi bi-envelope"></i> <?php echo htmlspecialchars($user['email']); ?></span>
-                  <?php if (!empty($user['first_name']) || !empty($user['last_name'])): ?>
+                  <span><i class="bi bi-envelope"></i> <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($user['email']); ?></span>
+                  <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (!empty($user['first_name']) || !empty($user['last_name'])): ?>
                     <span><i class="bi bi-person"></i> 
-                      <?php 
+                      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; 
                         $name_parts = array_filter([
                           $user['first_name'] ?? '',
                           $user['middle_name'] ?? '',
@@ -730,7 +745,8 @@ if ($db) {
                         echo htmlspecialchars(implode(' ', $name_parts));
                       ?>
                     </span>
-                  <?php endif; ?>
+                  <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
                 </div>
               </div>
             </div>
@@ -748,18 +764,23 @@ if ($db) {
                 <i class="bi bi-exclamation-triangle-fill"></i> Ban Reason
               </div>
               <div class="ban-text">
-                <?php echo !empty($user['ban_reason']) ? htmlspecialchars($user['ban_reason']) : 'No reason provided'; ?>
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo !empty($user['ban_reason']) ? htmlspecialchars($user['ban_reason']) : 'No reason provided'; ?>
               </div>
               
               <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(239, 68, 68, 0.2); font-size: 0.875rem; color: rgba(255, 255, 255, 0.6);">
-                <div><i class="bi bi-calendar-x"></i> Banned on: <?php echo !empty($user['banned_at']) ? date('F j, Y \a\t g:i A', strtotime($user['banned_at'])) : 'Unknown'; ?></div>
-                <div style="margin-top: 0.25rem;"><i class="bi bi-person-badge"></i> Banned by: <?php echo !empty($user['banned_by']) ? htmlspecialchars($user['banned_by']) : 'Unknown'; ?></div>
+                <div><i class="bi bi-calendar-x"></i> Banned on: <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo !empty($user['banned_at']) ? date('F j, Y \a\t g:i A', strtotime($user['banned_at'])) : 'Unknown'; ?></div>
+                <div style="margin-top: 0.25rem;"><i class="bi bi-person-badge"></i> Banned by: <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo !empty($user['banned_by']) ? htmlspecialchars($user['banned_by']) : 'Unknown'; ?></div>
               </div>
             </div>
           </div>
 
           <div class="user-actions">
-            <button class="btn-unban" onclick="unbanUser(<?php echo $user['user_id']; ?>, '<?php echo htmlspecialchars($user['username']); ?>')">
+            <button class="btn-unban" onclick="unbanUser(<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $user['user_id']; ?>, '<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($user['username']); ?>')">
               <i class="bi bi-shield-fill-check"></i> Unban User
             </button>
             <button class="btn-view-profile" onclick="alert('Profile view coming soon!')">
@@ -767,8 +788,10 @@ if ($db) {
             </button>
           </div>
         </div>
-      <?php endforeach; ?>
-    <?php endif; ?>
+      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endforeach; ?>
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 // Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -471,7 +472,8 @@ if ($db) {
     <div class="topbar">
       <div>
         <h1 class="h4 mb-0">
-          Welcome, <strong><?php echo htmlspecialchars($username); ?></strong>
+          Welcome, <strong><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($username); ?></strong>
           <span class="mod-badge">
             <i class="bi bi-shield-check"></i> MODERATOR
           </span>
@@ -493,7 +495,8 @@ if ($db) {
       
       <div class="stats-bar">
         <div class="stat-item">
-          <span class="stat-num"><?php echo count($ban_reviews); ?></span>
+          <span class="stat-num"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo count($ban_reviews); ?></span>
           <span class="stat-label">Pending Reviews</span>
         </div>
         <div class="stat-item">
@@ -508,25 +511,32 @@ if ($db) {
     </div>
 
     <!-- Review Cards -->
-    <?php if (empty($ban_reviews)): ?>
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (empty($ban_reviews)): ?>
       <div class="empty-state">
         <i class="bi bi-check-circle"></i>
         <h3>All Clear!</h3>
         <p>No users are currently flagged for ban review.</p>
       </div>
-    <?php else: ?>
-      <?php foreach ($ban_reviews as $review): ?>
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
+      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; foreach ($ban_reviews as $review): ?>
         <div class="review-card">
           <div class="review-header">
             <div class="user-info">
               <div class="user-avatar">
-                <?php echo strtoupper(substr($review['username'], 0, 1)); ?>
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo strtoupper(substr($review['username'], 0, 1)); ?>
               </div>
               <div class="user-details">
-                <h3>@<?php echo htmlspecialchars($review['username']); ?></h3>
+                <h3>@<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($review['username']); ?></h3>
                 <div class="meta">
-                  <span><i class="bi bi-clock"></i> <?php echo date('M j, Y g:i A', strtotime($review['created_at'])); ?></span>
-                  <span><i class="bi bi-person-badge"></i> Flagged by: <?php echo htmlspecialchars($review['flagged_by']); ?></span>
+                  <span><i class="bi bi-clock"></i> <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo date('M j, Y g:i A', strtotime($review['created_at'])); ?></span>
+                  <span><i class="bi bi-person-badge"></i> Flagged by: <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($review['flagged_by']); ?></span>
                 </div>
               </div>
             </div>
@@ -544,33 +554,46 @@ if ($db) {
                 <i class="bi bi-chat-square-quote"></i> Reason for Flag
               </div>
               <div class="reason-text">
-                <?php echo htmlspecialchars($review['reason']); ?>
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($review['reason']); ?>
               </div>
             </div>
 
             <!-- Post Preview -->
-            <?php if (!empty($review['title'])): ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (!empty($review['title'])): ?>
               <div class="post-preview">
                 <div class="post-preview-title">
                   <i class="bi bi-file-text"></i> Related Post
-                  <?php if (!empty($review['game'])): ?>
+                  <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (!empty($review['game'])): ?>
                     <span style="color: #a78bfa; font-size: 0.875rem;">
-                      <i class="bi bi-controller"></i> <?php echo htmlspecialchars($review['game']); ?>
+                      <i class="bi bi-controller"></i> <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($review['game']); ?>
                     </span>
-                  <?php endif; ?>
+                  <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
                 </div>
-                <h5 style="color: #93c5fd; margin-bottom: 0.5rem;"><?php echo htmlspecialchars($review['title']); ?></h5>
+                <h5 style="color: #93c5fd; margin-bottom: 0.5rem;"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($review['title']); ?></h5>
                 <div class="post-preview-content">
-                  <?php echo htmlspecialchars(substr($review['content'], 0, 200)); ?>
-                  <?php if (strlen($review['content']) > 200): ?>...<?php endif; ?>
+                  <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars(substr($review['content'], 0, 200)); ?>
+                  <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (strlen($review['content']) > 200): ?>...<?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
                 </div>
-                <?php if (!empty($review['post_id'])): ?>
-                  <button class="btn-view mt-2" onclick="viewPost(<?php echo $review['post_id']; ?>)">
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (!empty($review['post_id'])): ?>
+                  <button class="btn-view mt-2" onclick="viewPost(<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $review['post_id']; ?>)">
                     <i class="bi bi-eye"></i> View Full Post
                   </button>
-                <?php endif; ?>
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
               </div>
-            <?php endif; ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
           </div>
 
           <div class="review-actions">
@@ -580,8 +603,10 @@ if ($db) {
             </div>
           </div>
         </div>
-      <?php endforeach; ?>
-    <?php endif; ?>
+      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endforeach; ?>
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
   </div>
 
   <!-- Post View Modal -->

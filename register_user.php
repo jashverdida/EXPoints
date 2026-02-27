@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/config/supabase-session.php';
 // Simple registration handler - just create PHP session and redirect
 ob_start();
 error_reporting(0);

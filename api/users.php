@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 // Prevent any output before JSON response
 ob_start();
 error_reporting(0);

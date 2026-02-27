@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 session_start();
 header('Content-Type: application/json');
 

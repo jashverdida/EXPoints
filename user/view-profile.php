@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 // Public profile view page
 session_start();
 
@@ -101,7 +102,8 @@ $dateStarted = date('m/d/y', strtotime($userData['created_at']));
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($username); ?> - Profile | +EXPoints</title>
+    <title><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($username); ?> - Profile | +EXPoints</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
@@ -129,40 +131,53 @@ $dateStarted = date('m/d/y', strtotime($userData['created_at']));
 
           <!-- Avatar -->
           <div class="avatar-wrap">
-            <img src="<?php echo htmlspecialchars($profilePicture); ?>" alt="Avatar" class="avatar-xl" />
+            <img src="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($profilePicture); ?>" alt="Avatar" class="avatar-xl" />
           </div>
 
           <!-- Header -->
           <div class="content-shift">
             <div class="d-flex align-items-center gap-2 flex-wrap">
               <h2 id="display_name" class="profile-name mb-0" 
-                  data-fullname="<?php echo htmlspecialchars($fullName ?: $username); ?>" 
-                  data-username="<?php echo htmlspecialchars($username); ?>">
-                <?php echo htmlspecialchars($fullName ?: $username); ?>
+                  data-fullname="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($fullName ?: $username); ?>" 
+                  data-username="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($username); ?>">
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($fullName ?: $username); ?>
               </h2>
-              <span class="profile-handle">@<?php echo htmlspecialchars($username); ?></span>
+              <span class="profile-handle">@<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($username); ?></span>
             </div>
 
             <!-- Stats -->
             <div class="d-flex align-items-center gap-3 mt-2 stats-row">
-              <span><i class="bi bi-star-fill"></i><span><?php echo (int)$stats['total_likes_received']; ?></span></span>
-              <span><i class="bi bi-book"></i><span><?php echo (int)$stats['total_posts']; ?></span></span>
+              <span><i class="bi bi-star-fill"></i><span><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo (int)$stats['total_likes_received']; ?></span></span>
+              <span><i class="bi bi-book"></i><span><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo (int)$stats['total_posts']; ?></span></span>
             </div>
 
             <!-- Level -->
             <div class="d-flex align-items-center gap-3 mt-2 level-wrap">
-              <span class="lvl-pill">LVL <span><?php echo (int)$level; ?></span></span>
+              <span class="lvl-pill">LVL <span><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo (int)$level; ?></span></span>
               <div class="progress level-bar flex-grow-1">
-                <div class="progress-bar" style="width: <?php echo ($expPoints % 1000) / 10; ?>%"></div>
+                <div class="progress-bar" style="width: <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo ($expPoints % 1000) / 10; ?>%"></div>
               </div>
             </div>
 
             <!-- Bio -->
-            <?php if (empty($bio)): ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (empty($bio)): ?>
               <p class="profile-bio mt-3" style="color: var(--muted); font-style: italic;">This user has not set a bio yet.</p>
-            <?php else: ?>
-              <p class="profile-bio mt-3"><?php echo nl2br(htmlspecialchars($bio)); ?></p>
-            <?php endif; ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
+              <p class="profile-bio mt-3"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo nl2br(htmlspecialchars($bio)); ?></p>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
           </div>
         </div>
       </div>
@@ -172,7 +187,8 @@ $dateStarted = date('m/d/y', strtotime($userData['created_at']));
         <!-- Date Started -->
         <div class="card card-glass p-3 mb-3">
           <h5 class="sidebar-title" style="color: #fff;">Date Started</h5>
-          <p class="sidebar-value mb-0" style="color: rgba(255, 255, 255, 0.9);"><?php echo $dateStarted; ?></p>
+          <p class="sidebar-value mb-0" style="color: rgba(255, 255, 255, 0.9);"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $dateStarted; ?></p>
         </div>
 
         <!-- Favorite Game -->
@@ -192,22 +208,29 @@ $dateStarted = date('m/d/y', strtotime($userData['created_at']));
         </div>
 
         <!-- Best Posts -->
-        <?php if (!empty($bestPosts)): ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (!empty($bestPosts)): ?>
         <div class="card card-glass p-3">
           <h5 class="sidebar-title mb-3" style="color: #fff;">Best Posts:</h5>
           <div class="best-posts-container">
-            <?php foreach ($bestPosts as $post): ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; foreach ($bestPosts as $post): ?>
             <div class="best-post-item">
-              <div class="best-post-title" style="color: rgba(255, 255, 255, 0.9);"><?php echo htmlspecialchars($post['title']); ?></div>
+              <div class="best-post-title" style="color: rgba(255, 255, 255, 0.9);"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['title']); ?></div>
               <div class="best-post-stats" style="color: rgba(255, 255, 255, 0.7);">
-                <span><i class="bi bi-star-fill"></i> <?php echo $post['like_count']; ?></span>
-                <span><i class="bi bi-chat-left-text"></i> <?php echo $post['comment_count']; ?></span>
+                <span><i class="bi bi-star-fill"></i> <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['like_count']; ?></span>
+                <span><i class="bi bi-chat-left-text"></i> <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['comment_count']; ?></span>
               </div>
             </div>
-            <?php endforeach; ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endforeach; ?>
           </div>
         </div>
-        <?php endif; ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
       </div>
     </div>
   </div>

@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 // API endpoint for post operations (Create, Read, Update, Delete, Like)
 session_start();
 header('Content-Type: application/json');

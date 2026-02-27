@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 session_start();
 $isLoggedIn = isset($_SESSION['user_authenticated']) && $_SESSION['user_authenticated'] === true;
 $userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'Admin') : 'Admin';
@@ -29,7 +30,8 @@ $userName = $isLoggedIn ? ($_SESSION['user_name'] ?? 'Admin') : 'Admin';
         <a href="index.php" class="icon" title="Dashboard"><i class="bi bi-speedometer"></i></a>
         <a href="reporting.php" class="icon" title="Reporting"><i class="bi bi-flag"></i></a>
         <a href="moderators.php" class="icon" title="Moderators"><i class="bi bi-people"></i></a>
-        <div class="avatar-nav" title="<?php echo htmlspecialchars($userName); ?>"></div>
+        <div class="avatar-nav" title="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($userName); ?>"></div>
       </div>
     </header>
   </div>

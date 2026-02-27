@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 session_start();
 
 // Check authentication
@@ -127,7 +128,8 @@ $db->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($gameName); ?> - Posts | +EXPoints</title>
+    <title><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($gameName); ?> - Posts | +EXPoints</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -256,7 +258,8 @@ $db->close();
                 <button class="icon" title="Filter"><i class="bi bi-funnel"></i></button>
                 <button class="icon" title="Notifications"><i class="bi bi-bell"></i></button>
                 <a href="profile.php" class="avatar-nav">
-                    <img src="<?php echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" class="avatar-img">
+                    <img src="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" class="avatar-img">
                 </a>
             </div>
         </header>
@@ -268,7 +271,8 @@ $db->close();
         <div class="game-header">
             <div class="game-header-title">
                 <i class="bi bi-joystick"></i>
-                <h1><?php echo htmlspecialchars($gameName); ?></h1>
+                <h1><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($gameName); ?></h1>
             </div>
             <div class="game-header-nav">
                 <a href="games.php" class="btn-back">
@@ -278,15 +282,18 @@ $db->close();
                 <div class="game-stats">
                     <span>
                         <i class="bi bi-file-text"></i>
-                        <strong id="postCount"><?php echo $gameStats['total']; ?></strong> posts
+                        <strong id="postCount"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $gameStats['total']; ?></strong> posts
                     </span>
                     <span>
                         <i class="bi bi-star-fill"></i>
-                        <strong><?php echo $gameStats['likes']; ?></strong> likes
+                        <strong><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $gameStats['likes']; ?></strong> likes
                     </span>
                     <span>
                         <i class="bi bi-chat-left-text"></i>
-                        <strong><?php echo $gameStats['comments']; ?></strong> comments
+                        <strong><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $gameStats['comments']; ?></strong> comments
                     </span>
                 </div>
             </div>
@@ -294,15 +301,19 @@ $db->close();
 
     <!-- Posts Container -->
     <div id="postsContainer">
-        <?php if (count($posts) > 0): ?>
-            <?php foreach ($posts as $post): ?>
-                <div class="card-post" data-post-id="<?php echo $post['id']; ?>">
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (count($posts) > 0): ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; foreach ($posts as $post): ?>
+                <div class="card-post" data-post-id="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['id']; ?>">
                     <div class="post-header">
                         <div class="row gap-3 align-items-start">
                             <div class="col-auto">
                                 <div class="avatar-us avatar-loading">
                                     <div class="star-loader">⭐</div>
-                                    <img src="<?php echo htmlspecialchars($post['author_profile_picture'] ?? '../assets/img/cat1.jpg'); ?>" 
+                                    <img src="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['author_profile_picture'] ?? '../assets/img/cat1.jpg'); ?>" 
                                          alt="Profile" 
                                          loading="lazy"
                                          class="profile-lazy-img"
@@ -310,30 +321,42 @@ $db->close();
                                 </div>
                             </div>
                             <div class="col">
-                                <div class="game-badge"><?php echo htmlspecialchars($post['game']); ?></div>
-                                <h2 class="title mb-1"><?php echo htmlspecialchars($post['title']); ?></h2>
-                                <div class="handle mb-3">@<?php echo htmlspecialchars($post['username']); ?></div>
-                                <p class="mb-3"><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
+                                <div class="game-badge"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['game']); ?></div>
+                                <h2 class="title mb-1"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['title']); ?></h2>
+                                <div class="handle mb-3">@<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['username']); ?></div>
+                                <p class="mb-3"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo nl2br(htmlspecialchars($post['content'])); ?></p>
                                 <div class="time-badge">
                                     <i class="bi bi-clock"></i>
-                                    <?php echo date('M j, Y g:i A', strtotime($post['created_at'])); ?>
+                                    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo date('M j, Y g:i A', strtotime($post['created_at'])); ?>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="actions">
-                        <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b><?php echo $post['like_count'] ?? 0; ?></b></span>
-                        <span class="a comment-btn" data-comments="<?php echo $post['comment_count'] ?? 0; ?>"><i class="bi bi-chat-left-text"></i><b><?php echo $post['comment_count'] ?? 0; ?></b></span>
+                        <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['like_count'] ?? 0; ?></b></span>
+                        <span class="a comment-btn" data-comments="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['comment_count'] ?? 0; ?>"><i class="bi bi-chat-left-text"></i><b><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['comment_count'] ?? 0; ?></b></span>
                     </div>
                 </div>
-            <?php endforeach; ?>
-        <?php else: ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endforeach; ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
             <div class="no-posts">
                 <i class="bi bi-inbox"></i>
                 <h3>No posts for this game yet</h3>
-                <p>Be the first to review <?php echo htmlspecialchars($gameName); ?>!</p>
+                <p>Be the first to review <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($gameName); ?>!</p>
             </div>
-        <?php endif; ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
     </div>
 </main>
 
@@ -453,8 +476,10 @@ $db->close();
 
 <script>
     // Initialize global variables
-    const gameName = <?php echo json_encode($gameName); ?>;
-    const currentUserId = <?php echo json_encode($userId); ?>;
+    const gameName = <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo json_encode($gameName); ?>;
+    const currentUserId = <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo json_encode($userId); ?>;
     const postsContainer = document.getElementById('postsContainer');
     const postCountEl = document.getElementById('postCount');
 

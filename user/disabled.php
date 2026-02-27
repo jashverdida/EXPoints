@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 // Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -237,15 +238,20 @@ session_destroy();
           Reason for Disable
         </div>
         <div class="disabled-reason-text">
-          <?php echo htmlspecialchars($disabled_reason); ?>
+          <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($disabled_reason); ?>
         </div>
         
-        <?php if ($disabled_at): ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if ($disabled_at): ?>
           <div class="disabled-meta">
-            <div><i class="bi bi-calendar-x"></i> Disabled on: <?php echo date('F j, Y \a\t g:i A', strtotime($disabled_at)); ?></div>
-            <div style="margin-top: 0.25rem;"><i class="bi bi-person-badge"></i> Disabled by: <?php echo htmlspecialchars($disabled_by); ?></div>
+            <div><i class="bi bi-calendar-x"></i> Disabled on: <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo date('F j, Y \a\t g:i A', strtotime($disabled_at)); ?></div>
+            <div style="margin-top: 0.25rem;"><i class="bi bi-person-badge"></i> Disabled by: <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($disabled_by); ?></div>
           </div>
-        <?php endif; ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
       </div>
       
       <p style="color: rgba(255, 255, 255, 0.7); font-size: 0.95rem; margin-bottom: 2rem;">

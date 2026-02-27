@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/config/supabase-session.php';
 session_start();
 
 // Set content type to JSON

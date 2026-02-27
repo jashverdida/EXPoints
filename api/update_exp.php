@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 /**
  * Update User EXP API Endpoint
  * Calculates and updates user EXP based on likes received

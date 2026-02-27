@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 // Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -225,7 +226,8 @@ if ($db) {
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <title>EXPoints • Home [<?php echo $username; ?>]</title>
+  <title>EXPoints • Home [<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $username; ?>]</title>
 
   <!-- Fix CSS paths by removing /EXPoints prefix since we're using localhost:8000 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -256,7 +258,8 @@ if ($db) {
           <span id="notificationBadge" class="notification-badge" style="display: none;">0</span>
         </button>
         <a href="profile.php" class="avatar-nav">
-  <img src="<?php echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" class="avatar-img" loading="eager">
+  <img src="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" class="avatar-img" loading="eager">
 </a>
 </div>
     </header>
@@ -313,33 +316,46 @@ if ($db) {
     </div>
     
     <!-- Success/Error Messages -->
-    <?php if ($successMessage): ?>
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if ($successMessage): ?>
     <div class="alert alert-success alert-dismissible fade show" role="alert">
-      <?php echo htmlspecialchars($successMessage); ?>
+      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($successMessage); ?>
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-    <?php endif; ?>
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
     
-    <?php if ($errorMessage): ?>
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if ($errorMessage): ?>
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-      <?php echo htmlspecialchars($errorMessage); ?>
+      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($errorMessage); ?>
       <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
-    <?php endif; ?>
+    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
 
     <!-- Post a Review Section -->
     <section class="card-post-form">
       <div class="row gap-3 align-items-start">
         <div class="col-auto">
           <div class="avatar-us">
-            <img src="<?php echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" style="position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px; width: calc(100% - 4px); height: calc(100% - 4px); object-fit: cover; border-radius: 50%; z-index: 3;">
+            <img src="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" style="position: absolute; top: 2px; left: 2px; right: 2px; bottom: 2px; width: calc(100% - 4px); height: calc(100% - 4px); object-fit: cover; border-radius: 50%; z-index: 3;">
           </div>
         </div>
         <div class="col">
           <!-- Simple textbox (initial state) -->
           <div id="simplePostBox" class="simple-post-box">
-            <input type="text" id="simplePostInput" class="simple-post-input" placeholder="What's on your mind, @<?php echo htmlspecialchars($username); ?>?" readonly data-username="<?php echo htmlspecialchars($username); ?>" data-userid="<?php echo $userId; ?>">
-            <!-- CACHE BUSTER: <?php echo time(); ?> | Username = <?php echo $username; ?> | User ID = <?php echo $userId; ?> -->
+            <input type="text" id="simplePostInput" class="simple-post-input" placeholder="What's on your mind, @<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($username); ?>?" readonly data-username="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($username); ?>" data-userid="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $userId; ?>">
+            <!-- CACHE BUSTER: <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo time(); ?> | Username = <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $username; ?> | User ID = <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $userId; ?> -->
           </div>
           
           <!-- Expanded form (hidden initially) -->
@@ -376,9 +392,11 @@ if ($db) {
               </div>
               <div class="form-group mb-3">
                 <label for="username" class="form-label">Username</label>
-                <input type="text" id="username" name="username" class="form-input" value="<?php echo htmlspecialchars($username); ?>" readonly>
+                <input type="text" id="username" name="username" class="form-input" value="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($username); ?>" readonly>
               </div>
-              <input type="hidden" name="email" value="<?php echo htmlspecialchars($_SESSION['user_email']); ?>">
+              <input type="hidden" name="email" value="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($_SESSION['user_email']); ?>">
               <div class="form-actions">
                 <button type="button" id="cancelPost" class="btn-cancel">Cancel</button>
                 <button type="submit" class="btn-post">Post Review</button>
@@ -392,9 +410,12 @@ if ($db) {
     <!-- Dynamic Posts Container -->
     <div id="postsContainer">
       <!-- Posts will be loaded here dynamically -->
-      <?php if (count($posts) > 0): ?>
-        <?php foreach ($posts as $post): ?>
-          <?php 
+      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (count($posts) > 0): ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; foreach ($posts as $post): ?>
+          <?php
+require_once __DIR__ . '/../config/supabase-session.php'; 
             $isOwnPost = ($post['username'] === $username);
             // Check if user has bookmarked this post
             $isBookmarked = false;
@@ -407,13 +428,16 @@ if ($db) {
               $bookmarkStmt->close();
             }
           ?>
-          <div class="card-post" data-post-id="<?php echo $post['id']; ?>" data-is-bookmarked="<?php echo $isBookmarked ? 'true' : 'false'; ?>">
+          <div class="card-post" data-post-id="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['id']; ?>" data-is-bookmarked="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $isBookmarked ? 'true' : 'false'; ?>">
             <div class="post-header">
               <div class="row gap-3 align-items-start">
                 <div class="col-auto">
                   <div class="avatar-us avatar-loading">
                     <div class="star-loader">⭐</div>
-                    <img src="<?php echo htmlspecialchars($post['author_profile_picture'] ?? '../assets/img/cat1.jpg'); ?>" 
+                    <img src="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['author_profile_picture'] ?? '../assets/img/cat1.jpg'); ?>" 
                          alt="Profile" 
                          loading="lazy"
                          class="profile-lazy-img"
@@ -421,31 +445,43 @@ if ($db) {
                   </div>
                 </div>
                 <div class="col">
-                  <div class="game-badge"><?php echo htmlspecialchars($post['game']); ?></div>
-                  <h2 class="title mb-1"><?php echo htmlspecialchars($post['title']); ?></h2>
-                  <div class="handle mb-3">@<?php echo htmlspecialchars($post['username']); ?></div>
-                  <p class="mb-3"><?php echo nl2br(htmlspecialchars($post['content'])); ?></p>
+                  <div class="game-badge"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['game']); ?></div>
+                  <h2 class="title mb-1"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['title']); ?></h2>
+                  <div class="handle mb-3">@<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['username']); ?></div>
+                  <p class="mb-3"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo nl2br(htmlspecialchars($post['content'])); ?></p>
                 </div>
               </div>
               <div class="post-menu">
-                <?php if ($isOwnPost): ?>
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if ($isOwnPost): ?>
                   <!-- Show edit/delete menu for own posts -->
                   <button class="icon more" aria-label="More"><i class="bi bi-three-dots-vertical"></i></button>
                   <div class="post-dropdown">
                     <button class="dropdown-item edit-post"><i class="bi bi-pencil"></i> Edit</button>
                     <button class="dropdown-item delete-post"><i class="bi bi-trash"></i> Delete</button>
                   </div>
-                <?php else: ?>
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
                   <!-- Show bookmark icon for other users' posts -->
-                  <button class="icon bookmark-btn <?php echo $isBookmarked ? 'bookmarked' : ''; ?>" aria-label="Bookmark" data-post-id="<?php echo $post['id']; ?>">
+                  <button class="icon bookmark-btn <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $isBookmarked ? 'bookmarked' : ''; ?>" aria-label="Bookmark" data-post-id="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['id']; ?>">
                     <i class="bi bi-bookmark-fill"></i>
                   </button>
-                <?php endif; ?>
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
               </div>
             </div>
             <div class="actions">
-              <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b><?php echo $post['like_count'] ?? 0; ?></b></span>
-              <span class="a comment-btn" data-comments="<?php echo $post['comment_count'] ?? 0; ?>"><i class="bi bi-chat-left-text"></i><b><?php echo $post['comment_count'] ?? 0; ?></b></span>
+              <span class="a like-btn" data-liked="false"><i class="bi bi-star"></i><b><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['like_count'] ?? 0; ?></b></span>
+              <span class="a comment-btn" data-comments="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['comment_count'] ?? 0; ?>"><i class="bi bi-chat-left-text"></i><b><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['comment_count'] ?? 0; ?></b></span>
             </div>
             
             <!-- Comments Section (hidden by default) -->
@@ -466,31 +502,41 @@ if ($db) {
               </div>
             </div>
           </div>
-        <?php endforeach; ?>
-      <?php else: ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endforeach; ?>
+      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
         <div class="no-posts-message">
           <i class="bi bi-inbox"></i>
           <p>No posts to display yet. Be the first to share your review!</p>
-          <?php if ($errorMessage): ?>
+          <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if ($errorMessage): ?>
             <div style="background: #ff4444; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
-              <strong>Error:</strong> <?php echo htmlspecialchars($errorMessage); ?>
+              <strong>Error:</strong> <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($errorMessage); ?>
             </div>
-          <?php endif; ?>
-          <?php if (!$db): ?>
+          <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
+          <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (!$db): ?>
             <div style="background: #ff9800; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
               <strong>Debug:</strong> Database connection failed. Check your .env file and Supabase credentials.
             </div>
-          <?php endif; ?>
+          <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
           <div style="background: #2196F3; color: white; padding: 15px; border-radius: 8px; margin-top: 20px;">
             <strong>Debug Info:</strong>
             <ul style="text-align: left; margin-top: 10px;">
-              <li>Posts array count: <?php echo count($posts); ?></li>
-              <li>Database connected: <?php echo $db ? 'Yes (' . get_class($db) . ')' : 'No'; ?></li>
+              <li>Posts array count: <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo count($posts); ?></li>
+              <li>Database connected: <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $db ? 'Yes (' . get_class($db) . ')' : 'No'; ?></li>
               <li>Test page: <a href="../test-posts-simple.php" style="color: #fff; text-decoration: underline;">Click here to run diagnostics</a></li>
             </ul>
           </div>
         </div>
-      <?php endif; ?>
+      <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
     </div>
     <!-- End of posts container -->
   </main>
@@ -561,7 +607,8 @@ if ($db) {
       <div class="welcome-panda-container">
         <img src="../assets/img/Login Panda Controller.png" alt="Welcome Panda" class="welcome-panda-img">
       </div>
-      <h1 class="welcome-title">Welcome, <?php echo htmlspecialchars($username); ?>!</h1>
+      <h1 class="welcome-title">Welcome, <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($username); ?>!</h1>
       <p class="welcome-message">Let's make this space positive and fun. Please share only appropriate and respectful content. Thanks for keeping it chill!</p>
       <button id="welcomeUnderstood" class="welcome-btn">Understood!</button>
     </div>
@@ -2549,11 +2596,13 @@ if ($db) {
 
   <!-- Set current user ID for JavaScript -->
   <script>
-    const currentUserId = <?php echo json_encode($userId); ?>;
+    const currentUserId = <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo json_encode($userId); ?>;
   </script>
 
   <!-- Dashboard Posts Management Script -->
-  <script src="../assets/js/dashboard-posts.js?v=<?php echo time(); ?>"></script>
+  <script src="../assets/js/dashboard-posts.js?v=<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo time(); ?>"></script>
   
   <!-- Search Filter Functionality -->
   <script>

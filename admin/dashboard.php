@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 // Start session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -962,7 +963,8 @@ if ($db) {
       </a>
       <div class="right">
         <span style="color: white; font-weight: 600;">
-          <?php echo htmlspecialchars($username); ?>
+          <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($username); ?>
           <span class="admin-badge">ADMIN</span>
         </span>
         <a href="../user/dashboard.php" class="icon" title="User Feed"><i class="bi bi-house-door"></i></a>
@@ -989,19 +991,23 @@ if ($db) {
         </h2>
         <div class="metrics">
           <div class="metric">
-            <span class="m-num"><?php echo number_format($total_users); ?></span>
+            <span class="m-num"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo number_format($total_users); ?></span>
             <span class="m-label">Total Users</span>
           </div>
           <div class="metric">
-            <span class="m-num"><?php echo number_format($total_posts); ?></span>
+            <span class="m-num"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo number_format($total_posts); ?></span>
             <span class="m-label">Total Posts</span>
           </div>
           <div class="metric">
-            <span class="m-num"><?php echo number_format($total_comments); ?></span>
+            <span class="m-num"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo number_format($total_comments); ?></span>
             <span class="m-label">Total Comments</span>
           </div>
           <div class="metric">
-            <span class="m-num"><?php echo number_format($total_admins); ?></span>
+            <span class="m-num"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo number_format($total_admins); ?></span>
             <span class="m-label">Administrators</span>
           </div>
         </div>
@@ -1034,7 +1040,9 @@ if ($db) {
             <i class="bi bi-list-check"></i> Posts for Moderation
           </h2>
           <span style="color: rgba(255, 255, 255, 0.6); font-size: 0.9rem;">
-            <span id="displayedCount"><?php echo count($recent_posts); ?></span> / <?php echo count($recent_posts); ?> posts
+            <span id="displayedCount"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo count($recent_posts); ?></span> / <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo count($recent_posts); ?> posts
           </span>
         </div>
         
@@ -1049,52 +1057,67 @@ if ($db) {
           </div>
         </div>
         
-        <?php if (empty($recent_posts)): ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (empty($recent_posts)): ?>
           <div style="text-align: center; padding: 4rem 2rem; color: rgba(255, 255, 255, 0.5);">
             <i class="bi bi-inbox" style="font-size: 4rem; margin-bottom: 1rem; display: block;"></i>
             <p style="font-size: 1.2rem;">No posts yet</p>
           </div>
-        <?php else: ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
           <div class="posts-grid" id="postsGrid">
-            <?php foreach ($recent_posts as $post): ?>
-              <div class="post-card" id="post-card-<?php echo $post['id']; ?>">
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; foreach ($recent_posts as $post): ?>
+              <div class="post-card" id="post-card-<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['id']; ?>">
                 <div class="post-card-header">
-                  <div class="post-id">#<?php echo htmlspecialchars($post['id']); ?></div>
+                  <div class="post-id">#<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['id']); ?></div>
                   <div class="post-date">
                     <i class="bi bi-calendar"></i>
-                    <?php echo date('M d, Y', strtotime($post['created_at'])); ?>
+                    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo date('M d, Y', strtotime($post['created_at'])); ?>
                   </div>
                 </div>
                 
-                <h3 class="post-title"><?php echo htmlspecialchars($post['title']); ?></h3>
+                <h3 class="post-title"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['title']); ?></h3>
                 
                 <div class="post-meta">
                   <span class="post-author">
                     <i class="bi bi-person-circle"></i>
-                    @<?php echo htmlspecialchars($post['username']); ?>
+                    @<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['username']); ?>
                   </span>
                   <span class="post-game">
                     <i class="bi bi-controller"></i>
-                    <?php echo htmlspecialchars($post['game']); ?>
+                    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['game']); ?>
                   </span>
                 </div>
                 
                 <div class="post-content-preview">
-                  <?php echo htmlspecialchars(substr($post['content'], 0, 120)) . (strlen($post['content']) > 120 ? '...' : ''); ?>
+                  <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars(substr($post['content'], 0, 120)) . (strlen($post['content']) > 120 ? '...' : ''); ?>
                 </div>
                 
                 <div class="post-card-actions">
-                  <button class="btn-view" onclick="viewPost(<?php echo $post['id']; ?>)">
+                  <button class="btn-view" onclick="viewPost(<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['id']; ?>)">
                     <i class="bi bi-eye"></i> View
                   </button>
-                  <button class="btn-flag" onclick="flagForBan(<?php echo $post['id']; ?>, '<?php echo htmlspecialchars($post['username']); ?>')">
+                  <button class="btn-flag" onclick="flagForBan(<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $post['id']; ?>, '<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($post['username']); ?>')">
                     <i class="bi bi-flag-fill"></i> Flag User
                   </button>
                 </div>
               </div>
-            <?php endforeach; ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endforeach; ?>
           </div>
-        <?php endif; ?>
+        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
       </section>
     </div>
   </main>
@@ -1170,7 +1193,8 @@ if ($db) {
     let currentUsername = null;
     
     // Store all posts for search
-    const allPosts = <?php echo json_encode($recent_posts); ?>;
+    const allPosts = <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo json_encode($recent_posts); ?>;
 
     // Create floating emoji particles
     function createParticles() {

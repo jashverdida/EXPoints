@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../config/supabase-session.php';
 session_start();
 
 // Check authentication
@@ -615,7 +616,8 @@ $db->close();
                 <button class="icon" title="Filter"><i class="bi bi-funnel"></i></button>
                 <button class="icon" title="Notifications"><i class="bi bi-bell"></i></button>
                 <a href="profile.php" class="avatar-nav">
-                    <img src="<?php echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" class="avatar-img">
+                    <img src="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($userProfilePicture); ?>" alt="Profile" class="avatar-img">
                 </a>
             </div>
         </header>
@@ -633,12 +635,14 @@ $db->close();
         <!-- Stats Bar -->
         <div class="stats-bar">
             <div class="stat-item">
-                <span class="stat-value" id="totalGames"><?php echo count($games); ?></span>
+                <span class="stat-value" id="totalGames"><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo count($games); ?></span>
                 <div class="stat-label">Games Available</div>
             </div>
             <div class="stat-item">
                 <span class="stat-value" id="totalReviews">
-                    <?php 
+                    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; 
                     $totalReviews = array_sum(array_column($games, 'post_count'));
                     echo $totalReviews;
                     ?>
@@ -647,7 +651,8 @@ $db->close();
             </div>
             <div class="stat-item">
                 <span class="stat-value" id="activeGames">
-                    <?php 
+                    <?php
+require_once __DIR__ . '/../config/supabase-session.php'; 
                     $activeGames = 0;
                     foreach ($games as $game) {
                         if (strtotime($game['last_post_date']) > strtotime('-7 days')) {
@@ -668,14 +673,17 @@ $db->close();
 
         <!-- Games Grid -->
         <div id="gamesContainer">
-            <?php if (empty($games)): ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if (empty($games)): ?>
                 <div class="empty-state">
                     <i class="bi bi-controller"></i>
                     <h3>No Games Yet</h3>
                     <p>Be the first to post a review and start the gaming community!</p>
                 </div>
-            <?php else: ?>
-                <?php 
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; else: ?>
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; 
                 // Sort games by post count for popular badge
                 $sortedGames = $games;
                 usort($sortedGames, function($a, $b) {
@@ -685,24 +693,32 @@ $db->close();
                 foreach ($sortedGames as $index => $game): 
                     $isPopular = $index < 3 && $game['post_count'] >= 5; // Top 3 with at least 5 posts
                 ?>
-                    <a href="game-posts.php?game=<?php echo urlencode($game['game']); ?>" 
+                    <a href="game-posts.php?game=<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo urlencode($game['game']); ?>" 
                        class="game-card" 
-                       data-game-name="<?php echo htmlspecialchars(strtolower($game['game'])); ?>">
-                        <?php if ($isPopular): ?>
+                       data-game-name="<?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars(strtolower($game['game'])); ?>">
+                        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; if ($isPopular): ?>
                             <div class="popular-badge">🔥 HOT</div>
-                        <?php endif; ?>
+                        <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
                         <div class="game-card-title">
                             <i class="bi bi-joystick"></i>
-                            <span><?php echo htmlspecialchars($game['game']); ?></span>
+                            <span><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo htmlspecialchars($game['game']); ?></span>
                         </div>
                         <div class="game-card-stats">
                             <span>
                                 <i class="bi bi-file-text-fill"></i>
-                                <strong><?php echo $game['post_count']; ?></strong> <?php echo $game['post_count'] == 1 ? 'review' : 'reviews'; ?>
+                                <strong><?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $game['post_count']; ?></strong> <?php
+require_once __DIR__ . '/../config/supabase-session.php'; echo $game['post_count'] == 1 ? 'review' : 'reviews'; ?>
                             </span>
                             <span>
                                 <i class="bi bi-clock-history"></i>
-                                <?php 
+                                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; 
                                 $daysDiff = floor((time() - strtotime($game['last_post_date'])) / (60 * 60 * 24));
                                 if ($daysDiff == 0) {
                                     echo 'Active today';
@@ -717,8 +733,10 @@ $db->close();
                             </span>
                         </div>
                     </a>
-                <?php endforeach; ?>
-            <?php endif; ?>
+                <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endforeach; ?>
+            <?php
+require_once __DIR__ . '/../config/supabase-session.php'; endif; ?>
         </div>
     </main>
 

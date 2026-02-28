@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "functions": {
+    "**/*.php": {
+      "runtime": "vercel-php@0.9.0"
+    }
+  },
+  "routes": [
+    { "src": "/", "dest": "/user/index.php" },
+    { "src": "/user/(.*\\.php)", "dest": "/user/$1" },
+    { "src": "/api/(.*\\.php)", "dest": "/api/$1" },
+    { "src": "/admin/(.*\\.php)", "dest": "/admin/$1" },
+    { "src": "/mod/(.*\\.php)", "dest": "/mod/$1" },
+    { "src": "/(.*\\.php)", "dest": "/$1" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
+}
